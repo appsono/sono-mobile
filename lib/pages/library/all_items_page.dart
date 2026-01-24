@@ -12,7 +12,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:sono/services/utils/preferences_service.dart';
 import 'package:sono/utils/audio_filter_utils.dart';
 import 'package:sono/utils/artist_string_utils.dart';
 import 'package:sono/services/utils/analytics_service.dart';
@@ -37,7 +36,6 @@ class AllItemsPage extends StatefulWidget {
   final Future<List<dynamic>> itemsFuture;
   final ListItemType itemType;
   final OnAudioQuery audioQuery;
-  final PreferencesService prefsService;
 
   const AllItemsPage({
     super.key,
@@ -45,7 +43,6 @@ class AllItemsPage extends StatefulWidget {
     required this.itemsFuture,
     required this.itemType,
     required this.audioQuery,
-    required this.prefsService,
   });
 
   @override
@@ -83,7 +80,6 @@ class _AllItemsPageState extends State<AllItemsPage> {
         case ListItemType.song:
           _itemsFuture = AudioFilterUtils.getFilteredSongs(
             widget.audioQuery,
-            widget.prefsService,
           );
           break;
         case ListItemType.album:
@@ -556,7 +552,6 @@ class _AllItemsPageState extends State<AllItemsPage> {
                         ),
                         itemType: ListItemType.song,
                         audioQuery: widget.audioQuery,
-                        prefsService: widget.prefsService,
                       ),
                 ),
               ),
@@ -577,13 +572,11 @@ class _AllItemsPageState extends State<AllItemsPage> {
                         pageTitle: folderName,
                         itemsFuture: AudioFilterUtils.getFilteredSongs(
                           widget.audioQuery,
-                          widget.prefsService,
                           sortType: SongSortType.TITLE,
                           path: folderPath,
                         ),
                         itemType: ListItemType.song,
                         audioQuery: widget.audioQuery,
-                        prefsService: widget.prefsService,
                       ),
                 ),
               ),

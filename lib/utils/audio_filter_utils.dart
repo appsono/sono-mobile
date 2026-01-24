@@ -1,15 +1,14 @@
 import 'package:on_audio_query/on_audio_query.dart';
-import '../services/utils/preferences_service.dart';
+import '../services/settings/library_settings_service.dart';
 
 class AudioFilterUtils {
   static Future<List<SongModel>> getFilteredSongs(
-    OnAudioQuery audioQuery,
-    PreferencesService prefsService, {
+    OnAudioQuery audioQuery, {
     SongSortType? sortType,
     OrderType? orderType,
     String? path,
   }) async {
-    List<String> excludedPaths = await prefsService.getExcludedFolders();
+    List<String> excludedPaths = await LibrarySettingsService.instance.getExcludedFolders();
     List<SongModel> allSongs = await audioQuery.querySongs(
       sortType: sortType,
       orderType: orderType,
@@ -31,14 +30,12 @@ class AudioFilterUtils {
   }
 
   static Future<List<AlbumModel>> getFilteredAlbums(
-    OnAudioQuery audioQuery,
-    PreferencesService prefsService, {
+    OnAudioQuery audioQuery, {
     AlbumSortType? sortType,
     OrderType? orderType,
   }) async {
     List<SongModel> filteredSongs = await getFilteredSongs(
       audioQuery,
-      prefsService,
     );
 
     if (filteredSongs.isEmpty) {
@@ -68,14 +65,12 @@ class AudioFilterUtils {
   }
 
   static Future<List<ArtistModel>> getFilteredArtists(
-    OnAudioQuery audioQuery,
-    PreferencesService prefsService, {
+    OnAudioQuery audioQuery, {
     ArtistSortType? sortType,
     OrderType? orderType,
   }) async {
     List<SongModel> filteredSongs = await getFilteredSongs(
       audioQuery,
-      prefsService,
     );
 
     if (filteredSongs.isEmpty) {
@@ -124,8 +119,7 @@ class AudioFilterUtils {
   }
 
   static Future<List<PlaylistModel>> getFilteredPlaylists(
-    OnAudioQuery audioQuery,
-    PreferencesService prefsService, {
+    OnAudioQuery audioQuery, {
     PlaylistSortType? sortType,
     OrderType? orderType,
   }) async {

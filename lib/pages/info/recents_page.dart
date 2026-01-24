@@ -4,7 +4,6 @@ import 'package:sono/services/utils/recents_service.dart';
 import 'package:sono/services/utils/analytics_service.dart';
 import 'package:sono/widgets/player/sono_player.dart';
 import 'package:sono/styles/text.dart';
-import 'package:sono/services/utils/preferences_service.dart';
 import 'package:sono/utils/audio_filter_utils.dart';
 import 'package:sono/styles/app_theme.dart';
 import 'package:intl/intl.dart';
@@ -18,7 +17,6 @@ class RecentsPage extends StatefulWidget {
 
 class _RecentsPageState extends State<RecentsPage> {
   final OnAudioQuery _audioQuery = OnAudioQuery();
-  final PreferencesService _prefsService = PreferencesService();
   final RecentsService _recentsService = RecentsService.instance;
   final SonoPlayer _sonoPlayer = SonoPlayer();
 
@@ -48,7 +46,6 @@ class _RecentsPageState extends State<RecentsPage> {
       //get all songs
       final allSongs = await AudioFilterUtils.getFilteredSongs(
         _audioQuery,
-        _prefsService,
       );
       final songMap = {for (var song in allSongs) song.id: song};
 

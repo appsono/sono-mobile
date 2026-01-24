@@ -1256,53 +1256,61 @@ class _PlaylistDetailsPageState extends State<PlaylistDetailsPage> {
                   ValueListenableBuilder<SongModel?>(
                     valueListenable: SonoPlayer().currentSong,
                     builder: (context, currentSong, _) {
-                      final isPlaylistPlaying =
-                          _loadedSongs?.any(
-                            (song) => song.id == currentSong?.id,
-                          ) ??
-                          false;
+                      return ValueListenableBuilder<String?>(
+                        valueListenable: SonoPlayer().playbackContext,
+                        builder: (context, playbackContext, _) {
+                          final expectedContext =
+                              "Playlist: ${_currentPlaylist.name}";
+                          final isPlaylistPlaying =
+                              playbackContext == expectedContext &&
+                                  (_loadedSongs?.any(
+                                        (song) => song.id == currentSong?.id,
+                                      ) ??
+                                      false);
 
-                      return Container(
-                        height: 48,
-                        decoration: BoxDecoration(
-                          color: AppTheme.brandPink,
-                          borderRadius: BorderRadius.circular(
-                            AppTheme.radiusMd,
-                          ),
-                        ),
-                        child: ValueListenableBuilder<bool>(
-                          valueListenable: SonoPlayer().isPlaying,
-                          builder: (context, isPlaying, _) {
-                            return IconButton(
-                              icon: Icon(
-                                (isPlaylistPlaying && isPlaying)
-                                    ? Icons.pause_rounded
-                                    : Icons.play_arrow_rounded,
-                                color: Colors.white,
+                          return Container(
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: AppTheme.brandPink,
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radiusMd,
                               ),
-                              iconSize: 24,
-                              onPressed:
-                                  _loadedSongs != null &&
-                                          _loadedSongs!.isNotEmpty
-                                      ? () {
-                                        if (isPlaylistPlaying && isPlaying) {
-                                          SonoPlayer().pause();
-                                        } else if (isPlaylistPlaying &&
-                                            !isPlaying) {
-                                          SonoPlayer().play();
-                                        } else {
-                                          SonoPlayer().playNewPlaylist(
-                                            _loadedSongs!,
-                                            0,
-                                            context:
-                                                "Playlist: ${_currentPlaylist.name}",
-                                          );
-                                        }
-                                      }
-                                      : null,
-                            );
-                          },
-                        ),
+                            ),
+                            child: ValueListenableBuilder<bool>(
+                              valueListenable: SonoPlayer().isPlaying,
+                              builder: (context, isPlaying, _) {
+                                return IconButton(
+                                  icon: Icon(
+                                    (isPlaylistPlaying && isPlaying)
+                                        ? Icons.pause_rounded
+                                        : Icons.play_arrow_rounded,
+                                    color: Colors.white,
+                                  ),
+                                  iconSize: 24,
+                                  onPressed:
+                                      _loadedSongs != null &&
+                                              _loadedSongs!.isNotEmpty
+                                          ? () {
+                                            if (isPlaylistPlaying && isPlaying) {
+                                              SonoPlayer().pause();
+                                            } else if (isPlaylistPlaying &&
+                                                !isPlaying) {
+                                              SonoPlayer().play();
+                                            } else {
+                                              SonoPlayer().playNewPlaylist(
+                                                _loadedSongs!,
+                                                0,
+                                                context:
+                                                    "Playlist: ${_currentPlaylist.name}",
+                                              );
+                                            }
+                                          }
+                                          : null,
+                                );
+                              },
+                            ),
+                          );
+                        },
                       );
                     },
                   ),

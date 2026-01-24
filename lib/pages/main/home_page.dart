@@ -11,7 +11,6 @@ import 'package:sono/widgets/home/app_bar_content.dart';
 import 'package:sono/widgets/home/page_header_elements.dart';
 import 'package:sono/pages/library/all_items_page.dart';
 import 'package:sono/pages/info/changelog_page.dart';
-import 'package:sono/services/utils/preferences_service.dart';
 import 'package:sono/utils/audio_filter_utils.dart';
 import 'package:sono/widgets/global/refresh_indicator.dart';
 
@@ -47,7 +46,6 @@ class HomePageState extends State<HomePage>
     with AutomaticKeepAliveClientMixin<HomePage> {
   final OnAudioQuery _audioQuery = OnAudioQuery();
   final SonoPlayer _sonoPlayer = SonoPlayer();
-  final PreferencesService _prefsService = PreferencesService();
 
   Future<List<SongModel>> _recentlyAddedSongsPreviewFuture = Future.value([]);
   Future<List<AlbumModel>> _albumsPreviewFuture = Future.value([]);
@@ -100,21 +98,18 @@ class HomePageState extends State<HomePage>
     setState(() {
       _recentlyAddedSongsPreviewFuture = AudioFilterUtils.getFilteredSongs(
         _audioQuery,
-        _prefsService,
         sortType: SongSortType.DATE_ADDED,
         orderType: OrderType.DESC_OR_GREATER,
       ).then((s) => s.take(15).toList());
 
       _albumsPreviewFuture = AudioFilterUtils.getFilteredAlbums(
             _audioQuery,
-            _prefsService,
           )
           .then((a) => a..sort((x, y) => (x.album).compareTo(y.album)))
           .then((a) => a.take(15).toList());
 
       _artistsPreviewFuture = AudioFilterUtils.getFilteredArtists(
             _audioQuery,
-            _prefsService,
           )
           .then((a) => a..sort((x, y) => (x.artist).compareTo(y.artist)))
           .then((a) => a.take(15).toList());
@@ -124,7 +119,6 @@ class HomePageState extends State<HomePage>
 
     AudioFilterUtils.getFilteredSongs(
       _audioQuery,
-      _prefsService,
       sortType: SongSortType.TITLE,
       orderType: OrderType.ASC_OR_SMALLER,
     ).then((songs) {
@@ -163,7 +157,6 @@ class HomePageState extends State<HomePage>
             ? List<SongModel>.from(_allSongs)
             : await AudioFilterUtils.getFilteredSongs(
               _audioQuery,
-              _prefsService,
             );
 
     if (songs.isNotEmpty) {
@@ -459,13 +452,11 @@ class HomePageState extends State<HomePage>
                       pageTitle: "All Recently Added",
                       itemsFuture: AudioFilterUtils.getFilteredSongs(
                         _audioQuery,
-                        _prefsService,
                         sortType: SongSortType.DATE_ADDED,
                         orderType: OrderType.DESC_OR_GREATER,
                       ),
                       itemType: ListItemType.song,
                       audioQuery: _audioQuery,
-                      prefsService: _prefsService,
                     ),
               ),
             );
@@ -503,13 +494,11 @@ class HomePageState extends State<HomePage>
                       pageTitle: "All Albums",
                       itemsFuture: AudioFilterUtils.getFilteredAlbums(
                         _audioQuery,
-                        _prefsService,
                         sortType: AlbumSortType.ALBUM,
                         orderType: OrderType.ASC_OR_SMALLER,
                       ),
                       itemType: ListItemType.album,
                       audioQuery: _audioQuery,
-                      prefsService: _prefsService,
                     ),
               ),
             );
@@ -541,13 +530,11 @@ class HomePageState extends State<HomePage>
                       pageTitle: "All Artists",
                       itemsFuture: AudioFilterUtils.getFilteredArtists(
                         _audioQuery,
-                        _prefsService,
                         sortType: ArtistSortType.ARTIST,
                         orderType: OrderType.ASC_OR_SMALLER,
                       ),
                       itemType: ListItemType.artist,
                       audioQuery: _audioQuery,
-                      prefsService: _prefsService,
                     ),
               ),
             );

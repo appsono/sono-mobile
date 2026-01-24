@@ -8,7 +8,6 @@ import 'package:sono/widgets/player/sono_player.dart';
 import 'package:sono/pages/library/album_page.dart';
 import 'package:sono/pages/library/artist_page.dart';
 import 'package:sono/widgets/global/page_header.dart';
-import 'package:sono/services/utils/preferences_service.dart';
 import 'package:sono/utils/audio_filter_utils.dart';
 import 'package:sono/utils/error_handler.dart';
 import 'package:sono/widgets/global/cached_artwork_image.dart';
@@ -63,7 +62,6 @@ class _SearchPageState extends State<SearchPage>
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
   Timer? _debounce;
-  final PreferencesService _prefsService = PreferencesService();
 
   bool _isLoadingInitialData = true;
   bool _isSearching = false;
@@ -112,15 +110,12 @@ class _SearchPageState extends State<SearchPage>
     try {
       _allAlbums = await AudioFilterUtils.getFilteredAlbums(
         _audioQuery,
-        _prefsService,
       );
       _allArtists = await AudioFilterUtils.getFilteredArtists(
         _audioQuery,
-        _prefsService,
       );
       _allSongs = await AudioFilterUtils.getFilteredSongs(
         _audioQuery,
-        _prefsService,
         sortType: SongSortType.TITLE,
         orderType: OrderType.ASC_OR_SMALLER,
       );
