@@ -2277,7 +2277,9 @@ class SonoPlayer extends BaseAudioHandler {
   AudioPlayer _getOrCreateSecondaryPlayer() {
     _secondaryPlayer ??= AudioPlayer(
       audioLoadConfiguration: _minimalBufferConfig,
-      audioPipeline: _buildAudioPipeline(),
+      // Don't apply audio pipeline to secondary player to avoid sharing
+      // AudioEffect instances between multiple players (causes assertion error)
+      audioPipeline: null,
     );
     return _secondaryPlayer!;
   }
