@@ -194,14 +194,6 @@ class _AllItemsPageState extends State<AllItemsPage> {
     );
   }
 
-  void _playAll() {
-    if (_resolvedItems != null && _resolvedItems!.isNotEmpty) {
-      final songs = _resolvedItems!.cast<SongModel>();
-      if (songs.isNotEmpty) {
-        SonoPlayer().playNewPlaylist(songs, 0, context: widget.pageTitle);
-      }
-    }
-  }
 
   Widget _buildSkeletonListItem() {
     return RepaintBoundary(
@@ -436,21 +428,6 @@ class _AllItemsPageState extends State<AllItemsPage> {
       );
     }
 
-    if (widget.itemType == ListItemType.song &&
-        _resolvedItems != null &&
-        _resolvedItems!.isNotEmpty) {
-      return FloatingActionButton.extended(
-        onPressed: _playAll,
-        label: Text(
-          "PLAY ALL",
-          style: AppStyles.sonoButtonTextSmaller.copyWith(
-            color: AppTheme.textPrimaryDark,
-          ),
-        ),
-        icon: const Icon(Icons.play_arrow, color: AppTheme.textPrimaryDark),
-        backgroundColor: AppTheme.brandPink,
-      );
-    }
     return null;
   }
 

@@ -150,7 +150,7 @@ class _SonoState extends State<Sono> with WidgetsBindingObserver {
       debugPrint('Received deep link: $uri');
     }
 
-    if (uri.scheme == 'sonoapp' && (uri.host == 'sas' || uri.host == 'jam')) {
+    if (uri.scheme == 'sonoapp' && (uri.host == 'sas' || uri.host == 'sas')) {
       _handleSASDeepLink(uri);
     }
   }

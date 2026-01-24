@@ -74,7 +74,7 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data 
                     android:scheme="sonoapp" 
-                    android:host="jam" />
+                    android:host="sas" />
             </intent-filter>
         </activity>
 

@@ -58,23 +58,74 @@ class CreditsPage extends StatefulWidget {
 }
 
 class _CreditsPageState extends State<CreditsPage> {
+  List<Contributor> _contributors = [];
+  bool _isLoadingContributors = true;
+  String? _contributorsError;
+
   @override
   void initState() {
     super.initState();
+    _fetchContributors();
   }
 
-  final List<Contributor> _contributors = [
-    Contributor(
-      name: 'mathis',
-      description: 'Lead Developer & Creator',
-      githubUsername: 'mathiiiiiis',
-    ),
-    Contributor(
-      name: 'Max',
-      description: 'Lead Developer',
-      githubUsername: 'n0201',
-    ),
-  ];
+  Future<void> _fetchContributors() async {
+    setState(() {
+      _isLoadingContributors = true;
+      _contributorsError = null;
+    });
+
+    try {
+      final response = await http.get(
+        Uri.parse('https://api.github.com/repos/appsono/sono-mobile/contributors'),
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+
+        final contributors = <Contributor>[];
+        for (final item in data) {
+          final login = item['login'] as String?;
+          final contributions = item['contributions'] as int?;
+
+          if (login != null) {
+            String role = 'Contributor';
+            if (login == 'mathiiiiiis') {
+              role = 'Creator';
+            } else if (login == 'n0201') {
+              role = 'Lead Developer';
+            } else if (contributions != null && contributions > 100) {
+              role = 'Core Contributor';
+            } else if (contributions != null && contributions > 10) {
+              role = 'Contributor';
+            }
+
+            contributors.add(Contributor(
+              name: login,
+              description: role,
+              githubUsername: login,
+            ));
+          }
+        }
+
+        if (mounted) {
+          setState(() {
+            _contributors = contributors;
+            _isLoadingContributors = false;
+          });
+        }
+      } else {
+        throw Exception('Failed to load contributors: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('Error fetching contributors: $e');
+      if (mounted) {
+        setState(() {
+          _contributorsError = 'Could not load contributors from GitHub';
+          _isLoadingContributors = false;
+        });
+      }
+    }
+  }
 
   final List<ApiServices> _apiServices = [
     ApiServices(
@@ -221,6 +272,74 @@ class _CreditsPageState extends State<CreditsPage> {
   }
 
   Widget _buildContributorsSection() {
+    if (_isLoadingContributors) {
+      return SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (_contributorsError != null) {
+      return SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              Icon(
+                Icons.error_outline_rounded,
+                color: Colors.white.withAlpha((0.5 * 255).round()),
+                size: 48,
+              ),
+              SizedBox(height: 16),
+              Text(
+                _contributorsError!,
+                style: TextStyle(
+                  color: Colors.white.withAlpha((0.7 * 255).round()),
+                  fontSize: 14,
+                  fontFamily: 'VarelaRound',
+                ),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 16),
+              TextButton(
+                onPressed: _fetchContributors,
+                child: Text(
+                  'Retry',
+                  style: TextStyle(
+                    color: AppTheme.brandPink,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_contributors.isEmpty) {
+      return SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Text(
+            'No contributors found',
+            style: TextStyle(
+              color: Colors.white.withAlpha((0.7 * 255).round()),
+              fontSize: 14,
+              fontFamily: 'VarelaRound',
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    }
+
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       sliver: SliverList.builder(

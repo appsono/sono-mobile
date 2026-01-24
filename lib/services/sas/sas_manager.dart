@@ -135,7 +135,7 @@ class SASInfo {
   SASInfo({required this.host, required this.port, required this.sessionId});
 
   String get deepLink =>
-      'sonoapp://jam?host=$host&port=$port&session=$sessionId';
+      'sonoapp://sas?host=$host&port=$port&session=$sessionId';
   String get webUrl => 'http://$host:$port';
 }
 
@@ -336,7 +336,7 @@ class SASManager {
       _sessionInfo = null;
 
       if (kDebugMode) {
-        debugPrint('Jam Session stopped');
+        debugPrint('SAS Session stopped');
       }
     } catch (e) {
       if (kDebugMode) {
