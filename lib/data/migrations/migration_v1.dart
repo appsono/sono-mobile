@@ -1,9 +1,9 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:flutter/foundation.dart';
-import '../database/tables/favorites_table.dart';
-import '../database/tables/recents_table.dart';
-import '../database/tables/playlists_table.dart';
-import '../database/tables/stats_table.dart';
+import 'package:sono/data/database/tables/favorites_table.dart';
+import 'package:sono/data/database/tables/recents_table.dart';
+import 'package:sono/data/database/tables/playlists_table.dart';
+import 'package:sono/data/database/tables/stats_table.dart';
 
 class MigrationV1 {
   static const int version = 1;

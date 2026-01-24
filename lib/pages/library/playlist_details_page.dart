@@ -10,6 +10,7 @@ import 'package:sono/services/playlist/playlist_service.dart';
 import 'package:sono/styles/text.dart';
 import 'package:sono/styles/app_theme.dart';
 import 'package:sono/utils/artist_string_utils.dart';
+import 'package:sono/utils/audio_filter_utils.dart';
 import 'package:sono/services/utils/artwork_cache_service.dart';
 import 'package:sono/widgets/global/add_to_playlist_dialog.dart';
 import 'package:sono/widgets/global/refresh_indicator.dart';
@@ -38,10 +39,6 @@ class _PlaylistDetailsPageState extends State<PlaylistDetailsPage> {
   String? _loadError;
   bool _isReorderMode = false;
 
-  //Get PlaylistService from Provider
-  //ignore: unused_element
-  PlaylistService get _playlistService => context.read<PlaylistService>();
-
   @override
   void initState() {
     super.initState();
@@ -51,7 +48,7 @@ class _PlaylistDetailsPageState extends State<PlaylistDetailsPage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    //Load data after context is available for Provider
+    //load data after context is available for Provider
     if (_isLoading && _loadedSongs == null) {
       _loadPlaylistData();
     }
@@ -83,10 +80,11 @@ class _PlaylistDetailsPageState extends State<PlaylistDetailsPage> {
         widget.playlist.id,
       );
 
-      //Query all songs with error handling
-      List<SongModel> allSongs = [];
+      //query filtered songs (excluding songs from excluded folders)
+      List<SongModel> allFilteredSongs = [];
       try {
-        allSongs = await _audioQuery.querySongs(
+        allFilteredSongs = await AudioFilterUtils.getFilteredSongs(
+          _audioQuery,
           sortType: null,
           orderType: OrderType.ASC_OR_SMALLER,
         );
@@ -97,18 +95,12 @@ class _PlaylistDetailsPageState extends State<PlaylistDetailsPage> {
       final playlistSongs = <SongModel>[];
       for (final songId in songIds) {
         try {
-          final song = allSongs.firstWhere((s) => s.id == songId);
+          final song = allFilteredSongs.firstWhere((s) => s.id == songId);
           playlistSongs.add(song);
         } catch (e) {
-          //Song not found in MediaStore - clean up orphaned reference
-          try {
-            await playlistService.removeSongFromPlaylist(
-              widget.playlist.id,
-              songId,
-            );
-          } catch (_) {
-            //Ignore cleanup errors
-          }
+          //song not found in filtered songs => either not in MediaStore or in excluded folder
+          //dont clean up here since the song might just be in an excluded folder
+          debugPrint('PlaylistDetailsPage: Song $songId not in filtered songs (might be excluded)');
         }
       }
 

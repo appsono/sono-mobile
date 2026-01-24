@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../services/artists/artist_fetch_progress_service.dart';
-import '../../styles/app_theme.dart';
-import 'artist_fetch_progress_dialog.dart';
+import 'package:sono/services/artists/artist_fetch_progress_service.dart';
+import 'package:sono/styles/app_theme.dart';
+import 'package:sono/widgets/artists/artist_fetch_progress_dialog.dart';
 
 class ArtistFetchProgressButton extends StatelessWidget {
   const ArtistFetchProgressButton({super.key});

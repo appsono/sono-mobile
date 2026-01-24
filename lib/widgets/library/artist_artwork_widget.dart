@@ -3,7 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:on_audio_query/on_audio_query.dart';
-import '../../data/repositories/artists_repository.dart';
+import 'package:sono/data/repositories/artists_repository.dart';
 
 /// Widget that displays artist artwork with priority:
 /// 1. Custom image (user-selected from gallery)

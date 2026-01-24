@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:on_audio_query/on_audio_query.dart';
-import '../../services/utils/artwork_cache_service.dart';
+import 'package:sono/services/utils/artwork_cache_service.dart';
 
 class CachedArtworkImage extends StatefulWidget {
   final int id;

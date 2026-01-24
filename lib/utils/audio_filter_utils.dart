@@ -1,5 +1,5 @@
 import 'package:on_audio_query/on_audio_query.dart';
-import '../services/settings/library_settings_service.dart';
+import 'package:sono/services/settings/library_settings_service.dart';
 
 class AudioFilterUtils {
   static Future<List<SongModel>> getFilteredSongs(
@@ -77,32 +77,23 @@ class AudioFilterUtils {
       return [];
     }
 
-    // Get all artists from the plugin (including split artists with negative IDs)
     List<ArtistModel> allArtists = await audioQuery.queryArtists(
       sortType: sortType,
       orderType: orderType,
       uriType: UriType.EXTERNAL,
     );
 
-    // Build a set of artist names from filtered songs
     final Set<String> artistNamesFromSongs = filteredSongs
         .where((s) => s.artist != null)
         .map((s) => s.artist!.toLowerCase().trim())
         .toSet();
 
-
-    // Filter artists by checking if their name appears in any song's artist field
-    // This works for both regular and split artists
     List<ArtistModel> filteredArtists = allArtists.where((artist) {
       final artistNameLower = artist.artist.toLowerCase().trim();
 
-      // Check if this artist name appears in any song's artist field
       return artistNamesFromSongs.any((songArtist) {
-        // Exact match
         if (songArtist == artistNameLower) return true;
 
-        // Check if this artist is part of a combined string
-        // e.g., "Kanye West" should match "Kanye West, Jay-Z"
         final separators = [', ', ' feat. ', ' ft. ', ' featuring ', ' / ', '/', ' & ', '&', ' and ', ' x ', ' X '];
         for (final sep in separators) {
           if (songArtist.startsWith('$artistNameLower$sep') ||
@@ -123,7 +114,6 @@ class AudioFilterUtils {
     PlaylistSortType? sortType,
     OrderType? orderType,
   }) async {
-    //TODO: determine if playlist members should be filtered
     return audioQuery.queryPlaylists(
       sortType: sortType,
       orderType: orderType,

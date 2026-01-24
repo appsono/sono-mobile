@@ -1,6 +1,6 @@
 import 'package:sqflite/sqflite.dart';
-import '../database/database_helper.dart';
-import '../database/tables/favorites_table.dart';
+import 'package:sono/data/database/database_helper.dart';
+import 'package:sono/data/database/tables/favorites_table.dart';
 
 ///repository for managing favorites data
 class FavoritesRepository {

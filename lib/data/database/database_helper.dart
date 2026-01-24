@@ -1,7 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:flutter/foundation.dart';
-import '../migrations/migration_manager.dart';
+import 'package:sono/data/migrations/migration_manager.dart';
 
 ///central database helper
 ///handles database initialization and provides access to database instance

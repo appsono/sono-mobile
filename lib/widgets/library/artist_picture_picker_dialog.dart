@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../styles/app_theme.dart';
-import '../../services/artists/artist_profile_image_service.dart';
+import 'package:sono/styles/app_theme.dart';
+import 'package:sono/services/artists/artist_profile_image_service.dart';
 
 /// Result of artist picture picker selection
 class ArtistPictureResult {

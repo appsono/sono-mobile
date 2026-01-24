@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
-import '../../data/database/database_helper.dart';
+import 'package:sono/data/database/database_helper.dart';
 
 ///base class for all settings services
 ///provides database access and common CRUD operations for settings

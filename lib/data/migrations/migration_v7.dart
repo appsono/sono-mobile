@@ -1,6 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:flutter/foundation.dart';
-import '../database/tables/artists_table.dart';
+import 'package:sono/data//database/tables/artists_table.dart';
 
 ///migration v7: Add artist image fetching support
 class MigrationV7 {

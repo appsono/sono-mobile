@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
-import '../database/database_helper.dart';
-import '../database/tables/artists_table.dart';
+import 'package:sono/data/database/database_helper.dart';
+import 'package:sono/data/database/tables/artists_table.dart';
 
 /// Repository for managing custom artist metadata (profile pictures, etc.)
 class ArtistsRepository {

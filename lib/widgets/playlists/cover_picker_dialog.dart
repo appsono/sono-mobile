@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../styles/app_theme.dart';
+import 'package:sono/styles/app_theme.dart';
 
 /// Result of cover picker selection
 class CoverPickerResult {
