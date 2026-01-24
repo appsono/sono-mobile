@@ -52,7 +52,7 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
         backgroundColor: AppTheme.backgroundDark,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: const Text(
@@ -120,7 +120,8 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
                   _buildColorTile(
                     color: _accentColor,
                     title: 'Accent Color (not working atm)',
-                    subtitle: '#${_accentColor.toARGB32().toRadixString(16).padLeft(8, '0').substring(2).toUpperCase()}',
+                    subtitle:
+                        '#${_accentColor.toARGB32().toRadixString(16).padLeft(8, '0').substring(2).toUpperCase()}',
                     onTap: () => _showAccentColorDialog(),
                   ),
 
@@ -383,9 +384,17 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
             Icons.brightness_auto_rounded,
           ),
           const Divider(height: 1),
-          _buildThemeModeOption(ThemeMode.light, 'Light', Icons.light_mode_rounded),
+          _buildThemeModeOption(
+            ThemeMode.light,
+            'Light',
+            Icons.light_mode_rounded,
+          ),
           const Divider(height: 1),
-          _buildThemeModeOption(ThemeMode.dark, 'Dark', Icons.dark_mode_rounded),
+          _buildThemeModeOption(
+            ThemeMode.dark,
+            'Dark',
+            Icons.dark_mode_rounded,
+          ),
         ],
       ),
     );
@@ -425,7 +434,11 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
               ),
             ),
             if (isSelected)
-              Icon(Icons.check_circle_rounded, color: AppTheme.brandPink, size: 24),
+              Icon(
+                Icons.check_circle_rounded,
+                color: AppTheme.brandPink,
+                size: 24,
+              ),
           ],
         ),
       ),

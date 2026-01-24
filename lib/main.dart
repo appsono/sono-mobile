@@ -115,7 +115,6 @@ class _SonoState extends State<Sono> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    //_savePlaybackStateForResume();
     _linkSubscription?.cancel();
     super.dispose();
   }

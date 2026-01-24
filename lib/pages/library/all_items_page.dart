@@ -74,9 +74,7 @@ class _AllItemsPageState extends State<AllItemsPage> {
           _itemsFuture = PlaylistService().getAllPlaylists();
           break;
         case ListItemType.song:
-          _itemsFuture = AudioFilterUtils.getFilteredSongs(
-            widget.audioQuery,
-          );
+          _itemsFuture = AudioFilterUtils.getFilteredSongs(widget.audioQuery);
           break;
         case ListItemType.album:
           _itemsFuture = widget.audioQuery.queryAlbums();
@@ -280,7 +278,7 @@ class _AllItemsPageState extends State<AllItemsPage> {
               pinned: true,
               leading: IconButton(
                 icon: const Icon(
-                  Icons.arrow_back_ios_rounded,
+                  Icons.arrow_back_rounded,
                   color: AppTheme.textPrimaryDark,
                 ),
                 onPressed: () => Navigator.of(context).pop(),

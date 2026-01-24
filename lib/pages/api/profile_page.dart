@@ -25,14 +25,15 @@ class _ProfilePageState extends State<ProfilePage> {
   final ApiService _apiService = ApiService();
   final ImagePicker _picker = ImagePicker();
   bool _isLoading = false;
-  String? _localProfilePictureUrl;
+  Map<String, dynamic>? _localUserData;
 
-  String get _username => widget.currentUser?['username'] ?? '';
-  String get _email => widget.currentUser?['email'] ?? '';
-  String get _displayName => widget.currentUser?['display_name'] ?? '';
-  String get _bio => widget.currentUser?['bio'] ?? '';
-  String? get _profilePictureUrl =>
-      _localProfilePictureUrl ?? widget.currentUser?['profile_picture_url'];
+  Map<String, dynamic>? get _currentUserData => _localUserData ?? widget.currentUser;
+
+  String get _username => _currentUserData?['username'] ?? '';
+  String get _email => _currentUserData?['email'] ?? '';
+  String get _displayName => _currentUserData?['display_name'] ?? '';
+  String get _bio => _currentUserData?['bio'] ?? '';
+  String? get _profilePictureUrl => _currentUserData?['profile_picture_url'];
 
   Future<void> _handleImagePick() async {
     final scaffoldMessenger = ScaffoldMessenger.of(context);
@@ -48,14 +49,16 @@ class _ProfilePageState extends State<ProfilePage> {
       setState(() => _isLoading = true);
       try {
         await _apiService.uploadProfilePicture(File(image.path));
-        await widget.onProfileUpdate();
 
         //fetch updated user data to get the new profile picture URL
         final updatedUser = await _apiService.getCurrentUser();
 
+        //update parent scaffold
+        await widget.onProfileUpdate();
+
         if (mounted) {
           setState(() {
-            _localProfilePictureUrl = updatedUser['profile_picture_url'];
+            _localUserData = updatedUser;
             _isLoading = false;
           });
 
@@ -210,8 +213,19 @@ class _ProfilePageState extends State<ProfilePage> {
                           displayName: displayNameController.text.trim(),
                           bio: bioController.text.trim(),
                         );
+
+                        //fetch updated user data
+                        final updatedUser = await _apiService.getCurrentUser();
+
+                        //update parent scaffold
                         await widget.onProfileUpdate();
+
                         if (mounted) {
+                          setState(() {
+                            _localUserData = updatedUser;
+                            _isLoading = false;
+                          });
+
                           scaffoldMessenger.showSnackBar(
                             SnackBar(
                               content: Row(

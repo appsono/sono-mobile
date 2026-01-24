@@ -28,6 +28,9 @@ class AccountSettingsPage extends StatefulWidget {
 class _AccountSettingsPageState extends State<AccountSettingsPage> {
   final ApiService _apiService = ApiService();
   bool _isLoadingExport = false;
+  Map<String, dynamic>? _localUserData;
+
+  Map<String, dynamic>? get _currentUserData => _localUserData ?? widget.currentUser;
 
   Future<void> _handleExportData() async {
     setState(() => _isLoadingExport = true);
@@ -39,21 +42,18 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
 
       final jsonString = const JsonEncoder.withIndent('  ').convert(data);
 
-      // Generate filename with timestamp
       final timestamp = DateFormat(
         'yyyy-MM-dd_HH-mm-ss',
       ).format(DateTime.now());
       final filename = 'sono_data_export_$timestamp.json';
 
-      // Let user select directory to save the file
       final directoryPath = await FilePicker.platform.getDirectoryPath();
 
       if (directoryPath == null) {
-        // User cancelled the picker
         return;
       }
 
-      // Save file to selected directory
+      //save file to selected directory
       final file = File('$directoryPath/$filename');
       await file.writeAsString(jsonString);
 
@@ -114,13 +114,13 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
     );
   }
 
-  void _handleProfileNavigation() {
-    Navigator.push(
+  void _handleProfileNavigation() async {
+    await Navigator.push(
       context,
       MaterialPageRoute(
         builder:
             (context) => ProfilePage(
-              currentUser: widget.currentUser,
+              currentUser: _currentUserData,
               onLogout: () {
                 Navigator.pop(context);
               },
@@ -132,6 +132,18 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
             ),
       ),
     );
+
+    //refresh local user data
+    if (mounted) {
+      try {
+        final updatedUser = await _apiService.getCurrentUser();
+        setState(() {
+          _localUserData = updatedUser;
+        });
+      } catch (e) {
+        //silently fail => keep existing data
+      }
+    }
   }
 
   Future<void> _showConsentHistory() async {
@@ -307,11 +319,12 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isAdmin = widget.currentUser?['is_admin'] == true;
-    final isSuperuser = widget.currentUser?['is_superuser'] == true;
-    final username = widget.currentUser?['username'] ?? 'User';
-    final email = widget.currentUser?['email'] ?? '';
-    final profilePictureUrl = widget.currentUser?['profile_picture_url'];
+    final isAdmin = _currentUserData?['is_admin'] == true;
+    final isSuperuser = _currentUserData?['is_superuser'] == true;
+    final username = _currentUserData?['username'] ?? 'User';
+    final displayName = _currentUserData?['display_name'] ?? username;
+    final email = _currentUserData?['email'] ?? '';
+    final profilePictureUrl = _currentUserData?['profile_picture_url'];
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundDark,
@@ -361,8 +374,8 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                           child:
                               profilePictureUrl == null
                                   ? Text(
-                                    username.isNotEmpty
-                                        ? username[0].toUpperCase()
+                                    displayName.isNotEmpty
+                                        ? displayName[0].toUpperCase()
                                         : 'U',
                                     style: TextStyle(
                                       fontSize: AppTheme.fontTitle,
@@ -378,7 +391,7 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                username,
+                                displayName,
                                 style: TextStyle(
                                   fontSize: AppTheme.fontSubtitle,
                                   color: AppTheme.textPrimaryDark,
@@ -386,6 +399,15 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                                   fontFamily: AppTheme.fontFamily,
                                 ),
                               ),
+                              if (displayName != username)
+                                Text(
+                                  '@$username',
+                                  style: TextStyle(
+                                    fontSize: AppTheme.fontSm,
+                                    color: AppTheme.textTertiaryDark,
+                                    fontFamily: AppTheme.fontFamily,
+                                  ),
+                                ),
                               if (email.isNotEmpty)
                                 Text(
                                   email,

@@ -962,7 +962,7 @@ class _AlbumPageState extends State<AlbumPage> {
           backgroundColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_rounded, color: Colors.white),
+            icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
             onPressed: () => Navigator.of(context).pop(),
           ),
         ),
@@ -1181,10 +1181,10 @@ class _AlbumPageState extends State<AlbumPage> {
                                 "Album: ${widget.album.album}";
                             final isAlbumPlaying =
                                 playbackContext == expectedContext &&
-                                    (_loadedSongs?.any(
-                                          (song) => song.id == currentSong?.id,
-                                        ) ??
-                                        false);
+                                (_loadedSongs?.any(
+                                      (song) => song.id == currentSong?.id,
+                                    ) ??
+                                    false);
 
                             return Container(
                               height: 48,

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sono/services/api/api_service.dart';
 import 'package:sono/styles/app_theme.dart';
 import 'package:sono/pages/auth/forgot_password_page.dart';
-import 'package:sono/widgets/consent_dialog.dart';
+import 'package:sono/widgets/global/consent_dialog.dart';
 import 'package:sono/pages/info/privacy_page.dart';
 import 'package:sono/pages/info/terms_page.dart';
 

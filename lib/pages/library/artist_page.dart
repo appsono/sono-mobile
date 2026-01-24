@@ -216,9 +216,8 @@ class _ArtistPageState extends State<ArtistPage> {
 
     final result = await showDialog<ArtistPictureResult>(
       context: context,
-      builder: (context) => ArtistPicturePickerDialog(
-        artistName: widget.artistName,
-      ),
+      builder:
+          (context) => ArtistPicturePickerDialog(artistName: widget.artistName),
     );
 
     if (result != null && mounted) {
@@ -521,7 +520,7 @@ class _ArtistPageState extends State<ArtistPage> {
               elevation: 0,
               leading: IconButton(
                 icon: const Icon(
-                  Icons.arrow_back_ios_rounded,
+                  Icons.arrow_back_rounded,
                   color: AppTheme.textPrimaryDark,
                 ),
                 onPressed: () => Navigator.of(context).pop(),

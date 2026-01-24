@@ -191,10 +191,7 @@ class _CreditsPageState extends State<CreditsPage> {
             elevation: 0,
             pinned: true,
             leading: IconButton(
-              icon: const Icon(
-                Icons.arrow_back_ios_rounded,
-                color: Colors.white,
-              ),
+              icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
               onPressed: () => Navigator.of(context).pop(),
             ),
             title: const Text(
@@ -321,7 +318,11 @@ class _CreditsPageState extends State<CreditsPage> {
                   color: Colors.white.withAlpha((0.1 * 255).round()),
                   borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                 ),
-                child: const Icon(Icons.api_rounded, color: Colors.white, size: 20),
+                child: const Icon(
+                  Icons.api_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
               ),
               title: Text(
                 api.name,

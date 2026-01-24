@@ -37,7 +37,7 @@ import 'package:sono/widgets/player/parts/mini_player.dart';
 import 'package:sono/widgets/global/sidebar_menu.dart';
 import 'package:sono/widgets/global/bottom_sheet.dart';
 import 'package:sono/widgets/artists/artist_fetch_progress_button.dart';
-import 'package:sono/widgets/consent_dialog.dart';
+import 'package:sono/widgets/global/consent_dialog.dart';
 import 'package:sono/pages/info/privacy_page.dart';
 import 'package:sono/pages/info/terms_page.dart';
 
@@ -207,9 +207,19 @@ class _AppScaffoldState extends State<AppScaffold>
   }
 
   /// Refreshes all screens when user state changes
-  void _initializeScreens() {
+  void _initializeScreens({bool preserveCurrentScreen = false}) {
     setState(() {
-      _screens = _createAllScreens();
+      if (preserveCurrentScreen && _currentIndex >= 0 && _currentIndex < _screens.length) {
+        //preserve the currently active screen to prevent it from being replaced
+        final currentScreen = _screens[_currentIndex];
+        _screens = _createAllScreens();
+        //restore the current screen if it was already initialized
+        if (currentScreen is! SizedBox) {
+          _screens[_currentIndex] = _createScreen(_currentIndex);
+        }
+      } else {
+        _screens = _createAllScreens();
+      }
     });
   }
 
@@ -359,9 +369,9 @@ class _AppScaffoldState extends State<AppScaffold>
             _sidebarUserName = 'Guest';
             _profilePictureUrl = null;
             _currentUser = null;
-            //recreate all screens with logged-out state
-            _screens = _createAllScreens();
           });
+          //recreate all screens with logged-out state
+          _initializeScreens(preserveCurrentScreen: true);
         }
       }
     }
@@ -384,29 +394,42 @@ class _AppScaffoldState extends State<AppScaffold>
       debugPrint('[AppScaffold] User data fetched: ${userData['username']}');
       if (mounted) {
         final newUsername = userData['username'];
-        final currentUsername = _currentUser?['username'];
+        final newDisplayName = userData['display_name'];
+        final newBio = userData['bio'];
         final newProfilePicture = userData['profile_picture_url'];
 
-        if (newUsername != currentUsername ||
-            !_isLoggedIn ||
-            _profilePictureUrl != newProfilePicture) {
-          debugPrint('[AppScaffold] Updating user state: $_isLoggedIn -> true');
-          setState(() {
-            _currentUser = userData;
-            _isLoggedIn = true;
-            _sidebarUserName =
-                _currentUser?['display_name'] ??
-                _currentUser?['username'] ??
-                'User';
-            _profilePictureUrl = newProfilePicture;
-            debugPrint(
-              '[AppScaffold] User state updated. Username: ${_currentUser?['username']}, isLoggedIn: $_isLoggedIn',
-            );
-            //recreate all screens with new auth state
-            _screens = _createAllScreens();
-          });
-        } else {
-          debugPrint('[AppScaffold] User state unchanged');
+        final currentUsername = _currentUser?['username'];
+        final currentDisplayName = _currentUser?['display_name'];
+        final currentBio = _currentUser?['bio'];
+
+        //check if ANY user data has changed
+        final hasChanges = newUsername != currentUsername ||
+            newDisplayName != currentDisplayName ||
+            newBio != currentBio ||
+            newProfilePicture != _profilePictureUrl ||
+            !_isLoggedIn;
+
+        if (hasChanges) {
+          debugPrint('[AppScaffold] User data changed, updating state');
+        }
+
+        //always update user data
+        setState(() {
+          _currentUser = userData;
+          _isLoggedIn = true;
+          _sidebarUserName =
+              _currentUser?['display_name'] ??
+              _currentUser?['username'] ??
+              'User';
+          _profilePictureUrl = newProfilePicture;
+          debugPrint(
+            '[AppScaffold] User state updated. Username: ${_currentUser?['username']}, DisplayName: ${_currentUser?['display_name']}, isLoggedIn: $_isLoggedIn',
+          );
+        });
+
+        //recreate screens if data changed
+        if (hasChanges) {
+          _initializeScreens(preserveCurrentScreen: true);
         }
 
         _checkConsent();

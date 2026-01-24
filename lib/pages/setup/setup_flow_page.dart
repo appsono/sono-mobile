@@ -7,7 +7,7 @@ import 'package:sono/services/settings/developer_settings_service.dart';
 import 'package:sono/services/settings/library_settings_service.dart';
 import 'package:file_picker/file_picker.dart';
 
-/// Setup flow page that guides users through initial app configuration
+/// Setup flow page
 class SetupFlowPage extends StatefulWidget {
   final VoidCallback onSetupComplete;
 
@@ -27,7 +27,7 @@ class _SetupFlowPageState extends State<SetupFlowPage>
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
 
-  // Permission states
+  //permission states
   bool _mediaPermissionGranted = false;
   bool _allFilesPermissionGranted = false;
   bool _notificationPermissionGranted = false;
@@ -35,7 +35,7 @@ class _SetupFlowPageState extends State<SetupFlowPage>
   bool _batteryOptimizationDisabled = false;
   bool _installPermissionGranted = false;
 
-  // Excluded folders
+  //excluded folders
   List<String> _excludedFolders = [];
 
   @override
@@ -52,20 +52,14 @@ class _SetupFlowPageState extends State<SetupFlowPage>
     );
 
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _contentController,
-        curve: Curves.easeOut,
-      ),
+      CurvedAnimation(parent: _contentController, curve: Curves.easeOut),
     );
 
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0.0, 0.05),
       end: Offset.zero,
     ).animate(
-      CurvedAnimation(
-        parent: _contentController,
-        curve: Curves.easeOutCubic,
-      ),
+      CurvedAnimation(parent: _contentController, curve: Curves.easeOutCubic),
     );
 
     _contentController.forward();
@@ -162,7 +156,6 @@ class _SetupFlowPageState extends State<SetupFlowPage>
               ),
             ),
 
-            // Progress indicator (only show after welcome)
             if (_currentPage > 0)
               _ProgressIndicator(
                 currentStep: _currentPage,
@@ -222,8 +215,8 @@ class _SetupFlowPageState extends State<SetupFlowPage>
       case 3:
         return _ExcludedFoldersPage(
           excludedFolders: _excludedFolders,
-          onFoldersChanged: (folders) =>
-              setState(() => _excludedFolders = folders),
+          onFoldersChanged:
+              (folders) => setState(() => _excludedFolders = folders),
           onNext: _nextPage,
           onBack: _previousPage,
         );
@@ -292,17 +285,12 @@ class _SetupFlowPageState extends State<SetupFlowPage>
           onBack: _previousPage,
         );
       case 8:
-        return _AllSetPage(
-          onFinish: _completeSetup,
-          onBack: _previousPage,
-        );
+        return _AllSetPage(onFinish: _completeSetup, onBack: _previousPage);
       default:
         return const SizedBox.shrink();
     }
   }
 }
-
-// ============ PROGRESS INDICATOR ============
 
 class _ProgressIndicator extends StatelessWidget {
   final int currentStep;
@@ -319,7 +307,6 @@ class _ProgressIndicator extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
       child: Column(
         children: [
-          // Progress bar
           ClipRRect(
             borderRadius: BorderRadius.circular(4),
             child: SizedBox(
@@ -359,8 +346,6 @@ class _ProgressIndicator extends StatelessWidget {
   }
 }
 
-// ============ ANIMATED FRACTIONALLY SIZED BOX ============
-
 class AnimatedFractionallySizedBox extends ImplicitlyAnimatedWidget {
   final double widthFactor;
   final Widget child;
@@ -384,11 +369,13 @@ class _AnimatedFractionallySizedBoxState
 
   @override
   void forEachTween(TweenVisitor<dynamic> visitor) {
-    _widthFactor = visitor(
-      _widthFactor,
-      widget.widthFactor,
-      (dynamic value) => Tween<double>(begin: value as double),
-    ) as Tween<double>?;
+    _widthFactor =
+        visitor(
+              _widthFactor,
+              widget.widthFactor,
+              (dynamic value) => Tween<double>(begin: value as double),
+            )
+            as Tween<double>?;
   }
 
   @override
@@ -419,7 +406,6 @@ class _WelcomePage extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Image placeholder - rectangular for transparent background images
                 Container(
                   width: 200,
                   height: 200,
@@ -461,10 +447,7 @@ class _WelcomePage extends StatelessWidget {
             ),
           ),
 
-          _PrimaryButton(
-            label: 'Get Started',
-            onPressed: onNext,
-          ),
+          _PrimaryButton(label: 'Get Started', onPressed: onNext),
         ],
       ),
     );
@@ -496,7 +479,6 @@ class _PermissionPage extends StatelessWidget {
       padding: const EdgeInsets.all(24.0),
       child: Column(
         children: [
-          // Back button
           Align(
             alignment: Alignment.centerLeft,
             child: _BackButton(onPressed: onBack),
@@ -506,7 +488,6 @@ class _PermissionPage extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Icon - rectangular container for transparent images
                 Stack(
                   children: [
                     Container(
@@ -519,11 +500,11 @@ class _PermissionPage extends StatelessWidget {
                       child: Icon(
                         icon,
                         size: 80,
-                        color: isGranted ? AppTheme.success : AppTheme.brandPink,
+                        color:
+                            isGranted ? AppTheme.success : AppTheme.brandPink,
                       ),
                     ),
 
-                    // Check badge when granted
                     if (isGranted)
                       Positioned(
                         right: 8,
@@ -533,7 +514,9 @@ class _PermissionPage extends StatelessWidget {
                           height: 40,
                           decoration: BoxDecoration(
                             color: AppTheme.success,
-                            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radiusMd,
+                            ),
                           ),
                           child: const Icon(
                             Icons.check_rounded,
@@ -584,10 +567,8 @@ class _PermissionPage extends StatelessWidget {
             label: 'Skip for now',
             onPressed: onNext,
           ),*/
-
           const SizedBox(height: 16),
 
-          // Continue arrow at bottom right
           Align(
             alignment: Alignment.centerRight,
             child: _ContinueArrow(onPressed: onNext),
@@ -602,10 +583,7 @@ class _PermissionButton extends StatelessWidget {
   final bool isGranted;
   final VoidCallback onPressed;
 
-  const _PermissionButton({
-    required this.isGranted,
-    required this.onPressed,
-  });
+  const _PermissionButton({required this.isGranted, required this.onPressed});
 
   @override
   Widget build(BuildContext context) {
@@ -615,9 +593,10 @@ class _PermissionButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: isGranted ? null : onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: isGranted
-              ? AppTheme.success.withValues(alpha: 0.2)
-              : AppTheme.brandPink,
+          backgroundColor:
+              isGranted
+                  ? AppTheme.success.withValues(alpha: 0.2)
+                  : AppTheme.brandPink,
           foregroundColor: isGranted ? AppTheme.success : Colors.white,
           disabledBackgroundColor: AppTheme.success.withValues(alpha: 0.2),
           disabledForegroundColor: AppTheme.success,
@@ -715,7 +694,6 @@ class _ExcludedFoldersPageState extends State<_ExcludedFoldersPage> {
                 children: [
                   const SizedBox(height: 24),
 
-                  // Icon - rectangular
                   Container(
                     width: 200,
                     height: 200,
@@ -755,7 +733,6 @@ class _ExcludedFoldersPageState extends State<_ExcludedFoldersPage> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Folder list
                   if (_folders.isNotEmpty)
                     Container(
                       constraints: const BoxConstraints(maxHeight: 150),
@@ -803,19 +780,18 @@ class _ExcludedFoldersPageState extends State<_ExcludedFoldersPage> {
             ),
           ),
 
-          // Actions
           _PrimaryButton(
             label: 'Choose Excluded Folders',
             onPressed: _pickFolder,
             icon: Icons.folder_open_rounded,
           ),
           const SizedBox(height: 12),
+
           /*
           _SecondaryButton(
             label: _folders.isEmpty ? 'Skip for now' : 'Continue',
             onPressed: widget.onNext,
           ),*/
-
           const SizedBox(height: 16),
 
           Align(
@@ -848,7 +824,6 @@ class _AllSetPage extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Success icon - rectangular
                 Container(
                   width: 200,
                   height: 200,
@@ -890,10 +865,7 @@ class _AllSetPage extends StatelessWidget {
             ),
           ),
 
-          _PrimaryButton(
-            label: "Let's Go!",
-            onPressed: onFinish,
-          ),
+          _PrimaryButton(label: "Let's Go!", onPressed: onFinish),
         ],
       ),
     );
@@ -920,7 +892,7 @@ class _BackButton extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
-                Icons.arrow_back_ios_rounded,
+                Icons.arrow_back_rounded,
                 color: AppTheme.textSecondaryDark,
                 size: 20,
               ),
