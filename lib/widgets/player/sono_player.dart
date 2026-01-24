@@ -668,7 +668,6 @@ class SonoPlayer extends BaseAudioHandler {
   bool _isSASStream = false;
   Map<String, dynamic>? _sasMetadata;
   PlayerLifecycleState _lifecycleState = PlayerLifecycleState.idle;
-  bool _isLoadingPlaylist = false;
   final ValueNotifier<PlayerLifecycleState> lifecycleState = ValueNotifier(
     PlayerLifecycleState.idle,
   );
@@ -1488,49 +1487,33 @@ class SonoPlayer extends BaseAudioHandler {
       return;
     }
 
-    //guard against concurrent playlist loads
-    if (_isLoadingPlaylist) {
-      if (kDebugMode) {
-        debugPrint(
-          'Ignoring playNewPlaylist call - already loading a playlist',
-        );
-      }
-      return;
-    }
-
     if (newPlaylist.isEmpty) {
       _playerErrorMessage.value = 'Playlist is empty';
       await stop();
       return;
     }
 
-    _isLoadingPlaylist = true;
+    //clear any previous errors
+    _playerErrorMessage.value = null;
+
+    _playbackMode = _PlaybackMode.local;
+    _playbackContext.value = context;
+
+    final clampedIndex = index.clamp(0, newPlaylist.length - 1);
+    _queueManager.setPlaylist(newPlaylist, clampedIndex);
+    _isShuffleEnabled.value = _queueManager.shuffleEnabled;
 
     try {
-      //clear any previous errors
-      _playerErrorMessage.value = null;
-
-      _playbackMode = _PlaybackMode.local;
-      _playbackContext.value = context;
-
-      final clampedIndex = index.clamp(0, newPlaylist.length - 1);
-      _queueManager.setPlaylist(newPlaylist, clampedIndex);
-      _isShuffleEnabled.value = _queueManager.shuffleEnabled;
-
-      try {
-        await _playCurrentSong();
-        _updateQueueNotifier();
-        //save snapshot after successfully loading new playlist
-        savePlaybackSnapshot();
-      } catch (e) {
-        if (kDebugMode) {
-          debugPrint('Error in playNewPlaylist: $e');
-        }
-        _playerErrorMessage.value = 'Failed to start playback';
-        _setLifecycleState(PlayerLifecycleState.error);
+      await _playCurrentSong();
+      _updateQueueNotifier();
+      //save snapshot after successfully loading new playlist
+      savePlaybackSnapshot();
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('Error in playNewPlaylist: $e');
       }
-    } finally {
-      _isLoadingPlaylist = false;
+      _playerErrorMessage.value = 'Failed to start playback';
+      _setLifecycleState(PlayerLifecycleState.error);
     }
   }
 
@@ -2239,8 +2222,10 @@ class SonoPlayer extends BaseAudioHandler {
 
     //handle unexpected errors
     if (!isPreloading) {
-      _playerErrorMessage.value =
-          'Playback error: ${e.toString().substring(0, 50)}';
+      final errorStr = e.toString();
+      final truncatedError =
+          errorStr.length > 50 ? errorStr.substring(0, 50) : errorStr;
+      _playerErrorMessage.value = 'Playback error: $truncatedError';
       _setLifecycleState(PlayerLifecycleState.error);
 
       //try to skip to next song if available
