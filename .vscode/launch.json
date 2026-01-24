@@ -1,0 +1,47 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Flutter (Nightly)",
+      "request": "launch",
+      "type": "dart",
+      "args": [
+        "--flavor",
+        "nightly"
+      ],
+      "env": {
+        "FLUTTER_BUILD_JOBS": "2"
+      }
+    },
+    {
+      "name": "Flutter (Beta)",
+      "request": "launch",
+      "type": "dart",
+      "args": [
+        "--flavor",
+        "beta"
+      ],
+      "env": {
+        "FLUTTER_BUILD_JOBS": "2"
+      },
+    },
+    {
+      "name": "Flutter (Stable)",
+      "request": "launch",
+      "type": "dart",
+      "args": [
+        "--flavor",
+        "stable"
+      ],
+      "env": {
+        "FLUTTER_BUILD_JOBS": "2"
+      }
+    },
+    {
+      "name": "Dart",
+      "request": "launch",
+      "type": "dart",
+      "program": "bin/main.dart"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "IDX.aI.enableInlineCompletion": false,
+  "IDX.aI.enableCodebaseIndexing": false,
+  "terminal.integrated.env.linux": {
+    "FLUTTER_BUILD_JOBS": "2" //change how many cpu cores flutter is allowed to use
+  }
+}

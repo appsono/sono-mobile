@@ -1,0 +1,221 @@
+name: Nightly Build
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+env:
+  JAVA_VERSION: '21'
+
+jobs:
+  check-changes:
+    name: Check for changes
+    runs-on: ubuntu-latest
+    outputs:
+      should_build: ${{ steps.check.outputs.should_build }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check for changes in last 24 hours
+        id: check
+        run: |
+          LAST_COMMIT=$(git log -1 --format=%ct)
+          NOW=$(date +%s)
+          DIFF=$((NOW - LAST_COMMIT))
+          if [ $DIFF -lt 86400 ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "should_build=true" >> $GITHUB_OUTPUT
+            echo "Changes detected or manual trigger, will build"
+          else
+            echo "should_build=false" >> $GITHUB_OUTPUT
+            echo "No changes in last 24 hours, skipping build"
+          fi
+
+  build-nightly:
+    name: Build Nightly APK
+    needs: check-changes
+    if: needs.check-changes.outputs.should_build == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'beta'
+          cache: true
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Create .env file
+        run: |
+          cat > .env << EOF
+          API_BASE_URL=${{ secrets.API_BASE_URL }}
+          CDN_BASE_URL=${{ secrets.CDN_BASE_URL }}
+          UPDATE_API_URL=${{ secrets.UPDATE_API_URL }}
+          ARTIST_PROFILE_API_URL=${{ secrets.ARTIST_PROFILE_API_URL }}
+          LASTFM_API_KEY=${{ secrets.LASTFM_API_KEY }}
+          LASTFM_SHARED_SECRET=${{ secrets.LASTFM_SHARED_SECRET }}
+          FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_APP_ID_ANDROID=${{ secrets.FIREBASE_APP_ID_ANDROID }}
+          FIREBASE_APP_ID_WEB=${{ secrets.FIREBASE_APP_ID_WEB }}
+          FIREBASE_API_KEY_ANDROID=${{ secrets.FIREBASE_API_KEY_ANDROID }}
+          FIREBASE_API_KEY_WEB=${{ secrets.FIREBASE_API_KEY_WEB }}
+          FIREBASE_MESSAGING_SENDER_ID=${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+          FIREBASE_MESSAGING_SENDER_ID_WEB=${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+          FIREBASE_AUTH_DOMAIN=${{ secrets.FIREBASE_AUTH_DOMAIN }}
+          FIREBASE_STORAGE_BUCKET=${{ secrets.FIREBASE_STORAGE_BUCKET }}
+          ENABLE_CLOUD_FEATURES=true
+          ENABLE_SAS=true
+          DEBUG_MODE=false
+          EOF
+
+      - name: Setup google-services.json
+        run: echo "${{ secrets.GOOGLE_SERVICES_JSON_NIGHTLY }}" | base64 -d > android/app/src/nightly/google-services.json
+
+      - name: Generate nightly version
+        id: version
+        run: |
+          BASE_VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //' | cut -d'-' -f1)
+          DATE=$(date +%Y%m%d)
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          VERSION="${BASE_VERSION}-nightly.${DATE}"
+          VERSION_CODE=$(date +%Y%m%d%H)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "version_code=$VERSION_CODE" >> $GITHUB_OUTPUT
+          echo "Nightly version: $VERSION ($VERSION_CODE)"
+
+      - name: Setup signing
+        if: env.KEYSTORE_BASE64 != ''
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/keystore.jks
+          cat > android/key.properties << EOF
+          storeFile=keystore.jks
+          storePassword=${{ secrets.KEYSTORE_PASSWORD }}
+          keyAlias=${{ secrets.KEY_ALIAS }}
+          keyPassword=${{ secrets.KEY_PASSWORD }}
+          EOF
+
+      - name: Build APK
+        run: |
+          flutter build apk --flavor nightly --release \
+            --build-name=${{ steps.version.outputs.version }} \
+            --build-number=${{ steps.version.outputs.version_code }}
+
+      - name: Rename APK
+        run: |
+          mv build/app/outputs/flutter-apk/app-nightly-release.apk \
+             build/app/outputs/flutter-apk/sono-nightly-v${{ steps.version.outputs.version }}.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sono-nightly-${{ steps.version.outputs.version }}
+          path: build/app/outputs/flutter-apk/sono-nightly-v${{ steps.version.outputs.version }}.apk
+          retention-days: 7
+
+      - name: Upload to Version Service
+        if: env.VERSION_API_URL != '' && env.VERSION_WEBHOOK_SECRET != ''
+        env:
+          VERSION_API_URL: ${{ secrets.VERSION_API_URL }}
+          VERSION_WEBHOOK_SECRET: ${{ secrets.VERSION_WEBHOOK_SECRET }}
+        run: |
+          APK_PATH="build/app/outputs/flutter-apk/sono-nightly-v${{ steps.version.outputs.version }}.apk"
+          
+          if [ ! -f "$APK_PATH" ]; then
+            echo "APK file not found: $APK_PATH"
+            exit 1
+          fi
+          
+          APK_SIZE=$(stat -c%s "$APK_PATH" 2>/dev/null || stat -f%z "$APK_PATH")
+          echo "APK size: $APK_SIZE bytes ($(echo "scale=2; $APK_SIZE/1024/1024" | bc)MB)"
+
+          echo "Encoding APK to base64..."
+          APK_BASE64=$(base64 -w 0 "$APK_PATH")
+
+          COMMIT_MSG=$(git log -1 --pretty=%B | head -1 | tr -d '"' | tr -d "'" | cut -c1-200)
+          COMMIT_MSG=$(echo "$COMMIT_MSG" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | tr '\n' ' ')
+
+          cat > upload_payload.json <<EOF
+          {
+            "channel": "nightly",
+            "version": "${{ steps.version.outputs.version }}",
+            "version_code": ${{ steps.version.outputs.version_code }},
+            "release_notes": "Nightly build: $COMMIT_MSG",
+            "apk_base64": "$APK_BASE64"
+          }
+          EOF
+
+          echo "Uploading to version service at ${{ secrets.VERSION_API_URL }}..."
+          RESPONSE=$(curl -X POST "${{ secrets.VERSION_API_URL }}/api/v1/upload" \
+            -H "Content-Type: application/json" \
+            -H "X-Webhook-Secret: ${{ secrets.VERSION_WEBHOOK_SECRET }}" \
+            --data-binary @upload_payload.json \
+            -w "\nHTTP_CODE:%{http_code}" \
+            -s \
+            --max-time 300)
+          
+          HTTP_CODE=$(echo "$RESPONSE" | grep "HTTP_CODE:" | cut -d: -f2)
+          BODY=$(echo "$RESPONSE" | sed '/HTTP_CODE:/d')
+          
+          echo "Response: $BODY"
+          
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "Successfully uploaded nightly v${{ steps.version.outputs.version }}"
+          else
+            echo "Upload to version service failed with status $HTTP_CODE"
+            echo "Response body: $BODY"
+          fi
+
+          rm -f upload_payload.json
+
+      - name: Create Nightly Pre-release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: nightly-${{ steps.version.outputs.version }}
+          name: Nightly ${{ steps.version.outputs.version }}
+          files: build/app/outputs/flutter-apk/sono-nightly-v${{ steps.version.outputs.version }}.apk
+          prerelease: true
+          generate_release_notes: false
+          body: |
+            Automated nightly build from commit ${{ github.sha }}
+
+            **Warning:** This is an unstable nightly build. Use at your own risk.
+            
+            Build: ${{ steps.version.outputs.version }} (code: ${{ steps.version.outputs.version_code }})
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  cleanup-old-nightlies:
+    name: Cleanup old nightly releases
+    needs: build-nightly
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Delete old nightly releases
+        uses: dev-drprasad/delete-older-releases@v0.3.2
+        with:
+          keep_latest: 7
+          delete_tag_pattern: nightly-
+          delete_prerelease_only: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
