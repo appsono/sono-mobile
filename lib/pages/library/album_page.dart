@@ -11,7 +11,6 @@ import 'package:sono/styles/app_theme.dart';
 import 'package:sono/services/utils/artwork_cache_service.dart';
 import 'package:sono/utils/artist_string_utils.dart';
 import 'package:sono/utils/artist_navigation.dart';
-import 'package:sono/services/utils/analytics_service.dart';
 
 import 'package:sono/widgets/sas/sas_modal.dart';
 import 'package:sono/widgets/global/refresh_indicator.dart';
@@ -41,7 +40,6 @@ class _AlbumPageState extends State<AlbumPage> {
     _loadSongs();
     _loadFavoriteStatus();
     _loadArtists();
-    AnalyticsService.logScreenView('AlbumPage');
   }
 
   //duration formatter

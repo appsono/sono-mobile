@@ -26,7 +26,7 @@
 - [x] Liking songs, favoriting artists, and favoriting albums Lists only update after a full app restart
 - [x] Fix Update Service: Update Service pops up, but doesn't actually download APK
 - [ ] Re-design search page, from scratch
-- [ ] Add new API features: Account Settings, TOS and PRIVACY acceptance, reset password, announcements, adming dash (use web view inside app to open web.sono.wtf/admin). (NO COLLECTIONS FOR NOW) (API_REFERENCE.md)
+- [x] Add new API features: Account Settings, TOS and PRIVACY acceptance, reset password, announcements, admin dash (use web view inside app to open web.sono.wtf/admin).
 - [x] Remove weird pinkish background, when scrolling, from all headers
 - [ ] Make mini-player visible on all pages that it would be useful to see on
 - [ ] Make Bottom Nav visible on all pages that it would be useful to see on

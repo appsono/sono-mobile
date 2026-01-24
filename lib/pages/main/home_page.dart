@@ -10,7 +10,7 @@ import 'package:sono/widgets/home/page_items.dart';
 import 'package:sono/widgets/home/app_bar_content.dart';
 import 'package:sono/widgets/home/page_header_elements.dart';
 import 'package:sono/pages/library/all_items_page.dart';
-import 'package:sono/pages/info/changelog_page.dart';
+import 'package:sono/pages/info/announcements_changelog_page.dart';
 import 'package:sono/utils/audio_filter_utils.dart';
 import 'package:sono/widgets/global/refresh_indicator.dart';
 
@@ -422,7 +422,7 @@ class HomePageState extends State<HomePage>
                 onNewsTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const ChangelogPage()),
+                    MaterialPageRoute(builder: (_) => const AnnouncementsChangelogPage()),
                   );
                 },
                 onSearchTap: widget.onSearchTap,

@@ -26,7 +26,6 @@ class _RecentsPageState extends State<RecentsPage> {
   void initState() {
     super.initState();
     _loadSessions();
-    AnalyticsService.logScreenView('RecentsPage');
   }
 
   void _loadSessions() {

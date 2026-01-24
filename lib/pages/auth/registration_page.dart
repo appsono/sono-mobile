@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:sono/services/utils/analytics_service.dart';
 import 'package:sono/services/api/api_service.dart';
 import 'package:sono/styles/app_theme.dart';
+import 'package:sono/widgets/consent_dialog.dart';
+import 'package:sono/pages/info/privacy_page.dart';
+import 'package:sono/pages/info/terms_page.dart';
 
 class RegistrationPage extends StatefulWidget {
   final VoidCallback onRegistrationSuccess;
@@ -32,13 +34,6 @@ class _RegistrationPageState extends State<RegistrationPage> {
   bool _obscureConfirmPassword = true;
   final TextEditingController _passwordController = TextEditingController();
 
-  @override
-  void initState() {
-    super.initState();
-
-    AnalyticsService.logScreenView('RegistrationPage');
-  }
-
   Future<void> _performRegistration() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
@@ -59,6 +54,12 @@ class _RegistrationPageState extends State<RegistrationPage> {
         //Step 2: Attempt to log in automatically
         try {
           await _apiService.login(_username, _password);
+
+          //Step 3: Check consent (Privacy Policy and Terms of Service)
+          if (mounted) {
+            await _checkConsent();
+          }
+
           //if login is successful => ApiService saves the token
           widget
               .onRegistrationSuccess(); //notify main that registration & auto login were successful
@@ -81,6 +82,101 @@ class _RegistrationPageState extends State<RegistrationPage> {
           });
         }
       }
+    }
+  }
+
+  Future<void> _checkConsent() async {
+    const consentVersion = '2.0';
+
+    //check privacy policy consent
+    final privacyAccepted = await ConsentDialog.showIfNeeded(
+      context: context,
+      consentType: 'privacy_policy',
+      consentVersion: consentVersion,
+      title: 'Privacy Policy',
+      content: '''
+By using Sono, you agree to our Privacy Policy.
+
+Key points:
+• App can be used locally without any account - no data collection for local use
+• Creating a Sono Account is OPTIONAL and enables uploading to CDN and cloud playlists
+• Crash logs are optional and can be disabled in Settings
+• Your data is never sold to third parties
+• You have full GDPR rights (access, deletion, portability)
+
+Age requirement for accounts: 13+ years old
+
+Tap "Read Full Policy" below to view the complete Privacy Policy.
+      ''',
+      onViewFullDocument: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const PrivacyPage()),
+        );
+      },
+      onDeclined: () async {
+        //logout if declined
+        await _apiService.logout();
+      },
+    );
+
+    if (privacyAccepted == null || !privacyAccepted) {
+      //user declined, logout
+      await _apiService.logout();
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'You must accept the Privacy Policy to use Sono';
+          _isLoading = false;
+        });
+      }
+      throw Exception('Privacy Policy not accepted');
+    }
+
+    //check terms of service consent
+    if (!mounted) return;
+    final termsAccepted = await ConsentDialog.showIfNeeded(
+      context: context,
+      consentType: 'terms_of_service',
+      consentVersion: consentVersion,
+      title: 'Terms of Service',
+      content: '''
+By using Sono, you agree to our Terms of Service.
+
+Key terms:
+• App can be used locally without any account for all basic features
+• Creating a Sono Account is OPTIONAL and requires being 13+ years old
+• Sono Accounts enable uploading songs to CDN and cloud playlists
+• You must have legal rights to upload any content
+• Do not violate copyright laws or abuse the service
+• SAS sessions are peer-to-peer, no audio data stored on our servers
+
+Operated by: Mathis Laarmanns, Germany
+Contact: business@mail.sono.wtf
+
+Tap "Read Full Terms" below to view the complete Terms of Service.
+      ''',
+      onViewFullDocument: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const TermsPage()),
+        );
+      },
+      onDeclined: () async {
+        //logout if declined
+        await _apiService.logout();
+      },
+    );
+
+    if (termsAccepted == null || !termsAccepted) {
+      //user declined, logout
+      await _apiService.logout();
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'You must accept the Terms of Service to use Sono';
+          _isLoading = false;
+        });
+      }
+      throw Exception('Terms of Service not accepted');
     }
   }
 

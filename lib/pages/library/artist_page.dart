@@ -5,7 +5,6 @@ import 'package:shimmer/shimmer.dart';
 import 'package:sono/services/utils/favorites_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'package:sono/services/utils/analytics_service.dart';
 import 'package:sono/utils/error_handler.dart';
 import 'package:sono/utils/string_cleanup.dart';
 import 'package:sono/widgets/player/sono_player.dart';
@@ -60,7 +59,6 @@ class _ArtistPageState extends State<ArtistPage> {
     _loadArtistData();
     _fetchArtistInfo();
     _loadFavoriteStatus();
-    AnalyticsService.logScreenView('ArtistPage');
   }
 
   Widget _buildSkeletonLoader({

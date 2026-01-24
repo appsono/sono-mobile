@@ -14,7 +14,6 @@ import 'package:on_audio_query/on_audio_query.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:sono/utils/audio_filter_utils.dart';
 import 'package:sono/utils/artist_string_utils.dart';
-import 'package:sono/services/utils/analytics_service.dart';
 import 'package:sono/widgets/global/bottom_sheet.dart';
 import 'package:sono/data/models/playlist_model.dart' as db;
 import 'package:sono/services/playlist/playlist_service.dart';
@@ -57,9 +56,6 @@ class _AllItemsPageState extends State<AllItemsPage> {
   void initState() {
     super.initState();
     _itemsFuture = widget.itemsFuture;
-
-    String screenName = 'AllItemsPage_${widget.itemType.name}';
-    AnalyticsService.logScreenView(screenName);
   }
 
   void _refreshPlaylists() {
