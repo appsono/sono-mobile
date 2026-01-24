@@ -117,7 +117,7 @@ class _SubscriptionManager {
 //============================================================================
 
 class _QueueManager {
-  /// O riginal playlist order (never shuffled)
+  /// Original playlist order (never shuffled)
   final List<SongModel> _originalQueue = [];
 
   /// Current playback indices.
