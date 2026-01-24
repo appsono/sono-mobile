@@ -21,8 +21,8 @@
 - [x] Add swipe-down gesture to minimize fullscreen player (respect safe area)
 - [x] Add swipe-up gesture on mini player to open fullscreen player
   and swipe-down to dismiss the player (stop player, not app, respect safe area)
-- [ ] Restore fullscreen player animation when switching songs
-- [ ] Skipping songs in fullscreen player is buggy and sometimes takes a long time
+- [x] Restore fullscreen player animation when switching songs
+- [x] Skipping songs in fullscreen player is buggy and sometimes takes a long time
 - [x] Liking songs, favoriting artists, and favoriting albums Lists only update after a full app restart
 - [x] Fix Update Service: Update Service pops up, but doesn't actually download APK
 - [ ] Re-design search page, from scratch
@@ -35,3 +35,4 @@
 
 - [ ] Add Tag Editor
 - [ ] Add Themes (for App, Player components etc.)
+- [ ] MAYBE add translations [weblate(?)]
