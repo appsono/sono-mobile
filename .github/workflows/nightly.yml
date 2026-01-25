@@ -19,6 +19,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
+          ref: nightly
           fetch-depth: 2
 
       - name: Check for changes in last 24 hours
