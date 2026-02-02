@@ -278,7 +278,7 @@ class _LibraryPageState extends State<LibraryPage>
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [AppTheme.backgroundDark, AppTheme.elevatedSurfaceDark],
+            colors: [AppTheme.backgroundDark, AppTheme.surfaceDark],
           ),
         ),
         child:
