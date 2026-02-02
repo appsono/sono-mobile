@@ -27,8 +27,8 @@
 - [x] Fix Update Service: Update Service pops up, but doesn't actually download APK
 - [x] Add new API features: Account Settings, TOS and PRIVACY acceptance, reset password, announcements, admin dash (use web view inside app to open web.sono.wtf/admin).
 - [x] Remove weird pinkish background, when scrolling, from all headers
-- [ ] Make mini-player visible on all pages that it would be useful to see on
-- [ ] Re-design search page, from scratch
+see on
+- [x] Re-design search page, from scratch
 - [ ] Re-design artist page, from scratch
 
 ## Long-term tasks
