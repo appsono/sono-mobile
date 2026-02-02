@@ -190,8 +190,7 @@ class _QueueViewState extends State<QueueView> {
                       onDismissed: (_) async {
                         await widget.sonoPlayer.removeQueueItem(mediaItem);
                         if (mounted) {
-                          //ignore: use_build_context_synchronously
-                          ScaffoldMessenger.of(context).showSnackBar(
+                          ScaffoldMessenger.of(this.context).showSnackBar(
                             SnackBar(
                               content: Text(
                                 "Removed '${mediaItem.title}' from queue",

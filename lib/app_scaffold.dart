@@ -15,7 +15,6 @@ import 'package:sono/pages/main/library_page.dart';
 import 'package:sono/pages/auth/login_page.dart';
 import 'package:sono/pages/api/profile_page.dart';
 import 'package:sono/pages/info/recents_page.dart';
-/*import 'package:sono/pages/api/collections_page.dart';*/
 import 'package:sono/pages/auth/registration_page.dart';
 import 'package:sono/pages/main/search_page.dart';
 import 'package:sono/pages/main/settings_page.dart';
@@ -209,13 +208,14 @@ class _AppScaffoldState extends State<AppScaffold>
   /// Refreshes all screens when user state changes
   void _initializeScreens({bool preserveCurrentScreen = false}) {
     setState(() {
-      if (preserveCurrentScreen && _currentIndex >= 0 && _currentIndex < _screens.length) {
-        //preserve the currently active screen to prevent it from being replaced
-        final currentScreen = _screens[_currentIndex];
+      if (preserveCurrentScreen && _screens.isNotEmpty) {
+        //preserve all already-initialized screens => prevents them from going blank
+        final oldScreens = List<Widget>.from(_screens);
         _screens = _createAllScreens();
-        //restore the current screen if it was already initialized
-        if (currentScreen is! SizedBox) {
-          _screens[_currentIndex] = _createScreen(_currentIndex);
+        for (int i = 0; i < oldScreens.length && i < _screens.length; i++) {
+          if (oldScreens[i] is! SizedBox) {
+            _screens[i] = _createScreen(i);
+          }
         }
       } else {
         _screens = _createAllScreens();
@@ -767,8 +767,7 @@ Tap "Read Full Terms" below to view the complete Terms of Service.
                 if (Navigator.canPop(context)) Navigator.pop(context);
                 await _initializeAuth();
                 if (mounted) {
-                  //ignore: use_build_context_synchronously
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  ScaffoldMessenger.of(this.context).showSnackBar(
                     const SnackBar(
                       content: Text("You are now logged in."),
                       backgroundColor: Colors.green,
@@ -800,8 +799,7 @@ Tap "Read Full Terms" below to view the complete Terms of Service.
                 if (Navigator.canPop(context)) Navigator.pop(context);
                 await _initializeAuth();
                 if (mounted) {
-                  //ignore: use_build_context_synchronously
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  ScaffoldMessenger.of(this.context).showSnackBar(
                     const SnackBar(
                       content: Text(
                         "Registration successful! You are now logged in.",
