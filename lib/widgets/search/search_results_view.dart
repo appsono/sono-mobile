@@ -118,7 +118,7 @@ class SearchResultsView extends StatelessWidget {
 
         ...displayItems.map((item) => _buildItem(context, item)),
 
-        if (hasMore) const SizedBox(height: AppTheme.spacingMd),
+        if (hasMore) const SizedBox(height: AppTheme.spacingSm),
       ],
     );
   }

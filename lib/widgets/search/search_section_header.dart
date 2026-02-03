@@ -33,7 +33,6 @@ class SearchSectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final icon = _getIcon();
     final title = _getTitle();
     final displayCount = totalCount > 0 ? totalCount : count;
 
@@ -44,13 +43,6 @@ class SearchSectionHeader extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(
-            icon,
-            size: 20,
-            color: AppTheme.brandPink,
-          ),
-          const SizedBox(width: AppTheme.spacingSm),
-
           Text(
             title,
             style: const TextStyle(
@@ -60,6 +52,7 @@ class SearchSectionHeader extends StatelessWidget {
               color: Colors.white,
             ),
           ),
+
           const SizedBox(width: AppTheme.spacingSm),
 
           if (displayCount > 0)
@@ -118,7 +111,7 @@ class SearchSectionHeader extends StatelessWidget {
                       style: TextStyle(
                         fontSize: AppTheme.fontSm,
                         fontWeight: FontWeight.w600,
-                        color: AppTheme.brandPink,
+                        color: AppTheme.textSecondaryDark,
                         fontFamily: 'VarelaRound',
                       ),
                     ),
@@ -126,7 +119,7 @@ class SearchSectionHeader extends StatelessWidget {
                     Icon(
                       Icons.arrow_forward_rounded,
                       size: 16,
-                      color: AppTheme.brandPink,
+                      color: AppTheme.textSecondaryDark,
                     ),
                   ],
                 ),
@@ -135,17 +128,6 @@ class SearchSectionHeader extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  IconData _getIcon() {
-    switch (type) {
-      case SearchItemType.song:
-        return Icons.music_note_rounded;
-      case SearchItemType.album:
-        return Icons.album_rounded;
-      case SearchItemType.artist:
-        return Icons.person_rounded;
-    }
   }
 
   String _getTitle() {

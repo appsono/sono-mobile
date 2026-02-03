@@ -306,8 +306,10 @@ class _SearchPageState extends State<SearchPage>
 
             _buildSearchInput(),
 
-            if (_query.isNotEmpty && _searchResults.isNotEmpty)
+            if (_query.isNotEmpty && _searchResults.isNotEmpty) ...[
               _buildTabBar(),
+              const SizedBox(height: AppTheme.spacingMd),
+            ],
 
             Expanded(
               child: _buildContent(),
