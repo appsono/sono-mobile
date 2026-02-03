@@ -19,7 +19,7 @@ import 'package:sono/styles/app_theme.dart';
 import 'package:sono/styles/text.dart';
 import 'package:sono/widgets/player/sono_player.dart';
 import 'package:sono/widgets/player/parts/queue_view.dart';
-import 'package:sono/widgets/player/parts/synced_lyrics_viewer.dart';
+import 'package:sono/widgets/player/parts/lyrics_view.dart';
 import 'package:sono/services/sas/sas_manager.dart';
 import 'package:provider/provider.dart';
 import 'package:sono/utils/artist_navigation.dart';
