@@ -135,7 +135,7 @@ class SASInfo {
   SASInfo({required this.host, required this.port, required this.sessionId});
 
   String get deepLink =>
-      'sonoapp://sas?host=$host&port=$port&session=$sessionId';
+      'sono://sas?host=$host&port=$port&session=$sessionId';
   String get webUrl => 'http://$host:$port';
 }
 

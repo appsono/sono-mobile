@@ -858,7 +858,7 @@ class _SASAdaptiveModalState extends State<SASAdaptiveModal> {
   void _handleScannedQRCode(String qrData) {
     try {
       final uri = Uri.parse(qrData);
-      if (uri.scheme == 'sonoapp' && (uri.host == 'jam' || uri.host == 'sas')) {
+      if (uri.scheme == 'sono' && (uri.host == 'jam' || uri.host == 'sas')) {
         final host = uri.queryParameters['host'];
         final portStr = uri.queryParameters['port'];
 

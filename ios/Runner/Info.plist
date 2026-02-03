@@ -46,7 +46,7 @@
 			<string>wtf.sono.app.N4LC4BCYCP</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>sonoapp</string>
+				<string>sono</string>
 			</array>
 		</dict>
 	</array>

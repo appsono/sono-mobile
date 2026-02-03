@@ -67,7 +67,7 @@
 - **Sync playback across devices** on the same network
 - Connect via QR code scanning
 - Real-time latency and connection quality monitoring
-- Deep link support (`sonoapp://sas`)
+- Deep link support (`sono://sas`)
 
 ### Metadata & Scrobbling
 - **Last.fm integration** - scrobble your listening history

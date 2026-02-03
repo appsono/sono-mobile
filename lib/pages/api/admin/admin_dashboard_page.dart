@@ -88,7 +88,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         )
         ..setBackgroundColor(AppTheme.backgroundDark)
         ..addJavaScriptChannel(
-          'SonoApp',
+          'Sono',
           onMessageReceived: (JavaScriptMessage message) {
             debugPrint('Message from WebView: ${message.message}');
           },
