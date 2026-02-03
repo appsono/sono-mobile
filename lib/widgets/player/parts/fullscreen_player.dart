@@ -179,6 +179,7 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
     _trackInfoSwitchController = AnimationController(
       duration: const Duration(milliseconds: 400),
       vsync: this,
+      value: 1.0,
     );
 
     _trackInfoFadeAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
@@ -1807,6 +1808,9 @@ class _SongCreditsViewState extends State<SongCreditsView> {
                   artworkType: ArtworkType.ARTIST,
                   id: widget.song.artistId,
                   isArtist: true,
+                  artistName: ArtistStringUtils.getPrimaryArtist(
+                    widget.song.artist ?? '',
+                  ),
                   onTap: () {
                     Navigator.pop(context);
                     _navigateToArtistPage(widget.song);

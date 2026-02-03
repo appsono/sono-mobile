@@ -25,7 +25,11 @@ class _CachedArtworkImageState extends State<CachedArtworkImage> {
   @override
   Widget build(BuildContext context) {
     final double devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
-    final int requestSize = (widget.size * devicePixelRatio).round();
+    int requestSize = (widget.size * devicePixelRatio).round();
+
+    if (widget.type == ArtworkType.ALBUM) {
+      requestSize = requestSize.clamp(300, 600);
+    }
 
     return RepaintBoundary(
       child: FutureBuilder<Uint8List?>(

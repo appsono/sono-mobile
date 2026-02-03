@@ -192,7 +192,7 @@ class _AppScaffoldState extends State<AppScaffold>
           _hasPermission = status.isGranted;
           _isLoadingPermission = false;
         });
-        _initializeScreens();
+        _initializeScreens(preserveCurrentScreen: _screens.any((s) => s is! SizedBox));
       }
     } catch (e) {
       if (mounted) {
@@ -200,7 +200,7 @@ class _AppScaffoldState extends State<AppScaffold>
           _hasPermission = true;
           _isLoadingPermission = false;
         });
-        _initializeScreens();
+        _initializeScreens(preserveCurrentScreen: _screens.any((s) => s is! SizedBox));
       }
     }
   }
