@@ -40,9 +40,9 @@ class _SearchPageState extends State<SearchPage>
     with
         AutomaticKeepAliveClientMixin<SearchPage>,
         SingleTickerProviderStateMixin {
-  //keep alive => only when theres an active search => reduce memory usage
+  //keep alive once initial data is loaded to avoid reinitialization
   @override
-  bool get wantKeepAlive => _query.isNotEmpty;
+  bool get wantKeepAlive => !_isLoadingInitialData;
 
   final OnAudioQuery _audioQuery = OnAudioQuery();
 
