@@ -1,7 +1,8 @@
+// ignore_for_file: undefined_hidden_name
+
 import 'dart:ui';
 import 'dart:ui' as ui;
 
-//ignore: undefined_hidden_name
 import 'package:flutter/material.dart'
     hide RepeatMode; //required for build use in gitub workflow
 import 'package:flutter/services.dart';
