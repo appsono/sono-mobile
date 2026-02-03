@@ -310,23 +310,38 @@ class _SonoState extends State<Sono> with WidgetsBindingObserver {
   }
 
   ThemeData _buildThemeData(MaterialColor primaryColor, Brightness brightness) {
-    //ignore: unused_local_variable
     final isDark = brightness == Brightness.dark;
-    final primary = primaryColor;
     final background = AppTheme.background(brightness);
     final onBackground = AppTheme.textPrimary(brightness);
     final surface = AppTheme.surface(brightness);
 
     return ThemeData(
       brightness: brightness,
-      primaryColor: primary,
-      primarySwatch: primary,
+      primaryColor: primaryColor,
       scaffoldBackgroundColor: background,
       fontFamily: AppTheme.fontFamily,
+      canvasColor: background,
+      cardColor: AppTheme.card(brightness),
+      dividerColor: AppTheme.border(brightness),
+      colorScheme: isDark
+          ? ColorScheme.dark(
+              primary: primaryColor,
+              secondary: primaryColor,
+              surface: surface,
+              onSurface: onBackground,
+            )
+          : ColorScheme.light(
+              primary: primaryColor,
+              secondary: primaryColor,
+              surface: surface,
+              onSurface: onBackground,
+            ),
       appBarTheme: AppBarTheme(
-        backgroundColor: surface,
+        backgroundColor: Colors.transparent,
         foregroundColor: onBackground,
-        elevation: AppTheme.elevationNone,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
         centerTitle: true,
         titleTextStyle: TextStyle(
           color: onBackground,
@@ -335,17 +350,11 @@ class _SonoState extends State<Sono> with WidgetsBindingObserver {
           fontFamily: AppTheme.fontFamily,
         ),
       ),
-      colorScheme: ColorScheme.fromSwatch(
-        primarySwatch: primary,
-        brightness: brightness,
-      ).copyWith(surface: surface),
       textTheme: TextTheme(
         bodyLarge: TextStyle(color: onBackground),
         bodyMedium: TextStyle(color: onBackground),
         titleLarge: TextStyle(color: onBackground),
       ),
-      dividerColor: AppTheme.border(brightness),
-      cardColor: AppTheme.card(brightness),
     );
   }
 }
