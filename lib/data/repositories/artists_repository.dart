@@ -264,4 +264,18 @@ class ArtistsRepository {
       where: 'fetched_image_url IS NOT NULL OR fetch_attempted_at IS NOT NULL',
     );
   }
+
+  /// Clear fetched image URL for a single artist (to allow refetch)
+  Future<void> clearFetchedImageForArtist(String artistName) async {
+    final db = await _dbHelper.database;
+    await db.update(
+      ArtistMetadataTable.tableName,
+      {
+        'fetched_image_url': null,
+        'fetch_attempted_at': null,
+      },
+      where: 'artist_name_lower = ?',
+      whereArgs: [artistName.toLowerCase()],
+    );
+  }
 }

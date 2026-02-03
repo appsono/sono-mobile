@@ -7,9 +7,14 @@ import 'package:sono/services/artists/artist_profile_image_service.dart';
 /// Result of artist picture picker selection
 class ArtistPictureResult {
   final bool remove;
+  final bool refetch;
   final String? imagePath;
 
-  const ArtistPictureResult({required this.remove, this.imagePath});
+  const ArtistPictureResult({
+    required this.remove,
+    this.refetch = false,
+    this.imagePath,
+  });
 
   /// Create result for removing picture
   factory ArtistPictureResult.remove() =>
@@ -18,6 +23,10 @@ class ArtistPictureResult {
   /// Create result for setting custom picture
   factory ArtistPictureResult.customImage(String path) =>
       ArtistPictureResult(remove: false, imagePath: path);
+
+  /// Create result for refetching picture from internet
+  factory ArtistPictureResult.refetchFromInternet() =>
+      const ArtistPictureResult(remove: false, refetch: true);
 }
 
 class ArtistPicturePickerDialog extends StatefulWidget {
@@ -95,6 +104,10 @@ class _ArtistPicturePickerDialogState extends State<ArtistPicturePickerDialog> {
 
   void _onRemovePressed() {
     Navigator.pop(context, ArtistPictureResult.remove());
+  }
+
+  void _onRefetchPressed() {
+    Navigator.pop(context, ArtistPictureResult.refetchFromInternet());
   }
 
   @override
@@ -183,12 +196,29 @@ class _ArtistPicturePickerDialogState extends State<ArtistPicturePickerDialog> {
             ),
           ),
 
+          if (_selectedImagePath == null) ...[
+            const SizedBox(height: AppTheme.spacingSm),
+            OutlinedButton.icon(
+              onPressed: _onRefetchPressed,
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Refetch from Internet'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppTheme.textPrimaryDark,
+                side: const BorderSide(color: AppTheme.textSecondaryDark),
+                minimumSize: const Size(double.infinity, 48),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                ),
+              ),
+            ),
+          ],
+
           if (_hasExistingImage && _selectedImagePath == null) ...[
             const SizedBox(height: AppTheme.spacingSm),
             OutlinedButton.icon(
               onPressed: _onRemovePressed,
               icon: const Icon(Icons.delete_rounded),
-              label: const Text('Remove Current Picture'),
+              label: const Text('Remove Custom Picture'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppTheme.error,
                 side: const BorderSide(color: AppTheme.error),

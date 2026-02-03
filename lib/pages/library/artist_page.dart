@@ -15,6 +15,7 @@ import 'package:sono/styles/text.dart';
 import 'package:sono/widgets/library/artist_artwork_widget.dart';
 import 'package:sono/widgets/library/artist_picture_picker_dialog.dart';
 import 'package:sono/services/artists/artist_profile_image_service.dart';
+import 'package:sono/services/artists/artist_image_fetch_service.dart';
 import 'package:sono/data/repositories/artists_repository.dart';
 import 'package:sono/widgets/global/refresh_indicator.dart';
 import 'package:provider/provider.dart';
@@ -223,6 +224,8 @@ class _ArtistPageState extends State<ArtistPage> {
     if (result != null && mounted) {
       if (result.remove) {
         await _removeArtistImage();
+      } else if (result.refetch) {
+        await _refetchArtistImage();
       } else if (result.imagePath != null) {
         await _saveArtistImage(result.imagePath!);
       }
@@ -232,7 +235,13 @@ class _ArtistPageState extends State<ArtistPage> {
   Future<void> _saveArtistImage(String path) async {
     try {
       final service = ArtistProfileImageService();
-      await service.saveArtistImage(widget.artistName, path);
+      final savedPath = await service.saveArtistImage(widget.artistName, path);
+
+      //clear both metadata cache and flutter image cache for file
+      await ArtistArtworkWidget.clearCacheForArtistWithFile(
+        widget.artistName,
+        savedPath,
+      );
 
       if (mounted) {
         setState(() {}); //refresh to show new image
@@ -262,10 +271,21 @@ class _ArtistPageState extends State<ArtistPage> {
   Future<void> _removeArtistImage() async {
     try {
       final service = ArtistProfileImageService();
+
+      //get file path before deleting so cache can get cleared
+      final imageFile = await service.getArtistImageFile(widget.artistName);
+      final filePath = imageFile?.path;
+
       await service.deleteArtistImage(widget.artistName);
 
       final repo = ArtistsRepository();
       await repo.removeCustomImage(widget.artistName);
+
+      //clear both metadata cache and flutter image cache for file
+      await ArtistArtworkWidget.clearCacheForArtistWithFile(
+        widget.artistName,
+        filePath,
+      );
 
       if (mounted) {
         setState(() {}); //refresh to show fallback image
@@ -285,6 +305,66 @@ class _ArtistPageState extends State<ArtistPage> {
         ErrorHandler.showErrorSnackbar(
           context: context,
           message: 'Failed to remove artist picture',
+          error: e,
+          stackTrace: stackTrace,
+        );
+      }
+    }
+  }
+
+  Future<void> _refetchArtistImage() async {
+    try {
+      final repo = ArtistsRepository();
+      final fetchService = ArtistImageFetchService();
+
+      //clear existing fetched image to allow refetch
+      await repo.clearFetchedImageForArtist(widget.artistName);
+
+      //clear the widget cache for this artist
+      ArtistArtworkWidget.clearCacheForArtist(widget.artistName);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Fetching artist picture...'),
+            backgroundColor: AppTheme.brandPink,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+            ),
+            duration: const Duration(seconds: 1),
+          ),
+        );
+      }
+
+      //fetch new image from API
+      final newUrl = await fetchService.fetchArtistImage(widget.artistName);
+
+      if (mounted) {
+        //clear cache again to pick up new image
+        ArtistArtworkWidget.clearCacheForArtist(widget.artistName);
+        setState(() {}); //refresh UI
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              newUrl != null
+                  ? 'Artist picture updated'
+                  : 'No picture found for this artist',
+            ),
+            backgroundColor: newUrl != null ? AppTheme.success : AppTheme.warning,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+            ),
+          ),
+        );
+      }
+    } catch (e, stackTrace) {
+      if (mounted) {
+        ErrorHandler.showErrorSnackbar(
+          context: context,
+          message: 'Failed to fetch artist picture',
           error: e,
           stackTrace: stackTrace,
         );
