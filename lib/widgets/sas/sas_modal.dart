@@ -36,9 +36,6 @@ class _SASAdaptiveModalState extends State<SASAdaptiveModal> {
   bool _showingScanner = false;
   MobileScannerController? _scannerController;
 
-  //stream delay control
-  double _currentDelay = 200.0; //default 200ms
-
   @override
   void initState() {
     super.initState();
@@ -46,8 +43,6 @@ class _SASAdaptiveModalState extends State<SASAdaptiveModal> {
     if (_manager.isHost && _manager.sessionInfo != null) {
       _sessionInfo = _manager.sessionInfo;
     }
-    //initialize delay from manager
-    _currentDelay = _manager.streamDelayMs.toDouble();
   }
 
   @override
@@ -271,66 +266,6 @@ class _SASAdaptiveModalState extends State<SASAdaptiveModal> {
 
           SizedBox(height: AppTheme.spacingLg),
 
-          Container(
-            padding: EdgeInsets.all(AppTheme.spacingMd),
-            margin: EdgeInsets.only(bottom: AppTheme.spacingMd),
-            decoration: BoxDecoration(
-              color: AppTheme.elevatedSurfaceDark,
-              borderRadius: BorderRadius.circular(AppTheme.radius),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Stream Delay',
-                  style: TextStyle(
-                    color: AppTheme.textPrimaryDark,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                SizedBox(height: AppTheme.spacingSm),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Slider(
-                        value: _currentDelay,
-                        min: 0,
-                        max: 5000,
-                        divisions: 50,
-                        label: '${_currentDelay.toInt()}ms',
-                        activeColor: AppTheme.brandPink,
-                        onChanged:
-                            (value) => setState(() => _currentDelay = value),
-                        onChangeEnd:
-                            (value) => _manager.setStreamDelay(value.toInt()),
-                      ),
-                    ),
-                    SizedBox(width: AppTheme.spacingSm),
-                    Text(
-                      '${_currentDelay.toInt()}ms',
-                      style: TextStyle(
-                        color: AppTheme.brandPink,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: AppTheme.spacingSm),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _buildDelayPreset(0, 'None'),
-                    _buildDelayPreset(200, 'Low'),
-                    _buildDelayPreset(500, 'Med'),
-                    _buildDelayPreset(1000, 'High'),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
           Row(
             children: [
               Expanded(
@@ -424,15 +359,6 @@ class _SASAdaptiveModalState extends State<SASAdaptiveModal> {
 
           SizedBox(height: AppTheme.spacingXl),
 
-          ValueListenableBuilder<StreamHealthStatus>(
-            valueListenable: _manager.streamHealth,
-            builder: (context, health, child) {
-              return _buildHealthIndicator(health.quality);
-            },
-          ),
-
-          SizedBox(height: AppTheme.spacingMd),
-
           ValueListenableBuilder<String?>(
             valueListenable: _manager.clientSongTitle,
             builder: (context, title, child) {
@@ -497,51 +423,6 @@ class _SASAdaptiveModalState extends State<SASAdaptiveModal> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildHealthIndicator(ConnectionQuality quality) {
-    Color color;
-    String label;
-    IconData icon;
-
-    switch (quality) {
-      case ConnectionQuality.excellent:
-        color = Colors.green;
-        label = 'Excellent';
-        icon = Icons.signal_cellular_alt_rounded;
-      case ConnectionQuality.good:
-        color = Colors.lightGreen;
-        label = 'Good';
-        icon = Icons.signal_cellular_alt_2_bar_rounded;
-      case ConnectionQuality.fair:
-        color = Colors.orange;
-        label = 'Fair';
-        icon = Icons.signal_cellular_alt_1_bar_rounded;
-      case ConnectionQuality.poor:
-        color = Colors.deepOrange;
-        label = 'Poor';
-        icon = Icons.signal_cellular_connected_no_internet_0_bar_rounded;
-      case ConnectionQuality.critical:
-        color = Colors.red;
-        label = 'Critical';
-        icon = Icons.signal_cellular_nodata_rounded;
-    }
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(icon, color: color, size: 20),
-        SizedBox(width: AppTheme.spacingSm),
-        Text(
-          'Connection: $label',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: color,
-          ),
-        ),
-      ],
     );
   }
 
@@ -887,35 +768,6 @@ class _SASAdaptiveModalState extends State<SASAdaptiveModal> {
     } catch (e) {
       setState(() => _joinError = 'Invalid QR code: $e');
     }
-  }
-
-  Widget _buildDelayPreset(int delayMs, String label) {
-    final isSelected = (_currentDelay.toInt() - delayMs).abs() < 50;
-    return Expanded(
-      child: OutlinedButton(
-        onPressed: () {
-          setState(() => _currentDelay = delayMs.toDouble());
-          _manager.setStreamDelay(delayMs);
-        },
-        style: OutlinedButton.styleFrom(
-          backgroundColor:
-              isSelected
-                  ? AppTheme.brandPink.withValues(alpha: 0.2)
-                  : Colors.transparent,
-          side: BorderSide(
-            color: isSelected ? AppTheme.brandPink : AppTheme.textSecondaryDark,
-          ),
-          padding: EdgeInsets.symmetric(vertical: AppTheme.spacingSm),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? AppTheme.brandPink : AppTheme.textSecondaryDark,
-            fontSize: 13,
-          ),
-        ),
-      ),
-    );
   }
 
   //============================================================================

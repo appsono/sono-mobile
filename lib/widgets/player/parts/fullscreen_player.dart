@@ -1535,11 +1535,20 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
               label: 'Queue',
               onPressed: _showQueueSheet,
             ),
-            //lyrics and add to playlist disabled in SAS mode
             _buildBottomBarButton(
               icon: Icons.lyrics_rounded,
               label: 'Lyrics',
-              onPressed: null, //disabled in SAS mode
+              onPressed: () {
+                final metadata = _sonoPlayer.sasMetadata;
+                if (metadata != null) {
+                  _showLyricsSheet(SongModel({
+                    '_id': metadata['songId'] ?? 0,
+                    'title': metadata['title'] ?? 'Unknown',
+                    'artist': metadata['artist'],
+                    'album': metadata['album'],
+                  }));
+                }
+              },
             ),
             _buildBottomBarButton(
               icon: Icons.add_circle_outline_rounded,
