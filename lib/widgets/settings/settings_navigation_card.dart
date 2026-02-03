@@ -24,9 +24,7 @@ class SettingsNavigationCard extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
@@ -41,11 +39,7 @@ class SettingsNavigationCard extends StatelessWidget {
                   color: effectiveIconColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(
-                  icon,
-                  color: effectiveIconColor,
-                  size: 24,
-                ),
+                child: Icon(icon, color: effectiveIconColor, size: 24),
               ),
               const SizedBox(width: 16),
 
@@ -63,7 +57,9 @@ class SettingsNavigationCard extends StatelessWidget {
                     Text(
                       subtitle,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+                        color: theme.textTheme.bodySmall?.color?.withValues(
+                          alpha: 0.7,
+                        ),
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,

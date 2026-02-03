@@ -5,7 +5,7 @@ class RecentSearch {
 
   /// When this search was performed
   final DateTime timestamp;
-  
+
   /// Number of results found for this query
   final int resultCount;
 
@@ -17,10 +17,10 @@ class RecentSearch {
 
   /// Convert to JSON for SharedPreferences storage
   Map<String, dynamic> toJson() => {
-        'query': query,
-        'timestamp': timestamp.toIso8601String(),
-        'resultCount': resultCount,
-      };
+    'query': query,
+    'timestamp': timestamp.toIso8601String(),
+    'resultCount': resultCount,
+  };
 
   /// Create from JSON stored in SharedPreferences
   factory RecentSearch.fromJson(Map<String, dynamic> json) {

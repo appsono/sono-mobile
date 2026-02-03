@@ -134,8 +134,7 @@ class SASInfo {
 
   SASInfo({required this.host, required this.port, required this.sessionId});
 
-  String get deepLink =>
-      'sono://sas?host=$host&port=$port&session=$sessionId';
+  String get deepLink => 'sono://sas?host=$host&port=$port&session=$sessionId';
   String get webUrl => 'http://$host:$port';
 }
 
@@ -733,7 +732,9 @@ class SASManager {
     _lastPositionBroadcast = now;
 
     if (kDebugMode) {
-      debugPrint('[SAS Host] Broadcasting seek position: ${position.inMilliseconds}ms');
+      debugPrint(
+        '[SAS Host] Broadcasting seek position: ${position.inMilliseconds}ms',
+      );
     }
   }
 
@@ -1335,14 +1336,18 @@ class SASManager {
           }
         } else {
           if (kDebugMode) {
-            debugPrint('[SAS Client] Player not ready, waiting for ready state');
+            debugPrint(
+              '[SAS Client] Player not ready, waiting for ready state',
+            );
           }
           //wait for player to become ready
           try {
             await _sonoPlayer.player.processingStateStream
-                .firstWhere((state) =>
-                    state == ProcessingState.ready ||
-                    state == ProcessingState.buffering)
+                .firstWhere(
+                  (state) =>
+                      state == ProcessingState.ready ||
+                      state == ProcessingState.buffering,
+                )
                 .timeout(Duration(seconds: 8));
             await _sonoPlayer.play();
             if (kDebugMode) {
@@ -1350,7 +1355,9 @@ class SASManager {
             }
           } catch (timeoutError) {
             if (kDebugMode) {
-              debugPrint('[SAS Client] Timeout waiting for ready state: $timeoutError');
+              debugPrint(
+                '[SAS Client] Timeout waiting for ready state: $timeoutError',
+              );
             }
             //try to play anyway
             try {

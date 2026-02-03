@@ -56,28 +56,29 @@ class SearchFilterChips extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppTheme.radius),
       ),
-      itemBuilder: (context) => [
-        _buildMenuItem(
-          SearchSortType.relevance,
-          'Relevance',
-          Icons.star_rounded,
-        ),
-        _buildMenuItem(
-          SearchSortType.alphabetical,
-          'A-Z',
-          Icons.sort_by_alpha_rounded,
-        ),
-        _buildMenuItem(
-          SearchSortType.reverseAlphabetical,
-          'Z-A',
-          Icons.sort_by_alpha_rounded,
-        ),
-        _buildMenuItem(
-          SearchSortType.dateAdded,
-          'Date Added',
-          Icons.schedule_rounded,
-        ),
-      ],
+      itemBuilder:
+          (context) => [
+            _buildMenuItem(
+              SearchSortType.relevance,
+              'Relevance',
+              Icons.star_rounded,
+            ),
+            _buildMenuItem(
+              SearchSortType.alphabetical,
+              'A-Z',
+              Icons.sort_by_alpha_rounded,
+            ),
+            _buildMenuItem(
+              SearchSortType.reverseAlphabetical,
+              'Z-A',
+              Icons.sort_by_alpha_rounded,
+            ),
+            _buildMenuItem(
+              SearchSortType.dateAdded,
+              'Date Added',
+              Icons.schedule_rounded,
+            ),
+          ],
       child: Container(
         padding: const EdgeInsets.symmetric(
           horizontal: AppTheme.spacingMd,
@@ -94,11 +95,7 @@ class SearchFilterChips extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.sort_rounded,
-              size: 18,
-              color: AppTheme.brandPink,
-            ),
+            Icon(Icons.sort_rounded, size: 18, color: AppTheme.brandPink),
             const SizedBox(width: AppTheme.spacingSm),
             Text(
               _getSortLabel(filterOptions.sortType),
@@ -134,9 +131,10 @@ class SearchFilterChips extends StatelessWidget {
           Icon(
             icon,
             size: 20,
-            color: isSelected
-                ? AppTheme.brandPink
-                : Colors.white.withValues(alpha: 0.7),
+            color:
+                isSelected
+                    ? AppTheme.brandPink
+                    : Colors.white.withValues(alpha: 0.7),
           ),
           const SizedBox(width: AppTheme.spacingMd),
           Text(
@@ -150,11 +148,7 @@ class SearchFilterChips extends StatelessWidget {
           ),
           if (isSelected) ...[
             const Spacer(),
-            Icon(
-              Icons.check_rounded,
-              size: 18,
-              color: AppTheme.brandPink,
-            ),
+            Icon(Icons.check_rounded, size: 18, color: AppTheme.brandPink),
           ],
         ],
       ),

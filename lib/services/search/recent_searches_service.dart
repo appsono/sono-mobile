@@ -26,9 +26,12 @@ class RecentSearchesService {
       }
 
       final List<dynamic> jsonList = jsonDecode(jsonString);
-      final searches = jsonList
-          .map((json) => RecentSearch.fromJson(json as Map<String, dynamic>))
-          .toList();
+      final searches =
+          jsonList
+              .map(
+                (json) => RecentSearch.fromJson(json as Map<String, dynamic>),
+              )
+              .toList();
 
       //sort by timestamp => most recent first
       searches.sort((a, b) => b.timestamp.compareTo(a.timestamp));
@@ -47,8 +50,9 @@ class RecentSearchesService {
       final searches = await getRecentSearches();
 
       //remove existing search with same query, case-sensitive
-      searches.removeWhere((s) =>
-          s.query.toLowerCase() == search.query.toLowerCase());
+      searches.removeWhere(
+        (s) => s.query.toLowerCase() == search.query.toLowerCase(),
+      );
 
       //add new search at beginning
       searches.insert(0, search);
@@ -70,8 +74,7 @@ class RecentSearchesService {
       final searches = await getRecentSearches();
 
       //emove search with matching query, case-insensitive
-      searches.removeWhere((s) =>
-          s.query.toLowerCase() == query.toLowerCase());
+      searches.removeWhere((s) => s.query.toLowerCase() == query.toLowerCase());
 
       await _saveSearches(searches);
     } catch (e) {
@@ -104,8 +107,7 @@ class RecentSearchesService {
   /// Check if a query exists in recent searches
   Future<bool> hasRecentSearch(String query) async {
     final searches = await getRecentSearches();
-    return searches.any((s) =>
-        s.query.toLowerCase() == query.toLowerCase());
+    return searches.any((s) => s.query.toLowerCase() == query.toLowerCase());
   }
 
   /// Get recent search count

@@ -40,18 +40,14 @@ class ArtistsRepository {
     final db = await _dbHelper.database;
     final now = DateTime.now().millisecondsSinceEpoch;
 
-    await db.insert(
-      ArtistMetadataTable.tableName,
-      {
-        'artist_name': artistName,
-        'artist_name_lower': artistName.toLowerCase(),
-        'custom_image_path': customImagePath,
-        'mediastore_id': mediaStoreId,
-        'created_at': now,
-        'updated_at': now,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert(ArtistMetadataTable.tableName, {
+      'artist_name': artistName,
+      'artist_name_lower': artistName.toLowerCase(),
+      'custom_image_path': customImagePath,
+      'mediastore_id': mediaStoreId,
+      'created_at': now,
+      'updated_at': now,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   /// Update just the custom image path for an artist
@@ -65,10 +61,7 @@ class ArtistsRepository {
     if (existing != null) {
       await db.update(
         ArtistMetadataTable.tableName,
-        {
-          'custom_image_path': imagePath,
-          'updated_at': now,
-        },
+        {'custom_image_path': imagePath, 'updated_at': now},
         where: 'artist_name_lower = ?',
         whereArgs: [artistName.toLowerCase()],
       );
@@ -118,18 +111,14 @@ class ArtistsRepository {
 
     final batch = db.batch();
     for (final artist in artists) {
-      batch.insert(
-        ArtistMetadataTable.tableName,
-        {
-          'artist_name': artist['name'],
-          'artist_name_lower': (artist['name'] as String).toLowerCase(),
-          'custom_image_path': artist['imagePath'],
-          'mediastore_id': artist['mediaStoreId'],
-          'created_at': now,
-          'updated_at': now,
-        },
-        conflictAlgorithm: ConflictAlgorithm.ignore,
-      );
+      batch.insert(ArtistMetadataTable.tableName, {
+        'artist_name': artist['name'],
+        'artist_name_lower': (artist['name'] as String).toLowerCase(),
+        'custom_image_path': artist['imagePath'],
+        'mediastore_id': artist['mediaStoreId'],
+        'created_at': now,
+        'updated_at': now,
+      }, conflictAlgorithm: ConflictAlgorithm.ignore);
     }
     await batch.commit(noResult: true);
   }
@@ -181,7 +170,9 @@ class ArtistsRepository {
     final metadata = await getArtistMetadata(artistName);
 
     if (kDebugMode) {
-      print('ArtistsRepository.getArtistImageInfo [$artistName]: metadata=$metadata');
+      print(
+        'ArtistsRepository.getArtistImageInfo [$artistName]: metadata=$metadata',
+      );
     }
 
     return {
@@ -202,10 +193,7 @@ class ArtistsRepository {
     if (existing != null) {
       await db.update(
         ArtistMetadataTable.tableName,
-        {
-          'fetch_attempted_at': now,
-          'updated_at': now,
-        },
+        {'fetch_attempted_at': now, 'updated_at': now},
         where: 'artist_name_lower = ?',
         whereArgs: [artistName.toLowerCase()],
       );
@@ -257,10 +245,7 @@ class ArtistsRepository {
     final db = await _dbHelper.database;
     await db.update(
       ArtistMetadataTable.tableName,
-      {
-        'fetched_image_url': null,
-        'fetch_attempted_at': null,
-      },
+      {'fetched_image_url': null, 'fetch_attempted_at': null},
       where: 'fetched_image_url IS NOT NULL OR fetch_attempted_at IS NOT NULL',
     );
   }
@@ -270,10 +255,7 @@ class ArtistsRepository {
     final db = await _dbHelper.database;
     await db.update(
       ArtistMetadataTable.tableName,
-      {
-        'fetched_image_url': null,
-        'fetch_attempted_at': null,
-      },
+      {'fetched_image_url': null, 'fetch_attempted_at': null},
       where: 'artist_name_lower = ?',
       whereArgs: [artistName.toLowerCase()],
     );

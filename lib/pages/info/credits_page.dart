@@ -76,7 +76,9 @@ class _CreditsPageState extends State<CreditsPage> {
 
     try {
       final response = await http.get(
-        Uri.parse('https://api.github.com/repos/appsono/sono-mobile/contributors'),
+        Uri.parse(
+          'https://api.github.com/repos/appsono/sono-mobile/contributors',
+        ),
       );
 
       if (response.statusCode == 200) {
@@ -99,11 +101,13 @@ class _CreditsPageState extends State<CreditsPage> {
               role = 'Contributor';
             }
 
-            contributors.add(Contributor(
-              name: login,
-              description: role,
-              githubUsername: login,
-            ));
+            contributors.add(
+              Contributor(
+                name: login,
+                description: role,
+                githubUsername: login,
+              ),
+            );
           }
         }
 

@@ -28,7 +28,9 @@ class ApkInstallResult {
 }
 
 class ApkInstaller {
-  static const MethodChannel _channel = MethodChannel('wtf.sono.app/apk_installer');
+  static const MethodChannel _channel = MethodChannel(
+    'wtf.sono.app/apk_installer',
+  );
 
   /// Opens the APK file for installation using Androids package installer
   ///

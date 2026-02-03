@@ -6,10 +6,7 @@ class _CachedSearchResult {
   final List<SearchItem> results;
   final DateTime timestamp;
 
-  const _CachedSearchResult({
-    required this.results,
-    required this.timestamp,
-  });
+  const _CachedSearchResult({required this.results, required this.timestamp});
 
   /// Check if cache entry is expired
   bool isExpired(Duration maxAge) {
@@ -30,9 +27,11 @@ class SearchCacheService {
 
   SearchCacheService({
     int maxCacheSize = 50, // maxCacheSize can be changed heree
-    Duration cacheDuration = const Duration(minutes: 5), // Duration can be changed here
-  })  : _maxCacheSize = maxCacheSize,
-        _cacheDuration = cacheDuration;
+    Duration cacheDuration = const Duration(
+      minutes: 5,
+    ), // Duration can be changed here
+  }) : _maxCacheSize = maxCacheSize,
+       _cacheDuration = cacheDuration;
 
   /// Get cached results for a query
   /// Returns null if not found or expired
@@ -51,7 +50,9 @@ class SearchCacheService {
       return null;
     }
 
-    debugPrint('SearchCache: Cache hit for query "$query" (${cached.results.length} results)');
+    debugPrint(
+      'SearchCache: Cache hit for query "$query" (${cached.results.length} results)',
+    );
 
     //move to end to mark as recently used, LRU
     _cache.remove(cacheKey);
@@ -78,7 +79,9 @@ class SearchCacheService {
       timestamp: DateTime.now(),
     );
 
-    debugPrint('SearchCache: Cached query "$query" (${results.length} results)');
+    debugPrint(
+      'SearchCache: Cached query "$query" (${results.length} results)',
+    );
   }
 
   /// Clear all cached results

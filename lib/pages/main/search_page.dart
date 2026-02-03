@@ -51,8 +51,7 @@ class _SearchPageState extends State<SearchPage>
   Timer? _debounce;
 
   final SearchService _searchService = SearchService();
-  final RecentSearchesService _recentSearchesService =
-      RecentSearchesService();
+  final RecentSearchesService _recentSearchesService = RecentSearchesService();
   final SearchCacheService _searchCacheService = SearchCacheService();
 
   late TabController _tabController;
@@ -245,7 +244,6 @@ class _SearchPageState extends State<SearchPage>
     await _loadRecentSearches();
   }
 
-
   void _onLoadMore(SearchItemType type) {
     setState(() {
       final currentCount = _loadedCounts[type] ?? _pageSize;
@@ -262,11 +260,12 @@ class _SearchPageState extends State<SearchPage>
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => FilteredSearchResultsPage(
-          type: type,
-          results: typeResults,
-          query: _query,
-        ),
+        builder:
+            (context) => FilteredSearchResultsPage(
+              type: type,
+              results: typeResults,
+              query: _query,
+            ),
       ),
     );
   }
@@ -311,9 +310,7 @@ class _SearchPageState extends State<SearchPage>
               const SizedBox(height: AppTheme.spacingMd),
             ],
 
-            Expanded(
-              child: _buildContent(),
-            ),
+            Expanded(child: _buildContent()),
           ],
         ),
       ),
@@ -345,18 +342,19 @@ class _SearchPageState extends State<SearchPage>
             Icons.search_rounded,
             color: Colors.white.withValues(alpha: 0.7),
           ),
-          suffixIcon: _query.isNotEmpty
-              ? IconButton(
-                  icon: Icon(
-                    Icons.close_rounded,
-                    color: Colors.white.withValues(alpha: 0.7),
-                  ),
-                  onPressed: () {
-                    _searchController.clear();
-                    _searchFocusNode.unfocus();
-                  },
-                )
-              : null,
+          suffixIcon:
+              _query.isNotEmpty
+                  ? IconButton(
+                    icon: Icon(
+                      Icons.close_rounded,
+                      color: Colors.white.withValues(alpha: 0.7),
+                    ),
+                    onPressed: () {
+                      _searchController.clear();
+                      _searchFocusNode.unfocus();
+                    },
+                  )
+                  : null,
           filled: true,
           fillColor: AppTheme.surfaceDark,
           border: OutlineInputBorder(
@@ -403,14 +401,17 @@ class _SearchPageState extends State<SearchPage>
         tabs: [
           Tab(text: 'All (${_searchResults.length})'),
           Tab(
-              text:
-                  'Songs (${_groupedResults[SearchItemType.song]?.length ?? 0})'),
+            text:
+                'Songs (${_groupedResults[SearchItemType.song]?.length ?? 0})',
+          ),
           Tab(
-              text:
-                  'Albums (${_groupedResults[SearchItemType.album]?.length ?? 0})'),
+            text:
+                'Albums (${_groupedResults[SearchItemType.album]?.length ?? 0})',
+          ),
           Tab(
-              text:
-                  'Artists (${_groupedResults[SearchItemType.artist]?.length ?? 0})'),
+            text:
+                'Artists (${_groupedResults[SearchItemType.artist]?.length ?? 0})',
+          ),
         ],
       ),
     );
@@ -446,7 +447,6 @@ class _SearchPageState extends State<SearchPage>
     return TabBarView(
       controller: _tabController,
       children: [
-
         SearchResultsView(
           results: _searchResults,
           groupedResults: _groupedResults,
@@ -578,8 +578,9 @@ class _SearchPageState extends State<SearchPage>
                         width: double.infinity,
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius:
-                              BorderRadius.circular(AppTheme.radiusSm),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radiusSm,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -588,8 +589,9 @@ class _SearchPageState extends State<SearchPage>
                         width: 150,
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius:
-                              BorderRadius.circular(AppTheme.radiusSm),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radiusSm,
+                          ),
                         ),
                       ),
                     ],

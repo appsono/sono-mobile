@@ -2,7 +2,8 @@ import 'dart:ui';
 import 'dart:ui' as ui;
 
 //ignore: undefined_hidden_name
-import 'package:flutter/material.dart' hide RepeatMode; //required for build use in gitub workflow
+import 'package:flutter/material.dart'
+    hide RepeatMode; //required for build use in gitub workflow
 import 'package:flutter/services.dart';
 import 'package:marquee/marquee.dart';
 import 'package:on_audio_query/on_audio_query.dart';
@@ -1293,7 +1294,8 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
                             : () {
                               final now = DateTime.now();
                               if (_lastSkipTime != null &&
-                                  now.difference(_lastSkipTime!) < _skipDebounceMs) {
+                                  now.difference(_lastSkipTime!) <
+                                      _skipDebounceMs) {
                                 return; //debounce => ignore rapid presses
                               }
                               _lastSkipTime = now;

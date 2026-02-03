@@ -157,8 +157,7 @@ class SearchService {
   }
 
   /// Sort results based on selected sort type
-  static void _sortResults(
-      List<SearchItem> items, SearchSortType sortType) {
+  static void _sortResults(List<SearchItem> items, SearchSortType sortType) {
     switch (sortType) {
       case SearchSortType.relevance:
         //sort by score, highest first => then by type => then alphabetically
@@ -206,7 +205,8 @@ class SearchService {
 
   /// Group results by type for display
   static Map<SearchItemType, List<SearchItem>> groupResultsByType(
-      List<SearchItem> results) {
+    List<SearchItem> results,
+  ) {
     final Map<SearchItemType, List<SearchItem>> grouped = {
       SearchItemType.song: [],
       SearchItemType.album: [],

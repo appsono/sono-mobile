@@ -564,7 +564,10 @@ class _SASAdaptiveModalState extends State<SASAdaptiveModal> {
           Row(
             children: [
               IconButton(
-                icon: Icon(Icons.arrow_back_rounded, color: AppTheme.textPrimaryDark),
+                icon: Icon(
+                  Icons.arrow_back_rounded,
+                  color: AppTheme.textPrimaryDark,
+                ),
                 onPressed: () {
                   setState(() {
                     _showingJoinUI = false;
@@ -599,7 +602,11 @@ class _SASAdaptiveModalState extends State<SASAdaptiveModal> {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.error_outline_rounded, color: Colors.red, size: 20),
+                  Icon(
+                    Icons.error_outline_rounded,
+                    color: Colors.red,
+                    size: 20,
+                  ),
                   SizedBox(width: AppTheme.spacingSm),
                   Expanded(
                     child: Text(
@@ -619,7 +626,9 @@ class _SASAdaptiveModalState extends State<SASAdaptiveModal> {
               onPressed:
                   () => setState(() => _showingScanner = !_showingScanner),
               icon: Icon(
-                _showingScanner ? Icons.keyboard_rounded : Icons.qr_code_scanner_rounded,
+                _showingScanner
+                    ? Icons.keyboard_rounded
+                    : Icons.qr_code_scanner_rounded,
               ),
               label: Text(_showingScanner ? 'Manual Entry' : 'Scan QR Code'),
               style: ElevatedButton.styleFrom(

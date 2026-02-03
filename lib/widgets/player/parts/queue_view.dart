@@ -245,13 +245,15 @@ class _QueueViewState extends State<QueueView> {
                                         songId != null
                                             ? CachedArtworkImage(
                                               id: songId,
-                                              size: AppTheme.responsiveArtworkSize(
-                                                context,
-                                                AppTheme.artworkMd,
-                                              ),
-                                              borderRadius: BorderRadius.circular(
-                                                AppTheme.radiusMd,
-                                              ),
+                                              size:
+                                                  AppTheme.responsiveArtworkSize(
+                                                    context,
+                                                    AppTheme.artworkMd,
+                                                  ),
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                    AppTheme.radiusMd,
+                                                  ),
                                             )
                                             : Container(
                                               color:

@@ -31,9 +31,10 @@ class _SkeletonLoaderState extends State<SkeletonLoader>
       duration: const Duration(milliseconds: 1500),
     )..repeat();
 
-    _animation = Tween<double>(begin: -1.0, end: 2.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _animation = Tween<double>(
+      begin: -1.0,
+      end: 2.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -60,11 +61,12 @@ class _SkeletonLoaderState extends State<SkeletonLoader>
                 AppTheme.textPrimaryDark.withValues(alpha: 0.15),
                 AppTheme.textPrimaryDark.withValues(alpha: 0.05),
               ],
-              stops: [
-                _animation.value - 0.3,
-                _animation.value,
-                _animation.value + 0.3,
-              ].map((stop) => stop.clamp(0.0, 1.0)).toList(),
+              stops:
+                  [
+                    _animation.value - 0.3,
+                    _animation.value,
+                    _animation.value + 0.3,
+                  ].map((stop) => stop.clamp(0.0, 1.0)).toList(),
             ),
           ),
         );
@@ -97,48 +99,20 @@ class SkeletonNewsCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                SkeletonLoader(
-                  width: 120,
-                  height: 24,
-                  borderRadius: 16,
-                ),
-                SkeletonLoader(
-                  width: 80,
-                  height: 16,
-                  borderRadius: 8,
-                ),
+                SkeletonLoader(width: 120, height: 24, borderRadius: 16),
+                SkeletonLoader(width: 80, height: 16, borderRadius: 8),
               ],
             ),
             SizedBox(height: AppTheme.spacingSm),
-            SkeletonLoader(
-              width: double.infinity,
-              height: 24,
-              borderRadius: 8,
-            ),
+            SkeletonLoader(width: double.infinity, height: 24, borderRadius: 8),
             SizedBox(height: 8),
-            SkeletonLoader(
-              width: 200,
-              height: 24,
-              borderRadius: 8,
-            ),
+            SkeletonLoader(width: 200, height: 24, borderRadius: 8),
             SizedBox(height: AppTheme.spacingSm),
-            SkeletonLoader(
-              width: double.infinity,
-              height: 16,
-              borderRadius: 8,
-            ),
+            SkeletonLoader(width: double.infinity, height: 16, borderRadius: 8),
             SizedBox(height: 8),
-            SkeletonLoader(
-              width: double.infinity,
-              height: 16,
-              borderRadius: 8,
-            ),
+            SkeletonLoader(width: double.infinity, height: 16, borderRadius: 8),
             SizedBox(height: 8),
-            SkeletonLoader(
-              width: 250,
-              height: 16,
-              borderRadius: 8,
-            ),
+            SkeletonLoader(width: 250, height: 16, borderRadius: 8),
           ],
         ),
       ),
@@ -174,26 +148,14 @@ class SkeletonListTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SkeletonLoader(
-                  width: 150,
-                  height: 16,
-                  borderRadius: 8,
-                ),
+                SkeletonLoader(width: 150, height: 16, borderRadius: 8),
                 const SizedBox(height: 8),
-                SkeletonLoader(
-                  width: 200,
-                  height: 14,
-                  borderRadius: 8,
-                ),
+                SkeletonLoader(width: 200, height: 14, borderRadius: 8),
               ],
             ),
           ),
           const SizedBox(width: 8),
-          SkeletonLoader(
-            width: 20,
-            height: 20,
-            borderRadius: 10,
-          ),
+          SkeletonLoader(width: 20, height: 20, borderRadius: 10),
         ],
       ),
     );

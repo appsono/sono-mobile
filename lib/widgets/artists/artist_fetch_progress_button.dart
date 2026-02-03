@@ -11,7 +11,8 @@ class ArtistFetchProgressButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<ArtistFetchProgressService>(
       builder: (context, progressService, child) {
-        if (!progressService.isFetching && progressService.currentProgress == 0) {
+        if (!progressService.isFetching &&
+            progressService.currentProgress == 0) {
           return const SizedBox.shrink();
         }
 
@@ -35,10 +36,7 @@ class ArtistFetchProgressButton extends StatelessWidget {
                     offset: const Offset(0, 4),
                   ),
                 ],
-                border: Border.all(
-                  color: AppTheme.borderDark,
-                  width: 1,
-                ),
+                border: Border.all(color: AppTheme.borderDark, width: 1),
               ),
               child: Stack(
                 alignment: Alignment.center,
@@ -61,9 +59,10 @@ class ArtistFetchProgressButton extends StatelessWidget {
                     progressService.isFetching
                         ? Icons.download_rounded
                         : Icons.check_rounded,
-                    color: progressService.isFetching
-                        ? AppTheme.info
-                        : AppTheme.success,
+                    color:
+                        progressService.isFetching
+                            ? AppTheme.info
+                            : AppTheme.success,
                     size: 24,
                   ),
                 ],

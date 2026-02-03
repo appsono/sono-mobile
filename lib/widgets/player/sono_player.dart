@@ -717,7 +717,9 @@ class SonoPlayer extends BaseAudioHandler {
     if (Platform.isAndroid) {
       final effects = <AndroidAudioEffect>[];
       if (_equalizer != null) effects.add(_equalizer!);
-      return effects.isNotEmpty ? AudioPipeline(androidAudioEffects: effects) : null;
+      return effects.isNotEmpty
+          ? AudioPipeline(androidAudioEffects: effects)
+          : null;
     }
     return null;
   }

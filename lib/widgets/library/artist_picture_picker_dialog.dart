@@ -32,10 +32,7 @@ class ArtistPictureResult {
 class ArtistPicturePickerDialog extends StatefulWidget {
   final String artistName;
 
-  const ArtistPicturePickerDialog({
-    super.key,
-    required this.artistName,
-  });
+  const ArtistPicturePickerDialog({super.key, required this.artistName});
 
   @override
   State<ArtistPicturePickerDialog> createState() =>
@@ -118,9 +115,7 @@ class _ArtistPicturePickerDialogState extends State<ArtistPicturePickerDialog> {
         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
       ),
       child: Container(
-        constraints: const BoxConstraints(
-          maxWidth: 400,
-        ),
+        constraints: const BoxConstraints(maxWidth: 400),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -152,7 +147,10 @@ class _ArtistPicturePickerDialogState extends State<ArtistPicturePickerDialog> {
           ),
           const Spacer(),
           IconButton(
-            icon: const Icon(Icons.close_rounded, color: AppTheme.textSecondaryDark),
+            icon: const Icon(
+              Icons.close_rounded,
+              color: AppTheme.textSecondaryDark,
+            ),
             onPressed: () => Navigator.pop(context),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
@@ -166,9 +164,7 @@ class _ArtistPicturePickerDialogState extends State<ArtistPicturePickerDialog> {
     if (_isLoading) {
       return const Padding(
         padding: EdgeInsets.all(AppTheme.spacing),
-        child: Center(
-          child: CircularProgressIndicator(),
-        ),
+        child: Center(child: CircularProgressIndicator()),
       );
     }
 
@@ -178,13 +174,16 @@ class _ArtistPicturePickerDialogState extends State<ArtistPicturePickerDialog> {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (_selectedImagePath != null) _buildPreview(),
-          if (_selectedImagePath != null) const SizedBox(height: AppTheme.spacing),
+          if (_selectedImagePath != null)
+            const SizedBox(height: AppTheme.spacing),
 
           ElevatedButton.icon(
             onPressed: _pickImage,
             icon: const Icon(Icons.photo_library_rounded),
             label: Text(
-              _selectedImagePath == null ? 'Choose from Gallery' : 'Choose Different Image',
+              _selectedImagePath == null
+                  ? 'Choose from Gallery'
+                  : 'Choose Different Image',
             ),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.brandPink,
@@ -244,10 +243,7 @@ class _ArtistPicturePickerDialogState extends State<ArtistPicturePickerDialog> {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        child: Image.file(
-          File(_selectedImagePath!),
-          fit: BoxFit.cover,
-        ),
+        child: Image.file(File(_selectedImagePath!), fit: BoxFit.cover),
       ),
     );
   }

@@ -124,21 +124,16 @@ class _LibraryPageState extends State<LibraryPage>
         color: Colors.green.shade400,
         onTap: () {
           final favoritesService = context.read<FavoritesService>();
-          _navigateTo(
-            context,
-            "Favorite Albums",
-            ListItemType.album,
-            () async {
-              final favIds = await favoritesService.getFavoriteAlbumIds();
-              if (favIds.isEmpty) return [];
-              final allAlbums = await AudioFilterUtils.getFilteredAlbums(
-                _audioQuery,
-              );
-              return allAlbums
-                  .where((album) => favIds.contains(album.id))
-                  .toList();
-            }(),
-          );
+          _navigateTo(context, "Favorite Albums", ListItemType.album, () async {
+            final favIds = await favoritesService.getFavoriteAlbumIds();
+            if (favIds.isEmpty) return [];
+            final allAlbums = await AudioFilterUtils.getFilteredAlbums(
+              _audioQuery,
+            );
+            return allAlbums
+                .where((album) => favIds.contains(album.id))
+                .toList();
+          }());
         },
       ),
       _LibraryCategory(
@@ -225,9 +220,7 @@ class _LibraryPageState extends State<LibraryPage>
         color: Colors.brown.shade300,
         onTap: () {
           _navigateTo(context, "Folders", ListItemType.folder, () async {
-            final songs = await AudioFilterUtils.getFilteredSongs(
-              _audioQuery,
-            );
+            final songs = await AudioFilterUtils.getFilteredSongs(_audioQuery);
             final Set<String> folderPaths = {};
             for (var song in songs) {
               if (song.data.isNotEmpty) {

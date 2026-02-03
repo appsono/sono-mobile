@@ -161,7 +161,10 @@ class _CoverPickerDialogState extends State<CoverPickerDialog>
           ),
           const Spacer(),
           IconButton(
-            icon: const Icon(Icons.close_rounded, color: AppTheme.textSecondaryDark),
+            icon: const Icon(
+              Icons.close_rounded,
+              color: AppTheme.textSecondaryDark,
+            ),
             onPressed: () => Navigator.pop(context),
           ),
         ],

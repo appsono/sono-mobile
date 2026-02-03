@@ -13,8 +13,7 @@ abstract class BaseSettingsService with ChangeNotifier {
   final Map<String, dynamic> _cache = {};
 
   ///gets the database instance
-  Future<Database> get _db async =>
-      await SonoDatabaseHelper.instance.database;
+  Future<Database> get _db async => await SonoDatabaseHelper.instance.database;
 
   ///gets a setting value by key
   ///returns the value if found, otherwise returns defaultValue
@@ -58,16 +57,12 @@ abstract class BaseSettingsService with ChangeNotifier {
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final jsonValue = jsonEncode(value);
 
-      await db.insert(
-        'app_settings',
-        {
-          'category': category,
-          'key': key,
-          'value': jsonValue,
-          'updated_at': timestamp,
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+      await db.insert('app_settings', {
+        'category': category,
+        'key': key,
+        'value': jsonValue,
+        'updated_at': timestamp,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
 
       _cache[key] = value;
       notifyListeners();

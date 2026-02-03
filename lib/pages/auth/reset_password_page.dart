@@ -5,10 +5,7 @@ import 'package:sono/styles/app_theme.dart';
 class ResetPasswordPage extends StatefulWidget {
   final String token;
 
-  const ResetPasswordPage({
-    super.key,
-    required this.token,
-  });
+  const ResetPasswordPage({super.key, required this.token});
 
   @override
   State<ResetPasswordPage> createState() => _ResetPasswordPageState();
@@ -115,10 +112,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(
-            Icons.close_rounded,
-            color: AppTheme.textPrimaryDark,
-          ),
+          icon: Icon(Icons.close_rounded, color: AppTheme.textPrimaryDark),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -152,9 +146,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        CircularProgressIndicator(
-          color: Theme.of(context).primaryColor,
-        ),
+        CircularProgressIndicator(color: Theme.of(context).primaryColor),
         SizedBox(height: AppTheme.spacingXl),
         Text(
           'Verifying reset link...',
@@ -173,11 +165,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Icon(
-          Icons.error_outline_rounded,
-          size: 80,
-          color: AppTheme.error,
-        ),
+        Icon(Icons.error_outline_rounded, size: 80, color: AppTheme.error),
         SizedBox(height: AppTheme.spacingXl),
         Text(
           'Invalid or Expired Link',
@@ -191,7 +179,8 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
         ),
         SizedBox(height: AppTheme.spacingSm),
         Text(
-          _errorMessage ?? 'This password reset link is invalid or has expired. Please request a new one.',
+          _errorMessage ??
+              'This password reset link is invalid or has expired. Please request a new one.',
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: AppTheme.font,
@@ -203,9 +192,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
         ElevatedButton(
           style: ElevatedButton.styleFrom(
             backgroundColor: Theme.of(context).primaryColor,
-            padding: EdgeInsets.symmetric(
-              vertical: AppTheme.spacing,
-            ),
+            padding: EdgeInsets.symmetric(vertical: AppTheme.spacing),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(30.0),
             ),
@@ -352,32 +339,30 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
             ),
           _isLoading
               ? Center(
-                  child: CircularProgressIndicator(
-                    color: Theme.of(context).primaryColor,
-                  ),
-                )
+                child: CircularProgressIndicator(
+                  color: Theme.of(context).primaryColor,
+                ),
+              )
               : ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).primaryColor,
-                    padding: EdgeInsets.symmetric(
-                      vertical: AppTheme.spacing,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30.0),
-                    ),
-                    elevation: 3,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).primaryColor,
+                  padding: EdgeInsets.symmetric(vertical: AppTheme.spacing),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30.0),
                   ),
-                  onPressed: _resetPassword,
-                  child: Text(
-                    'RESET PASSWORD',
-                    style: TextStyle(
-                      color: AppTheme.textPrimaryDark,
-                      fontSize: AppTheme.font,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.5,
-                    ),
+                  elevation: 3,
+                ),
+                onPressed: _resetPassword,
+                child: Text(
+                  'RESET PASSWORD',
+                  style: TextStyle(
+                    color: AppTheme.textPrimaryDark,
+                    fontSize: AppTheme.font,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
                   ),
                 ),
+              ),
         ],
       ),
     );
@@ -388,11 +373,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Icon(
-          Icons.check_circle_rounded,
-          size: 80,
-          color: Colors.green,
-        ),
+        Icon(Icons.check_circle_rounded, size: 80, color: Colors.green),
         SizedBox(height: AppTheme.spacingXl),
         Text(
           'Password Reset!',
@@ -418,9 +399,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
         ElevatedButton(
           style: ElevatedButton.styleFrom(
             backgroundColor: Theme.of(context).primaryColor,
-            padding: EdgeInsets.symmetric(
-              vertical: AppTheme.spacing,
-            ),
+            padding: EdgeInsets.symmetric(vertical: AppTheme.spacing),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(30.0),
             ),
@@ -462,15 +441,16 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
           size: AppTheme.iconMd,
         ),
       ),
-      suffixIcon: suffixIcon != null
-          ? Padding(
-              padding: EdgeInsets.only(
-                left: AppTheme.spacingMd,
-                right: AppTheme.spacing,
-              ),
-              child: suffixIcon,
-            )
-          : null,
+      suffixIcon:
+          suffixIcon != null
+              ? Padding(
+                padding: EdgeInsets.only(
+                  left: AppTheme.spacingMd,
+                  right: AppTheme.spacing,
+                ),
+                child: suffixIcon,
+              )
+              : null,
       filled: true,
       fillColor: AppTheme.textPrimaryDark.opacity10,
       contentPadding: EdgeInsets.symmetric(

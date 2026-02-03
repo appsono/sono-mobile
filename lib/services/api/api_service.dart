@@ -1351,10 +1351,7 @@ class ApiService {
     required String newPassword,
   }) async {
     final baseUrl = await _getBaseUrl();
-    final body = {
-      'token': token,
-      'new_password': newPassword,
-    };
+    final body = {'token': token, 'new_password': newPassword};
 
     try {
       final response = await http.post(
@@ -1464,13 +1461,11 @@ class ApiService {
   }) async {
     final baseUrl = await _getBaseUrl();
 
-    final queryParams = {
-      'skip': skip.toString(),
-      'limit': limit.toString(),
-    };
+    final queryParams = {'skip': skip.toString(), 'limit': limit.toString()};
 
-    final uri = Uri.parse('$baseUrl/announcements')
-        .replace(queryParameters: queryParams);
+    final uri = Uri.parse(
+      '$baseUrl/announcements',
+    ).replace(queryParameters: queryParams);
 
     try {
       final response = await http.get(uri);

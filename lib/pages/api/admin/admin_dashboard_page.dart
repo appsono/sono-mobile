@@ -37,62 +37,63 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
       const adminUrl = 'https://web.sono.wtf/admin';
 
-      _webViewController = WebViewController()
-        ..setJavaScriptMode(JavaScriptMode.unrestricted)
-        ..setNavigationDelegate(
-          NavigationDelegate(
-            onProgress: (int progress) {
-              setState(() {
-                _loadingProgress = progress / 100;
-              });
-            },
-            onPageStarted: (String url) {
-              setState(() {
-                _isLoading = true;
-              });
-            },
-            onPageFinished: (String url) async {
-              //inject the authentication token into localStorage on first load
-              if (!_hasInjectedToken && _webViewController != null) {
-                _hasInjectedToken = true;
-                try {
-                  await _webViewController!.runJavaScript('''
+      _webViewController =
+          WebViewController()
+            ..setJavaScriptMode(JavaScriptMode.unrestricted)
+            ..setNavigationDelegate(
+              NavigationDelegate(
+                onProgress: (int progress) {
+                  setState(() {
+                    _loadingProgress = progress / 100;
+                  });
+                },
+                onPageStarted: (String url) {
+                  setState(() {
+                    _isLoading = true;
+                  });
+                },
+                onPageFinished: (String url) async {
+                  //inject the authentication token into localStorage on first load
+                  if (!_hasInjectedToken && _webViewController != null) {
+                    _hasInjectedToken = true;
+                    try {
+                      await _webViewController!.runJavaScript('''
                     localStorage.setItem('access_token', '$token');
                     localStorage.setItem('token', '$token');
                     window.location.reload();
                   ''');
-                } catch (e) {
-                  debugPrint('Failed to inject token: $e');
-                }
-              }
-              setState(() {
-                _isLoading = false;
-              });
-            },
-            onHttpError: (HttpResponseError error) {
-              setState(() {
-                _errorMessage = 'HTTP Error: ${error.response?.statusCode}';
-                _isLoading = false;
-              });
-            },
-            onWebResourceError: (WebResourceError error) {
-              setState(() {
-                _errorMessage = 'Error: ${error.description}';
-                _isLoading = false;
-              });
-            },
-            onNavigationRequest: (NavigationRequest request) {
-              return NavigationDecision.navigate;
-            },
-          ),
-        )
-        ..setBackgroundColor(AppTheme.backgroundDark)
-        ..addJavaScriptChannel(
-          'Sono',
-          onMessageReceived: (JavaScriptMessage message) {
-            debugPrint('Message from WebView: ${message.message}');
-          },
-        );
+                    } catch (e) {
+                      debugPrint('Failed to inject token: $e');
+                    }
+                  }
+                  setState(() {
+                    _isLoading = false;
+                  });
+                },
+                onHttpError: (HttpResponseError error) {
+                  setState(() {
+                    _errorMessage = 'HTTP Error: ${error.response?.statusCode}';
+                    _isLoading = false;
+                  });
+                },
+                onWebResourceError: (WebResourceError error) {
+                  setState(() {
+                    _errorMessage = 'Error: ${error.description}';
+                    _isLoading = false;
+                  });
+                },
+                onNavigationRequest: (NavigationRequest request) {
+                  return NavigationDecision.navigate;
+                },
+              ),
+            )
+            ..setBackgroundColor(AppTheme.backgroundDark)
+            ..addJavaScriptChannel(
+              'Sono',
+              onMessageReceived: (JavaScriptMessage message) {
+                debugPrint('Message from WebView: ${message.message}');
+              },
+            );
 
       await _webViewController?.loadRequest(Uri.parse(adminUrl));
 
@@ -174,7 +175,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               onSelected: (value) async {
                 switch (value) {
                   case 'forward':
-                    if (_webViewController != null && await _webViewController!.canGoForward()) {
+                    if (_webViewController != null &&
+                        await _webViewController!.canGoForward()) {
                       await _webViewController!.goForward();
                     }
                     break;
@@ -183,36 +185,41 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     break;
                 }
               },
-              itemBuilder: (context) => [
-                PopupMenuItem(
-                  value: 'forward',
-                  child: Row(
-                    children: [
-                      Icon(Icons.arrow_forward_rounded,
-                          color: AppTheme.textPrimaryDark),
-                      SizedBox(width: AppTheme.spacingMd),
-                      Text(
-                        'Forward',
-                        style: TextStyle(color: AppTheme.textPrimaryDark),
+              itemBuilder:
+                  (context) => [
+                    PopupMenuItem(
+                      value: 'forward',
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.arrow_forward_rounded,
+                            color: AppTheme.textPrimaryDark,
+                          ),
+                          SizedBox(width: AppTheme.spacingMd),
+                          Text(
+                            'Forward',
+                            style: TextStyle(color: AppTheme.textPrimaryDark),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'reload',
-                  child: Row(
-                    children: [
-                      Icon(Icons.refresh_rounded,
-                          color: AppTheme.textPrimaryDark),
-                      SizedBox(width: AppTheme.spacingMd),
-                      Text(
-                        'Reload',
-                        style: TextStyle(color: AppTheme.textPrimaryDark),
+                    ),
+                    PopupMenuItem(
+                      value: 'reload',
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.refresh_rounded,
+                            color: AppTheme.textPrimaryDark,
+                          ),
+                          SizedBox(width: AppTheme.spacingMd),
+                          Text(
+                            'Reload',
+                            style: TextStyle(color: AppTheme.textPrimaryDark),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
-              ],
+                    ),
+                  ],
             ),
           ],
         ),
@@ -286,9 +293,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
     if (_webViewController == null) {
       return Center(
-        child: CircularProgressIndicator(
-          color: Theme.of(context).primaryColor,
-        ),
+        child: CircularProgressIndicator(color: Theme.of(context).primaryColor),
       );
     }
 

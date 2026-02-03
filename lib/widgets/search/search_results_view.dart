@@ -67,7 +67,6 @@ class SearchResultsView extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 150),
       physics: const BouncingScrollPhysics(),
       children: [
-
         if (groupedResults[SearchItemType.song]?.isNotEmpty ?? false)
           _buildSection(
             context,
@@ -111,9 +110,8 @@ class SearchResultsView extends StatelessWidget {
           type: type,
           count: displayItems.length,
           totalCount: items.length,
-          onViewAll: hasMore && onViewAll != null
-              ? () => onViewAll!(type)
-              : null,
+          onViewAll:
+              hasMore && onViewAll != null ? () => onViewAll!(type) : null,
         ),
 
         ...displayItems.map((item) => _buildItem(context, item)),
@@ -170,7 +168,8 @@ class SearchResultsView extends StatelessWidget {
       song: song,
       onSongTap: (tappedSong) {
         final sonoPlayer = SonoPlayer();
-        final songs = groupedResults[SearchItemType.song]
+        final songs =
+            groupedResults[SearchItemType.song]
                 ?.map((item) => item.data as SongModel)
                 .toList() ??
             [];
@@ -190,10 +189,9 @@ class SearchResultsView extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => AlbumPage(
-              album: album,
-              audioQuery: OnAudioQuery(),
-            ),
+            builder:
+                (context) =>
+                    AlbumPage(album: album, audioQuery: OnAudioQuery()),
           ),
         );
       },
@@ -264,10 +262,9 @@ class SearchResultsView extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => ArtistPage(
-              artist: artist,
-              audioQuery: OnAudioQuery(),
-            ),
+            builder:
+                (context) =>
+                    ArtistPage(artist: artist, audioQuery: OnAudioQuery()),
           ),
         );
       },

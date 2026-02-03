@@ -100,15 +100,11 @@ class HomePageState extends State<HomePage>
         orderType: OrderType.DESC_OR_GREATER,
       ).then((s) => s.take(15).toList());
 
-      _albumsPreviewFuture = AudioFilterUtils.getFilteredAlbums(
-            _audioQuery,
-          )
+      _albumsPreviewFuture = AudioFilterUtils.getFilteredAlbums(_audioQuery)
           .then((a) => a..sort((x, y) => (x.album).compareTo(y.album)))
           .then((a) => a.take(15).toList());
 
-      _artistsPreviewFuture = AudioFilterUtils.getFilteredArtists(
-            _audioQuery,
-          )
+      _artistsPreviewFuture = AudioFilterUtils.getFilteredArtists(_audioQuery)
           .then((a) => a..sort((x, y) => (x.artist).compareTo(y.artist)))
           .then((a) => a.take(15).toList());
 
@@ -122,7 +118,7 @@ class HomePageState extends State<HomePage>
     ).then((songs) {
       if (mounted) {
         setState(() {
-          _allSongs = songs;    
+          _allSongs = songs;
           _paginatedSongs = songs.toList();
           _isLoadingAllSongs = false;
         });
@@ -141,9 +137,7 @@ class HomePageState extends State<HomePage>
     final songs =
         _allSongs.isNotEmpty
             ? List<SongModel>.from(_allSongs)
-            : await AudioFilterUtils.getFilteredSongs(
-              _audioQuery,
-            );
+            : await AudioFilterUtils.getFilteredSongs(_audioQuery);
 
     if (songs.isNotEmpty) {
       songs.shuffle();
@@ -405,7 +399,9 @@ class HomePageState extends State<HomePage>
                 onNewsTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const AnnouncementsChangelogPage()),
+                    MaterialPageRoute(
+                      builder: (_) => const AnnouncementsChangelogPage(),
+                    ),
                   );
                 },
                 onSearchTap: widget.onSearchTap,

@@ -27,7 +27,8 @@ class _ProfilePageState extends State<ProfilePage> {
   bool _isLoading = false;
   Map<String, dynamic>? _localUserData;
 
-  Map<String, dynamic>? get _currentUserData => _localUserData ?? widget.currentUser;
+  Map<String, dynamic>? get _currentUserData =>
+      _localUserData ?? widget.currentUser;
 
   String get _username => _currentUserData?['username'] ?? '';
   String get _email => _currentUserData?['email'] ?? '';
@@ -103,181 +104,193 @@ class _ProfilePageState extends State<ProfilePage> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: BoxDecoration(
-          color: AppTheme.surfaceDark,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(AppTheme.radiusXl),
-            topRight: Radius.circular(AppTheme.radiusXl),
-          ),
-        ),
-        padding: EdgeInsets.only(
-          top: AppTheme.spacing,
-          left: AppTheme.spacingXl,
-          right: AppTheme.spacingXl,
-          bottom: MediaQuery.of(context).viewInsets.bottom + AppTheme.spacingXl,
-        ),
-        child: Form(
-          key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  margin: EdgeInsets.only(bottom: AppTheme.spacingLg),
-                  decoration: BoxDecoration(
-                    color: AppTheme.textTertiaryDark,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
+      builder:
+          (context) => Container(
+            decoration: BoxDecoration(
+              color: AppTheme.surfaceDark,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(AppTheme.radiusXl),
+                topRight: Radius.circular(AppTheme.radiusXl),
               ),
-              Text(
-                'Edit Profile',
-                style: TextStyle(
-                  color: AppTheme.textPrimaryDark,
-                  fontFamily: AppTheme.fontFamily,
-                  fontSize: AppTheme.fontTitle,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: AppTheme.spacingXl),
-              TextFormField(
-                controller: displayNameController,
-                style: TextStyle(
-                  color: AppTheme.textPrimaryDark,
-                  fontFamily: AppTheme.fontFamily,
-                ),
-                decoration: InputDecoration(
-                  labelText: 'Display Name',
-                  labelStyle: TextStyle(
-                    color: AppTheme.textSecondaryDark,
-                    fontFamily: AppTheme.fontFamily,
-                  ),
-                  prefixIcon: Icon(
-                    Icons.person_outline_rounded,
-                    color: Theme.of(context).primaryColor,
-                  ),
-                  filled: true,
-                  fillColor: AppTheme.textPrimaryDark.opacity10,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter a display name';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: AppTheme.spacing),
-              TextFormField(
-                controller: bioController,
-                style: TextStyle(
-                  color: AppTheme.textPrimaryDark,
-                  fontFamily: AppTheme.fontFamily,
-                ),
-                maxLines: 4,
-                decoration: InputDecoration(
-                  labelText: 'Bio',
-                  labelStyle: TextStyle(
-                    color: AppTheme.textSecondaryDark,
-                    fontFamily: AppTheme.fontFamily,
-                  ),
-                  prefixIcon: Icon(
-                    Icons.info_outline_rounded,
-                    color: Theme.of(context).primaryColor,
-                  ),
-                  filled: true,
-                  fillColor: AppTheme.textPrimaryDark.opacity10,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-              SizedBox(height: AppTheme.spacingXl),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () async {
-                    if (formKey.currentState?.validate() ?? false) {
-                      Navigator.pop(context);
-                      setState(() => _isLoading = true);
-                      try {
-                        await _apiService.updateCurrentUser(
-                          displayName: displayNameController.text.trim(),
-                          bio: bioController.text.trim(),
-                        );
-
-                        //fetch updated user data
-                        final updatedUser = await _apiService.getCurrentUser();
-
-                        //update parent scaffold
-                        await widget.onProfileUpdate();
-
-                        if (mounted) {
-                          setState(() {
-                            _localUserData = updatedUser;
-                            _isLoading = false;
-                          });
-
-                          scaffoldMessenger.showSnackBar(
-                            SnackBar(
-                              content: Row(
-                                children: [
-                                  Icon(Icons.check_circle_rounded, color: Colors.white),
-                                  SizedBox(width: AppTheme.spacingSm),
-                                  const Text('Profile updated!'),
-                                ],
-                              ),
-                              backgroundColor: Colors.green[700],
-                              behavior: SnackBarBehavior.floating,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                              ),
-                            ),
-                          );
-                        }
-                      } catch (e, s) {
-                        if (mounted && context.mounted) {
-                          ErrorHandler.showErrorSnackbar(
-                            context: context,
-                            message: "Failed to update profile",
-                            error: e,
-                            stackTrace: s,
-                          );
-                        }
-                      } finally {
-                        if (mounted) setState(() => _isLoading = false);
-                      }
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).primaryColor,
-                    padding: EdgeInsets.symmetric(vertical: AppTheme.spacing),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+            ),
+            padding: EdgeInsets.only(
+              top: AppTheme.spacing,
+              left: AppTheme.spacingXl,
+              right: AppTheme.spacingXl,
+              bottom:
+                  MediaQuery.of(context).viewInsets.bottom + AppTheme.spacingXl,
+            ),
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      margin: EdgeInsets.only(bottom: AppTheme.spacingLg),
+                      decoration: BoxDecoration(
+                        color: AppTheme.textTertiaryDark,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
                     ),
                   ),
-                  child: Text(
-                    'SAVE',
+                  Text(
+                    'Edit Profile',
                     style: TextStyle(
                       color: AppTheme.textPrimaryDark,
+                      fontFamily: AppTheme.fontFamily,
+                      fontSize: AppTheme.fontTitle,
                       fontWeight: FontWeight.bold,
-                      fontSize: AppTheme.fontBody,
                     ),
                   ),
-                ),
+                  SizedBox(height: AppTheme.spacingXl),
+                  TextFormField(
+                    controller: displayNameController,
+                    style: TextStyle(
+                      color: AppTheme.textPrimaryDark,
+                      fontFamily: AppTheme.fontFamily,
+                    ),
+                    decoration: InputDecoration(
+                      labelText: 'Display Name',
+                      labelStyle: TextStyle(
+                        color: AppTheme.textSecondaryDark,
+                        fontFamily: AppTheme.fontFamily,
+                      ),
+                      prefixIcon: Icon(
+                        Icons.person_outline_rounded,
+                        color: Theme.of(context).primaryColor,
+                      ),
+                      filled: true,
+                      fillColor: AppTheme.textPrimaryDark.opacity10,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Please enter a display name';
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: AppTheme.spacing),
+                  TextFormField(
+                    controller: bioController,
+                    style: TextStyle(
+                      color: AppTheme.textPrimaryDark,
+                      fontFamily: AppTheme.fontFamily,
+                    ),
+                    maxLines: 4,
+                    decoration: InputDecoration(
+                      labelText: 'Bio',
+                      labelStyle: TextStyle(
+                        color: AppTheme.textSecondaryDark,
+                        fontFamily: AppTheme.fontFamily,
+                      ),
+                      prefixIcon: Icon(
+                        Icons.info_outline_rounded,
+                        color: Theme.of(context).primaryColor,
+                      ),
+                      filled: true,
+                      fillColor: AppTheme.textPrimaryDark.opacity10,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: AppTheme.spacingXl),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        if (formKey.currentState?.validate() ?? false) {
+                          Navigator.pop(context);
+                          setState(() => _isLoading = true);
+                          try {
+                            await _apiService.updateCurrentUser(
+                              displayName: displayNameController.text.trim(),
+                              bio: bioController.text.trim(),
+                            );
+
+                            //fetch updated user data
+                            final updatedUser =
+                                await _apiService.getCurrentUser();
+
+                            //update parent scaffold
+                            await widget.onProfileUpdate();
+
+                            if (mounted) {
+                              setState(() {
+                                _localUserData = updatedUser;
+                                _isLoading = false;
+                              });
+
+                              scaffoldMessenger.showSnackBar(
+                                SnackBar(
+                                  content: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.check_circle_rounded,
+                                        color: Colors.white,
+                                      ),
+                                      SizedBox(width: AppTheme.spacingSm),
+                                      const Text('Profile updated!'),
+                                    ],
+                                  ),
+                                  backgroundColor: Colors.green[700],
+                                  behavior: SnackBarBehavior.floating,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(
+                                      AppTheme.radiusMd,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }
+                          } catch (e, s) {
+                            if (mounted && context.mounted) {
+                              ErrorHandler.showErrorSnackbar(
+                                context: context,
+                                message: "Failed to update profile",
+                                error: e,
+                                stackTrace: s,
+                              );
+                            }
+                          } finally {
+                            if (mounted) setState(() => _isLoading = false);
+                          }
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).primaryColor,
+                        padding: EdgeInsets.symmetric(
+                          vertical: AppTheme.spacing,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radiusMd,
+                          ),
+                        ),
+                      ),
+                      child: Text(
+                        'SAVE',
+                        style: TextStyle(
+                          color: AppTheme.textPrimaryDark,
+                          fontWeight: FontWeight.bold,
+                          fontSize: AppTheme.fontBody,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
     );
   }
 
@@ -286,7 +299,11 @@ class _ProfilePageState extends State<ProfilePage> {
     if (widget.currentUser == null) {
       return Scaffold(
         backgroundColor: AppTheme.backgroundDark,
-        body: Center(child: CircularProgressIndicator(color: Theme.of(context).primaryColor)),
+        body: Center(
+          child: CircularProgressIndicator(
+            color: Theme.of(context).primaryColor,
+          ),
+        ),
       );
     }
 
@@ -335,22 +352,24 @@ class _ProfilePageState extends State<ProfilePage> {
                       CircleAvatar(
                         radius: 60,
                         backgroundColor: Theme.of(context).primaryColor,
-                        backgroundImage: _profilePictureUrl != null
-                            ? NetworkImage(_profilePictureUrl!)
-                            : null,
-                        child: _profilePictureUrl == null
-                            ? Text(
-                                _displayName.isNotEmpty
-                                    ? _displayName[0].toUpperCase()
-                                    : _username[0].toUpperCase(),
-                                style: TextStyle(
-                                  fontSize: 40,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppTheme.textPrimaryDark,
-                                  fontFamily: AppTheme.fontFamily,
-                                ),
-                              )
-                            : null,
+                        backgroundImage:
+                            _profilePictureUrl != null
+                                ? NetworkImage(_profilePictureUrl!)
+                                : null,
+                        child:
+                            _profilePictureUrl == null
+                                ? Text(
+                                  _displayName.isNotEmpty
+                                      ? _displayName[0].toUpperCase()
+                                      : _username[0].toUpperCase(),
+                                  style: TextStyle(
+                                    fontSize: 40,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppTheme.textPrimaryDark,
+                                    fontFamily: AppTheme.fontFamily,
+                                  ),
+                                )
+                                : null,
                       ),
                       Positioned(
                         bottom: 0,
@@ -472,9 +491,13 @@ class _ProfilePageState extends State<ProfilePage> {
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red.shade600,
-                        padding: EdgeInsets.symmetric(vertical: AppTheme.spacing),
+                        padding: EdgeInsets.symmetric(
+                          vertical: AppTheme.spacing,
+                        ),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radiusMd,
+                          ),
                         ),
                       ),
                       child: Row(
@@ -522,11 +545,7 @@ class _ProfilePageState extends State<ProfilePage> {
               color: Theme.of(context).primaryColor.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(AppTheme.radiusSm),
             ),
-            child: Icon(
-              icon,
-              color: Theme.of(context).primaryColor,
-              size: 20,
-            ),
+            child: Icon(icon, color: Theme.of(context).primaryColor, size: 20),
           ),
           SizedBox(width: AppTheme.spacing),
           Expanded(

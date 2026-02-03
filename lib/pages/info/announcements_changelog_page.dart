@@ -237,7 +237,8 @@ class _AnnouncementsChangelogPageState
       return ListView.separated(
         padding: EdgeInsets.all(AppTheme.spacing),
         itemCount: 3,
-        separatorBuilder: (context, index) => SizedBox(height: AppTheme.spacing),
+        separatorBuilder:
+            (context, index) => SizedBox(height: AppTheme.spacing),
         itemBuilder: (context, index) => const SkeletonNewsCard(),
       );
     }

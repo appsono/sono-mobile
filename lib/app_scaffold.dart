@@ -192,7 +192,9 @@ class _AppScaffoldState extends State<AppScaffold>
           _hasPermission = status.isGranted;
           _isLoadingPermission = false;
         });
-        _initializeScreens(preserveCurrentScreen: _screens.any((s) => s is! SizedBox));
+        _initializeScreens(
+          preserveCurrentScreen: _screens.any((s) => s is! SizedBox),
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -200,7 +202,9 @@ class _AppScaffoldState extends State<AppScaffold>
           _hasPermission = true;
           _isLoadingPermission = false;
         });
-        _initializeScreens(preserveCurrentScreen: _screens.any((s) => s is! SizedBox));
+        _initializeScreens(
+          preserveCurrentScreen: _screens.any((s) => s is! SizedBox),
+        );
       }
     }
   }
@@ -403,7 +407,8 @@ class _AppScaffoldState extends State<AppScaffold>
         final currentBio = _currentUser?['bio'];
 
         //check if ANY user data has changed
-        final hasChanges = newUsername != currentUsername ||
+        final hasChanges =
+            newUsername != currentUsername ||
             newDisplayName != currentDisplayName ||
             newBio != currentBio ||
             newProfilePicture != _profilePictureUrl ||

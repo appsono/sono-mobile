@@ -147,9 +147,8 @@ class _FilteredSearchResultsPageState extends State<FilteredSearchResultsPage> {
       song: song,
       onSongTap: (tappedSong) {
         final sonoPlayer = SonoPlayer();
-        final songs = _sortedResults
-            .map((item) => item.data as SongModel)
-            .toList();
+        final songs =
+            _sortedResults.map((item) => item.data as SongModel).toList();
         final index = songs.indexWhere((s) => s.id == tappedSong.id);
         sonoPlayer.playNewPlaylist(
           songs,
@@ -166,10 +165,9 @@ class _FilteredSearchResultsPageState extends State<FilteredSearchResultsPage> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => AlbumPage(
-              album: album,
-              audioQuery: OnAudioQuery(),
-            ),
+            builder:
+                (context) =>
+                    AlbumPage(album: album, audioQuery: OnAudioQuery()),
           ),
         );
       },
@@ -238,10 +236,9 @@ class _FilteredSearchResultsPageState extends State<FilteredSearchResultsPage> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => ArtistPage(
-              artist: artist,
-              audioQuery: OnAudioQuery(),
-            ),
+            builder:
+                (context) =>
+                    ArtistPage(artist: artist, audioQuery: OnAudioQuery()),
           ),
         );
       },

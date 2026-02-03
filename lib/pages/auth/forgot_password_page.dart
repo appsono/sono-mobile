@@ -60,10 +60,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back_rounded,
-            color: AppTheme.textPrimaryDark,
-          ),
+          icon: Icon(Icons.arrow_back_rounded, color: AppTheme.textPrimaryDark),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -151,32 +148,30 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
             ),
           _isLoading
               ? Center(
-                  child: CircularProgressIndicator(
-                    color: Theme.of(context).primaryColor,
-                  ),
-                )
+                child: CircularProgressIndicator(
+                  color: Theme.of(context).primaryColor,
+                ),
+              )
               : ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).primaryColor,
-                    padding: EdgeInsets.symmetric(
-                      vertical: AppTheme.spacing,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30.0),
-                    ),
-                    elevation: 3,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).primaryColor,
+                  padding: EdgeInsets.symmetric(vertical: AppTheme.spacing),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30.0),
                   ),
-                  onPressed: _requestPasswordReset,
-                  child: Text(
-                    'SEND RESET LINK',
-                    style: TextStyle(
-                      color: AppTheme.textPrimaryDark,
-                      fontSize: AppTheme.font,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.5,
-                    ),
+                  elevation: 3,
+                ),
+                onPressed: _requestPasswordReset,
+                child: Text(
+                  'SEND RESET LINK',
+                  style: TextStyle(
+                    color: AppTheme.textPrimaryDark,
+                    fontSize: AppTheme.font,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
                   ),
                 ),
+              ),
           SizedBox(height: AppTheme.spacingXl),
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -198,11 +193,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Icon(
-          Icons.mark_email_read_rounded,
-          size: 80,
-          color: Colors.green,
-        ),
+        Icon(Icons.mark_email_read_rounded, size: 80, color: Colors.green),
         SizedBox(height: AppTheme.spacingXl),
         Text(
           'Check Your Email',
@@ -238,9 +229,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         ElevatedButton(
           style: ElevatedButton.styleFrom(
             backgroundColor: Theme.of(context).primaryColor,
-            padding: EdgeInsets.symmetric(
-              vertical: AppTheme.spacing,
-            ),
+            padding: EdgeInsets.symmetric(vertical: AppTheme.spacing),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(30.0),
             ),
@@ -298,15 +287,16 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           size: AppTheme.iconMd,
         ),
       ),
-      suffixIcon: suffixIcon != null
-          ? Padding(
-              padding: EdgeInsets.only(
-                left: AppTheme.spacingMd,
-                right: AppTheme.spacing,
-              ),
-              child: suffixIcon,
-            )
-          : null,
+      suffixIcon:
+          suffixIcon != null
+              ? Padding(
+                padding: EdgeInsets.only(
+                  left: AppTheme.spacingMd,
+                  right: AppTheme.spacing,
+                ),
+                child: suffixIcon,
+              )
+              : null,
       filled: true,
       fillColor: AppTheme.textPrimaryDark.opacity10,
       contentPadding: EdgeInsets.symmetric(

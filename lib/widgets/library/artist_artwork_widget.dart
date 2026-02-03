@@ -76,7 +76,9 @@ class ArtistArtworkWidget extends StatelessWidget {
     _imageInfoCache[artistName] = imageInfo;
 
     if (kDebugMode) {
-      print('ArtistArtworkWidget [$artistName]: Fetched and cached - customPath=${imageInfo['customPath']}, fetchedUrl=${imageInfo['fetchedUrl']}');
+      print(
+        'ArtistArtworkWidget [$artistName]: Fetched and cached - customPath=${imageInfo['customPath']}, fetchedUrl=${imageInfo['fetchedUrl']}',
+      );
     }
 
     return imageInfo;
@@ -89,7 +91,10 @@ class ArtistArtworkWidget extends StatelessWidget {
   }
 
   /// Clear the cache for a specific artist including Flutters image cache
-  static Future<void> clearCacheForArtistWithFile(String artistName, String? filePath) async {
+  static Future<void> clearCacheForArtistWithFile(
+    String artistName,
+    String? filePath,
+  ) async {
     //clear metadata cache
     _imageInfoCache.remove(artistName);
 
@@ -183,9 +188,8 @@ class ArtistArtworkWidget extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final iconSize = constraints.maxWidth > 0
-            ? constraints.maxWidth * 0.4
-            : 40.0;
+        final iconSize =
+            constraints.maxWidth > 0 ? constraints.maxWidth * 0.4 : 40.0;
 
         return Container(
           decoration: BoxDecoration(

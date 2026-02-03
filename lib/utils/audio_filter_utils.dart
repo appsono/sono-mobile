@@ -8,7 +8,8 @@ class AudioFilterUtils {
     OrderType? orderType,
     String? path,
   }) async {
-    List<String> excludedPaths = await LibrarySettingsService.instance.getExcludedFolders();
+    List<String> excludedPaths =
+        await LibrarySettingsService.instance.getExcludedFolders();
     List<SongModel> allSongs = await audioQuery.querySongs(
       sortType: sortType,
       orderType: orderType,
@@ -34,9 +35,7 @@ class AudioFilterUtils {
     AlbumSortType? sortType,
     OrderType? orderType,
   }) async {
-    List<SongModel> filteredSongs = await getFilteredSongs(
-      audioQuery,
-    );
+    List<SongModel> filteredSongs = await getFilteredSongs(audioQuery);
 
     if (filteredSongs.isEmpty) {
       return [];
@@ -69,9 +68,7 @@ class AudioFilterUtils {
     ArtistSortType? sortType,
     OrderType? orderType,
   }) async {
-    List<SongModel> filteredSongs = await getFilteredSongs(
-      audioQuery,
-    );
+    List<SongModel> filteredSongs = await getFilteredSongs(audioQuery);
 
     if (filteredSongs.isEmpty) {
       return [];
@@ -83,28 +80,42 @@ class AudioFilterUtils {
       uriType: UriType.EXTERNAL,
     );
 
-    final Set<String> artistNamesFromSongs = filteredSongs
-        .where((s) => s.artist != null)
-        .map((s) => s.artist!.toLowerCase().trim())
-        .toSet();
+    final Set<String> artistNamesFromSongs =
+        filteredSongs
+            .where((s) => s.artist != null)
+            .map((s) => s.artist!.toLowerCase().trim())
+            .toSet();
 
-    List<ArtistModel> filteredArtists = allArtists.where((artist) {
-      final artistNameLower = artist.artist.toLowerCase().trim();
+    List<ArtistModel> filteredArtists =
+        allArtists.where((artist) {
+          final artistNameLower = artist.artist.toLowerCase().trim();
 
-      return artistNamesFromSongs.any((songArtist) {
-        if (songArtist == artistNameLower) return true;
+          return artistNamesFromSongs.any((songArtist) {
+            if (songArtist == artistNameLower) return true;
 
-        final separators = [', ', ' feat. ', ' ft. ', ' featuring ', ' / ', '/', ' & ', '&', ' and ', ' x ', ' X '];
-        for (final sep in separators) {
-          if (songArtist.startsWith('$artistNameLower$sep') ||
-              songArtist.endsWith('$sep$artistNameLower') ||
-              songArtist.contains('$sep$artistNameLower$sep')) {
-            return true;
-          }
-        }
-        return false;
-      });
-    }).toList();
+            final separators = [
+              ', ',
+              ' feat. ',
+              ' ft. ',
+              ' featuring ',
+              ' / ',
+              '/',
+              ' & ',
+              '&',
+              ' and ',
+              ' x ',
+              ' X ',
+            ];
+            for (final sep in separators) {
+              if (songArtist.startsWith('$artistNameLower$sep') ||
+                  songArtist.endsWith('$sep$artistNameLower') ||
+                  songArtist.contains('$sep$artistNameLower$sep')) {
+                return true;
+              }
+            }
+            return false;
+          });
+        }).toList();
 
     return filteredArtists;
   }

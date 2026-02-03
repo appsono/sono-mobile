@@ -194,7 +194,6 @@ class _AllItemsPageState extends State<AllItemsPage> {
     );
   }
 
-
   Widget _buildSkeletonListItem() {
     return RepaintBoundary(
       child: Shimmer.fromColors(

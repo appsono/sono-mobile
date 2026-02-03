@@ -39,9 +39,10 @@ class UpdateInfo {
       releaseNotes: json['release_notes'],
       sha256: json['sha256'],
       fileSize: json['file_size'],
-      publishedAt: json['published_at'] != null
-          ? DateTime.tryParse(json['published_at'])
-          : null,
+      publishedAt:
+          json['published_at'] != null
+              ? DateTime.tryParse(json['published_at'])
+              : null,
       channel: json['channel'] ?? 'stable',
     );
   }
@@ -49,7 +50,8 @@ class UpdateInfo {
 
 class UpdateService {
   String? _cachedChannel;
-  static const String _lastUpdateTimestampKey = 'last_downloaded_update_timestamp';
+  static const String _lastUpdateTimestampKey =
+      'last_downloaded_update_timestamp';
 
   /// Gets the timestamp of the last successfully downloaded update
   Future<DateTime?> getLastDownloadedUpdateTimestamp() async {
@@ -65,7 +67,9 @@ class UpdateService {
   Future<void> saveLastDownloadedUpdateTimestamp(DateTime timestamp) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_lastUpdateTimestampKey, timestamp.toIso8601String());
-    debugPrint('UpdateService: Saved last downloaded update timestamp: $timestamp');
+    debugPrint(
+      'UpdateService: Saved last downloaded update timestamp: $timestamp',
+    );
   }
 
   /// Checks if install packages permission is granted
@@ -88,12 +92,16 @@ class UpdateService {
       final List<FileSystemEntity> files = tempDir.listSync();
 
       for (final entity in files) {
-        if (entity is File && entity.path.contains('sono-') && entity.path.endsWith('.apk')) {
+        if (entity is File &&
+            entity.path.contains('sono-') &&
+            entity.path.endsWith('.apk')) {
           try {
             await entity.delete();
             debugPrint('UpdateService: Cleaned up old APK: ${entity.path}');
           } catch (e) {
-            debugPrint('UpdateService: Failed to delete APK ${entity.path}: $e');
+            debugPrint(
+              'UpdateService: Failed to delete APK ${entity.path}: $e',
+            );
           }
         }
       }
@@ -116,7 +124,9 @@ class UpdateService {
       _cachedChannel = 'stable';
     }
 
-    debugPrint('UpdateService: Detected channel: $_cachedChannel (package: $packageName)');
+    debugPrint(
+      'UpdateService: Detected channel: $_cachedChannel (package: $packageName)',
+    );
     return _cachedChannel!;
   }
 
@@ -171,9 +181,7 @@ class UpdateService {
       debugPrint(
         'UpdateService CHECK: Latest version from API: "${latestUpdate.latestVersion}"',
       );
-      debugPrint(
-        'UpdateService CHECK: Channel: "${latestUpdate.channel}"',
-      );
+      debugPrint('UpdateService CHECK: Channel: "${latestUpdate.channel}"');
       debugPrint(
         'UpdateService CHECK: APK URL present: ${latestUpdate.apkUrl != null}',
       );
@@ -213,13 +221,17 @@ class UpdateService {
 
       //if API version is higher => update is available
       if (versionComparison > 0) {
-        debugPrint('UpdateService COMPARISON: API version is higher - update available');
+        debugPrint(
+          'UpdateService COMPARISON: API version is higher - update available',
+        );
         return true;
       }
 
       //if API version is lower => no update
       if (versionComparison < 0) {
-        debugPrint('UpdateService COMPARISON: Current version is higher - no update');
+        debugPrint(
+          'UpdateService COMPARISON: Current version is higher - no update',
+        );
         return false;
       }
 
@@ -229,12 +241,16 @@ class UpdateService {
       );
 
       if (latestUpdate.versionCode > currentBuildNumber) {
-        debugPrint('UpdateService COMPARISON: API build number is higher - update available');
+        debugPrint(
+          'UpdateService COMPARISON: API build number is higher - update available',
+        );
         return true;
       }
 
       if (latestUpdate.versionCode < currentBuildNumber) {
-        debugPrint('UpdateService COMPARISON: Current build number is higher - no update');
+        debugPrint(
+          'UpdateService COMPARISON: Current build number is higher - no update',
+        );
         return false;
       }
 
@@ -247,12 +263,16 @@ class UpdateService {
 
         if (lastDownloaded == null) {
           //never downloaded an update before => this is a new install, no update needed
-          debugPrint('UpdateService COMPARISON: No previous download recorded - no update');
+          debugPrint(
+            'UpdateService COMPARISON: No previous download recorded - no update',
+          );
           return false;
         }
 
         if (latestUpdate.publishedAt!.isAfter(lastDownloaded)) {
-          debugPrint('UpdateService COMPARISON: API timestamp is newer than last download - update available');
+          debugPrint(
+            'UpdateService COMPARISON: API timestamp is newer than last download - update available',
+          );
           return true;
         }
       }
@@ -340,12 +360,16 @@ class UpdateService {
             debugPrint(
               "UpdateService: Attempting to open APK for installation...",
             );
-            final ApkInstallResult result = await ApkInstaller.installApk(filePath);
+            final ApkInstallResult result = await ApkInstaller.installApk(
+              filePath,
+            );
 
             if (result.type == ApkInstallResultType.done) {
               //save the timestamp of this update so we dont prompt again for the same build
               if (updateInfo.publishedAt != null) {
-                await saveLastDownloadedUpdateTimestamp(updateInfo.publishedAt!);
+                await saveLastDownloadedUpdateTimestamp(
+                  updateInfo.publishedAt!,
+                );
               } else {
                 //if no published_at => save current time as fallback
                 await saveLastDownloadedUpdateTimestamp(DateTime.now());

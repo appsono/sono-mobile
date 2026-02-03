@@ -352,7 +352,8 @@ class _ArtistPageState extends State<ArtistPage> {
                   ? 'Artist picture updated'
                   : 'No picture found for this artist',
             ),
-            backgroundColor: newUrl != null ? AppTheme.success : AppTheme.warning,
+            backgroundColor:
+                newUrl != null ? AppTheme.success : AppTheme.warning,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppTheme.radiusMd),

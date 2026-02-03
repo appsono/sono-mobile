@@ -81,13 +81,14 @@ class SearchIdleState extends StatelessWidget {
           Wrap(
             spacing: AppTheme.spacingSm,
             runSpacing: AppTheme.spacingSm,
-            children: recentSearches.map((search) {
-              return RecentSearchChip(
-                search: search,
-                onTap: () => onRecentSearchTap(search),
-                onDelete: () => onRecentSearchDelete(search),
-              );
-            }).toList(),
+            children:
+                recentSearches.map((search) {
+                  return RecentSearchChip(
+                    search: search,
+                    onTap: () => onRecentSearchTap(search),
+                    onDelete: () => onRecentSearchDelete(search),
+                  );
+                }).toList(),
           ),
         ],
       ),

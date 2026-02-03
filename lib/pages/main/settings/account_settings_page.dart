@@ -30,7 +30,8 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
   bool _isLoadingExport = false;
   Map<String, dynamic>? _localUserData;
 
-  Map<String, dynamic>? get _currentUserData => _localUserData ?? widget.currentUser;
+  Map<String, dynamic>? get _currentUserData =>
+      _localUserData ?? widget.currentUser;
 
   Future<void> _handleExportData() async {
     setState(() => _isLoadingExport = true);

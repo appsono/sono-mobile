@@ -127,7 +127,10 @@ class SongListTile extends StatelessWidget {
                             );
                           },
                         )
-                        : const Icon(Icons.more_vert_rounded, color: Colors.white70),
+                        : const Icon(
+                          Icons.more_vert_rounded,
+                          color: Colors.white70,
+                        ),
                 onPressed: () {
                   _showSongOptionsBottomSheet(context, song);
                 },

@@ -38,7 +38,8 @@ Future<void> _initializeFirebase() async {
 
     //only set up error handlers if crashlytics is enabled
     if (CrashlyticsService.instance.isEnabled) {
-      FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+      FlutterError.onError =
+          FirebaseCrashlytics.instance.recordFlutterFatalError;
       PlatformDispatcher.instance.onError = (error, stack) {
         FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
         return true;
@@ -73,10 +74,7 @@ void main() async {
   }
 
   //run independent initializations
-  await Future.wait([
-    EnvConfig.initialize(),
-    _initializeFirebase(),
-  ]);
+  await Future.wait([EnvConfig.initialize(), _initializeFirebase()]);
 
   runApp(
     MultiProvider(
@@ -323,19 +321,20 @@ class _SonoState extends State<Sono> with WidgetsBindingObserver {
       canvasColor: background,
       cardColor: AppTheme.card(brightness),
       dividerColor: AppTheme.border(brightness),
-      colorScheme: isDark
-          ? ColorScheme.dark(
-              primary: primaryColor,
-              secondary: primaryColor,
-              surface: surface,
-              onSurface: onBackground,
-            )
-          : ColorScheme.light(
-              primary: primaryColor,
-              secondary: primaryColor,
-              surface: surface,
-              onSurface: onBackground,
-            ),
+      colorScheme:
+          isDark
+              ? ColorScheme.dark(
+                primary: primaryColor,
+                secondary: primaryColor,
+                surface: surface,
+                onSurface: onBackground,
+              )
+              : ColorScheme.light(
+                primary: primaryColor,
+                secondary: primaryColor,
+                surface: surface,
+                onSurface: onBackground,
+              ),
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
         foregroundColor: onBackground,

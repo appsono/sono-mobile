@@ -100,7 +100,9 @@ class _PlaylistDetailsPageState extends State<PlaylistDetailsPage> {
         } catch (e) {
           //song not found in filtered songs => either not in MediaStore or in excluded folder
           //dont clean up here since the song might just be in an excluded folder
-          debugPrint('PlaylistDetailsPage: Song $songId not in filtered songs (might be excluded)');
+          debugPrint(
+            'PlaylistDetailsPage: Song $songId not in filtered songs (might be excluded)',
+          );
         }
       }
 
