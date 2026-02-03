@@ -115,6 +115,14 @@ jobs:
           keyAlias=${{ secrets.KEY_ALIAS }}
           keyPassword=${{ secrets.KEY_PASSWORD }}
           EOF
+      - name: Setup Gradle memory
+        run: |
+         mkdir -p ~/.gradle
+         cat > ~/.gradle/gradle.properties << EOF
+         org.gradle.jvmargs=-Xmx4g      -XX:MaxMetaspaceSize=512m -XX:    +HeapDumpOnOutOfMemoryError
+         org.gradle.daemon=false
+         org.gradle.parallel=false
+         EOF
 
       - name: Build APK
         run: |
