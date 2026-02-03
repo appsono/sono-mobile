@@ -141,7 +141,7 @@ class HomePageState extends State<HomePage>
 
     if (songs.isNotEmpty) {
       songs.shuffle();
-      _sonoPlayer.playNewPlaylist(songs, 0, context: "All Songs");
+      _sonoPlayer.playNewPlaylist(songs, 0, context: ": All Songs");
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -450,7 +450,7 @@ class HomePageState extends State<HomePage>
                       s,
                       listCtx,
                       idx,
-                      playbackContext: "Recently Added",
+                      playbackContext: ": Recently Added",
                     ),
               ),
           itemWidth: 70,
@@ -597,7 +597,7 @@ class HomePageState extends State<HomePage>
                 selectedSong,
                 _allSongs,
                 originalIndex,
-                playbackContext: "All Songs",
+                playbackContext: ": All Songs",
               ),
         );
       }, childCount: _paginatedSongs.length),
