@@ -53,9 +53,7 @@ class HomePageState extends State<HomePage>
 
   List<SongModel> _allSongs = [];
   List<SongModel> _paginatedSongs = [];
-  //final int _songsPerPage = 30;
   bool _isLoadingAllSongs = true;
-  //bool get _hasMoreSongs => _paginatedSongs.length < _allSongs.length;
 
   @override
   bool get wantKeepAlive => true;
@@ -124,25 +122,13 @@ class HomePageState extends State<HomePage>
     ).then((songs) {
       if (mounted) {
         setState(() {
-          _allSongs = songs;
-          //_paginatedSongs = songs.take(_songsPerPage).toList();
+          _allSongs = songs;    
           _paginatedSongs = songs.toList();
           _isLoadingAllSongs = false;
         });
       }
     });
   }
-
-  //void _loadMoreSongs() {
-  //  if (!_hasMoreSongs || !mounted) return;
-  //
-  //  setState(() {
-  //    final currentLength = _paginatedSongs.length;
-  //    //final moreSongs = _allSongs.skip(currentLength).take(_songsPerPage);
-  //    final moreSongs = _allSongs.skip(currentLength);
-  //    _paginatedSongs.addAll(moreSongs);
-  //  });
-  //}
 
   /// Refreshes the home page data
   Future<void> refreshData() async {
@@ -215,7 +201,7 @@ class HomePageState extends State<HomePage>
             colors: [AppTheme.backgroundDark, AppTheme.surfaceDark],
           ),
         ),
-        child: _buildScrollableHomepage(context),
+        child: _buildHomepage(context),
       ),
     );
   }
@@ -394,7 +380,7 @@ class HomePageState extends State<HomePage>
     );
   }
 
-  Widget _buildScrollableHomepage(BuildContext context) {
+  Widget _buildHomepage(BuildContext context) {
     const double appBarContentHeight = 70.0;
 
     return CustomScrollView(
@@ -411,9 +397,6 @@ class HomePageState extends State<HomePage>
           titleSpacing: 0,
           title: Builder(
             builder: (context) {
-              //debugPrint(
-              //  '[HomePage] Building HomeAppBarContent with isLoggedIn: ${widget.isLoggedIn}, user: ${widget.currentUser?['username']}',
-              //);
               return HomeAppBarContent(
                 key: ValueKey(
                   'HomeAppBarContent_${widget.isLoggedIn}_${widget.currentUser?['username']}',
@@ -520,7 +503,7 @@ class HomePageState extends State<HomePage>
         ),
         _buildSection<ArtistModel>(
           context: context,
-          title: "Artists in your Library",
+          title: "Artists",
           onSeeAllTap: () {
             Navigator.push(
               context,
@@ -625,28 +608,6 @@ class HomePageState extends State<HomePage>
     );
   }
 
-  //Widget _buildLoadMoreButton() {
-  //  return SliverToBoxAdapter(
-  //    child: Padding(
-  //      padding: EdgeInsets.symmetric(
-  //        vertical: AppTheme.spacing,
-  //        horizontal: 80.0,
-  //      ),
-  //      child: TextButton(
-  //        onPressed: _loadMoreSongs,
-  //        style: TextButton.styleFrom(
-  //          foregroundColor: AppTheme.textPrimaryDark,
-  //          backgroundColor: AppTheme.textPrimaryDark.opacity10,
-  //          shape: RoundedRectangleBorder(
-  //            borderRadius: BorderRadius.circular(AppTheme.spacingLg),
-  //          ),
-  //        ),
-  //        child: const Text("Load More"),
-  //      ),
-  //    ),
-  //  );
-  //}
-
   Widget _buildSection<T>({
     required BuildContext context,
     required String title,
@@ -680,12 +641,33 @@ class HomePageState extends State<HomePage>
                       fontSize: AppTheme.fontSubtitle,
                     ),
                   ),
-                  TextButton(
-                    onPressed: onSeeAllTap,
-                    child: Text(
-                      "See All",
-                      style: AppStyles.sonoPlayerArtist.copyWith(
-                        fontSize: AppTheme.fontSm,
+                  InkWell(
+                    onTap: onSeeAllTap,
+                    borderRadius: BorderRadius.circular(AppTheme.radius),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppTheme.spacingSm,
+                        vertical: 4,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'See All',
+                            style: TextStyle(
+                              fontSize: AppTheme.fontSm,
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.textSecondaryDark,
+                              fontFamily: 'VarelaRound',
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Icon(
+                            Icons.arrow_forward_rounded,
+                            size: 16,
+                            color: AppTheme.textSecondaryDark,
+                          ),
+                        ],
                       ),
                     ),
                   ),
