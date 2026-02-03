@@ -4,10 +4,10 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:open_filex/open_filex.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:pub_semver/pub_semver.dart' as semver;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sono/services/utils/apk_installer.dart';
 import 'package:sono/services/utils/env_config.dart';
 
 class UpdateInfo {
@@ -340,12 +340,9 @@ class UpdateService {
             debugPrint(
               "UpdateService: Attempting to open APK for installation...",
             );
-            final OpenResult result = await OpenFilex.open(
-              filePath,
-              type: 'application/vnd.android.package-archive',
-            );
+            final ApkInstallResult result = await ApkInstaller.installApk(filePath);
 
-            if (result.type == ResultType.done) {
+            if (result.type == ApkInstallResultType.done) {
               //save the timestamp of this update so we dont prompt again for the same build
               if (updateInfo.publishedAt != null) {
                 await saveLastDownloadedUpdateTimestamp(updateInfo.publishedAt!);
