@@ -51,7 +51,7 @@ class ArtistFetchProgressService extends ChangeNotifier {
     _startTime = DateTime.now();
     _successCount = 0;
     _failureCount = 0;
-    _addLog('Started fetching $total artists from Last.fm');
+    _addLog('Started fetching $total artists from API');
     notifyListeners();
   }
 
