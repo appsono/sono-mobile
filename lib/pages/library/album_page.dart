@@ -14,6 +14,7 @@ import 'package:sono/utils/artist_navigation.dart';
 
 import 'package:sono/widgets/sas/sas_modal.dart';
 import 'package:sono/widgets/global/refresh_indicator.dart';
+import 'package:sono/widgets/library/artist_artwork_widget.dart';
 import 'package:provider/provider.dart';
 
 class AlbumPage extends StatefulWidget {
@@ -29,7 +30,6 @@ class AlbumPage extends StatefulWidget {
 class _AlbumPageState extends State<AlbumPage> {
   late Future<List<SongModel>> _songsFuture;
   List<SongModel>? _loadedSongs;
-  final Map<int, Uint8List?> _artistArtworkCache = {};
   final Map<String, ArtistModel> _artistLookup =
       {}; //artist name (lowercase) -> ArtistModel
   bool _isAlbumFavorite = false;
@@ -121,27 +121,6 @@ class _AlbumPageState extends State<AlbumPage> {
       //build lookup map: artist name (lowercase) => ArtistModel
       for (final artist in allArtists) {
         _artistLookup[artist.artist.toLowerCase()] = artist;
-      }
-
-      //preload artwork for this albums artists
-      final albumArtists = ArtistStringUtils.splitArtists(
-        widget.album.artist ?? 'Unknown',
-      );
-
-      for (final artistName in albumArtists.take(3)) {
-        final artist = _artistLookup[artistName.toLowerCase()];
-        if (artist != null && !_artistArtworkCache.containsKey(artist.id)) {
-          final artwork = await ArtworkCacheService.instance.getArtwork(
-            artist.id,
-            type: ArtworkType.ARTIST,
-            size: 100,
-          );
-          if (mounted) {
-            setState(() {
-              _artistArtworkCache[artist.id] = artwork;
-            });
-          }
-        }
       }
     } catch (e) {
       if (kDebugMode) {
@@ -342,8 +321,6 @@ class _AlbumPageState extends State<AlbumPage> {
               //artist list
               ...artists.map((artistName) {
                 final artist = _artistLookup[artistName.toLowerCase()];
-                final cachedArtwork =
-                    artist != null ? _artistArtworkCache[artist.id] : null;
 
                 return ListTile(
                   leading: ClipRRect(
@@ -351,23 +328,20 @@ class _AlbumPageState extends State<AlbumPage> {
                     child: SizedBox(
                       width: 50,
                       height: 50,
-                      child:
-                          cachedArtwork != null
-                              ? Image.memory(
-                                cachedArtwork,
-                                width: 50,
-                                height: 50,
-                                fit: BoxFit.cover,
-                                gaplessPlayback: true,
-                              )
-                              : Container(
-                                color: Colors.grey.shade800,
-                                child: const Icon(
-                                  Icons.person_rounded,
-                                  color: Colors.white54,
-                                  size: 30,
-                                ),
-                              ),
+                      child: ArtistArtworkWidget(
+                        artistName: artistName,
+                        artistId: artist?.id ?? 0,
+                        fit: BoxFit.cover,
+                        borderRadius: BorderRadius.circular(25),
+                        placeholderWidget: Container(
+                          color: Colors.grey.shade800,
+                          child: const Icon(
+                            Icons.person_rounded,
+                            color: Colors.white54,
+                            size: 30,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                   title: Text(
@@ -830,8 +804,6 @@ class _AlbumPageState extends State<AlbumPage> {
               final index = entry.key;
               final artistName = entry.value;
               final artist = _artistLookup[artistName.toLowerCase()];
-              final cachedArtwork =
-                  artist != null ? _artistArtworkCache[artist.id] : null;
 
               return Positioned(
                 left: index * 12.0,
@@ -850,28 +822,25 @@ class _AlbumPageState extends State<AlbumPage> {
                     child: SizedBox(
                       width: 24,
                       height: 24,
-                      child:
-                          cachedArtwork != null
-                              ? Image.memory(
-                                cachedArtwork,
-                                width: 24,
-                                height: 24,
-                                fit: BoxFit.cover,
-                                gaplessPlayback: true,
-                              )
-                              : Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.grey.shade800,
-                                  borderRadius: BorderRadius.circular(
-                                    AppTheme.radiusMd,
-                                  ),
-                                ),
-                                child: const Icon(
-                                  Icons.person_rounded,
-                                  color: Colors.white54,
-                                  size: 14,
-                                ),
-                              ),
+                      child: ArtistArtworkWidget(
+                        artistName: artistName,
+                        artistId: artist?.id ?? 0,
+                        fit: BoxFit.cover,
+                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                        placeholderWidget: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade800,
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radiusMd,
+                            ),
+                          ),
+                          child: const Icon(
+                            Icons.person_rounded,
+                            color: Colors.white54,
+                            size: 14,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ),
