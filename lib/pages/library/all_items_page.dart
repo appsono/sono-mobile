@@ -12,10 +12,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:sono/services/utils/preferences_service.dart';
 import 'package:sono/utils/audio_filter_utils.dart';
 import 'package:sono/utils/artist_string_utils.dart';
-import 'package:sono/services/utils/analytics_service.dart';
 import 'package:sono/widgets/global/bottom_sheet.dart';
 import 'package:sono/data/models/playlist_model.dart' as db;
 import 'package:sono/services/playlist/playlist_service.dart';
@@ -37,7 +35,6 @@ class AllItemsPage extends StatefulWidget {
   final Future<List<dynamic>> itemsFuture;
   final ListItemType itemType;
   final OnAudioQuery audioQuery;
-  final PreferencesService prefsService;
 
   const AllItemsPage({
     super.key,
@@ -45,7 +42,6 @@ class AllItemsPage extends StatefulWidget {
     required this.itemsFuture,
     required this.itemType,
     required this.audioQuery,
-    required this.prefsService,
   });
 
   @override
@@ -60,9 +56,6 @@ class _AllItemsPageState extends State<AllItemsPage> {
   void initState() {
     super.initState();
     _itemsFuture = widget.itemsFuture;
-
-    String screenName = 'AllItemsPage_${widget.itemType.name}';
-    AnalyticsService.logScreenView(screenName);
   }
 
   void _refreshPlaylists() {
@@ -81,10 +74,7 @@ class _AllItemsPageState extends State<AllItemsPage> {
           _itemsFuture = PlaylistService().getAllPlaylists();
           break;
         case ListItemType.song:
-          _itemsFuture = AudioFilterUtils.getFilteredSongs(
-            widget.audioQuery,
-            widget.prefsService,
-          );
+          _itemsFuture = AudioFilterUtils.getFilteredSongs(widget.audioQuery);
           break;
         case ListItemType.album:
           _itemsFuture = widget.audioQuery.queryAlbums();
@@ -204,15 +194,6 @@ class _AllItemsPageState extends State<AllItemsPage> {
     );
   }
 
-  void _playAll() {
-    if (_resolvedItems != null && _resolvedItems!.isNotEmpty) {
-      final songs = _resolvedItems!.cast<SongModel>();
-      if (songs.isNotEmpty) {
-        SonoPlayer().playNewPlaylist(songs, 0, context: widget.pageTitle);
-      }
-    }
-  }
-
   Widget _buildSkeletonListItem() {
     return RepaintBoundary(
       child: Shimmer.fromColors(
@@ -288,7 +269,7 @@ class _AllItemsPageState extends State<AllItemsPage> {
               pinned: true,
               leading: IconButton(
                 icon: const Icon(
-                  Icons.arrow_back_ios_rounded,
+                  Icons.arrow_back_rounded,
                   color: AppTheme.textPrimaryDark,
                 ),
                 onPressed: () => Navigator.of(context).pop(),
@@ -446,21 +427,6 @@ class _AllItemsPageState extends State<AllItemsPage> {
       );
     }
 
-    if (widget.itemType == ListItemType.song &&
-        _resolvedItems != null &&
-        _resolvedItems!.isNotEmpty) {
-      return FloatingActionButton.extended(
-        onPressed: _playAll,
-        label: Text(
-          "PLAY ALL",
-          style: AppStyles.sonoButtonTextSmaller.copyWith(
-            color: AppTheme.textPrimaryDark,
-          ),
-        ),
-        icon: const Icon(Icons.play_arrow, color: AppTheme.textPrimaryDark),
-        backgroundColor: AppTheme.brandPink,
-      );
-    }
     return null;
   }
 
@@ -556,7 +522,6 @@ class _AllItemsPageState extends State<AllItemsPage> {
                         ),
                         itemType: ListItemType.song,
                         audioQuery: widget.audioQuery,
-                        prefsService: widget.prefsService,
                       ),
                 ),
               ),
@@ -577,13 +542,11 @@ class _AllItemsPageState extends State<AllItemsPage> {
                         pageTitle: folderName,
                         itemsFuture: AudioFilterUtils.getFilteredSongs(
                           widget.audioQuery,
-                          widget.prefsService,
                           sortType: SongSortType.TITLE,
                           path: folderPath,
                         ),
                         itemType: ListItemType.song,
                         audioQuery: widget.audioQuery,
-                        prefsService: widget.prefsService,
                       ),
                 ),
               ),

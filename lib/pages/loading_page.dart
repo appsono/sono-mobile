@@ -31,19 +31,23 @@ class _LoadingPageState extends State<LoadingPage> {
 
   Future<void> _initializeApp() async {
     //check if setup has been completed
-    final setupCompleted = await DeveloperSettingsService.instance.getSetupCompleted();
+    final setupCompleted =
+        await DeveloperSettingsService.instance.getSetupCompleted();
 
     if (!setupCompleted && mounted) {
       //show setup flow for first-time users
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (context) => SetupFlowPage(
-            onSetupComplete: () {
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (context) => const LoadingPage()),
-              );
-            },
-          ),
+          builder:
+              (context) => SetupFlowPage(
+                onSetupComplete: () {
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(
+                      builder: (context) => const LoadingPage(),
+                    ),
+                  );
+                },
+              ),
         ),
       );
       return;

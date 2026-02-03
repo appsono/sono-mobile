@@ -10,6 +10,7 @@ import 'package:sono/services/playlist/playlist_service.dart';
 import 'package:sono/styles/text.dart';
 import 'package:sono/styles/app_theme.dart';
 import 'package:sono/utils/artist_string_utils.dart';
+import 'package:sono/utils/audio_filter_utils.dart';
 import 'package:sono/services/utils/artwork_cache_service.dart';
 import 'package:sono/widgets/global/add_to_playlist_dialog.dart';
 import 'package:sono/widgets/global/refresh_indicator.dart';
@@ -38,10 +39,6 @@ class _PlaylistDetailsPageState extends State<PlaylistDetailsPage> {
   String? _loadError;
   bool _isReorderMode = false;
 
-  //Get PlaylistService from Provider
-  //ignore: unused_element
-  PlaylistService get _playlistService => context.read<PlaylistService>();
-
   @override
   void initState() {
     super.initState();
@@ -51,7 +48,7 @@ class _PlaylistDetailsPageState extends State<PlaylistDetailsPage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    //Load data after context is available for Provider
+    //load data after context is available for Provider
     if (_isLoading && _loadedSongs == null) {
       _loadPlaylistData();
     }
@@ -83,10 +80,11 @@ class _PlaylistDetailsPageState extends State<PlaylistDetailsPage> {
         widget.playlist.id,
       );
 
-      //Query all songs with error handling
-      List<SongModel> allSongs = [];
+      //query filtered songs (excluding songs from excluded folders)
+      List<SongModel> allFilteredSongs = [];
       try {
-        allSongs = await _audioQuery.querySongs(
+        allFilteredSongs = await AudioFilterUtils.getFilteredSongs(
+          _audioQuery,
           sortType: null,
           orderType: OrderType.ASC_OR_SMALLER,
         );
@@ -97,18 +95,14 @@ class _PlaylistDetailsPageState extends State<PlaylistDetailsPage> {
       final playlistSongs = <SongModel>[];
       for (final songId in songIds) {
         try {
-          final song = allSongs.firstWhere((s) => s.id == songId);
+          final song = allFilteredSongs.firstWhere((s) => s.id == songId);
           playlistSongs.add(song);
         } catch (e) {
-          //Song not found in MediaStore - clean up orphaned reference
-          try {
-            await playlistService.removeSongFromPlaylist(
-              widget.playlist.id,
-              songId,
-            );
-          } catch (_) {
-            //Ignore cleanup errors
-          }
+          //song not found in filtered songs => either not in MediaStore or in excluded folder
+          //dont clean up here since the song might just be in an excluded folder
+          debugPrint(
+            'PlaylistDetailsPage: Song $songId not in filtered songs (might be excluded)',
+          );
         }
       }
 
@@ -1038,7 +1032,7 @@ class _PlaylistDetailsPageState extends State<PlaylistDetailsPage> {
           backgroundColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_rounded, color: Colors.white),
+            icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
             onPressed: () => Navigator.of(context).pop(),
           ),
         ),
@@ -1053,7 +1047,7 @@ class _PlaylistDetailsPageState extends State<PlaylistDetailsPage> {
           backgroundColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_rounded, color: Colors.white),
+            icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
             onPressed: () => Navigator.of(context).pop(),
           ),
         ),
@@ -1092,7 +1086,7 @@ class _PlaylistDetailsPageState extends State<PlaylistDetailsPage> {
           backgroundColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_rounded, color: Colors.white),
+            icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
             onPressed: () => Navigator.of(context).pop(),
           ),
         ),
@@ -1102,223 +1096,233 @@ class _PlaylistDetailsPageState extends State<PlaylistDetailsPage> {
             padding: EdgeInsets.zero,
             children: [
               //playlist Artwork
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24.0,
-                vertical: 8.0,
-              ),
-              child: AspectRatio(
-                aspectRatio: 1,
-                child: GestureDetector(
-                  onTap:
-                      _currentPlaylist.name.toLowerCase() != 'liked songs'
-                          ? _showCoverPickerModal
-                          : null,
-                  child: Hero(
-                    tag: 'playlist-artwork-${_currentPlaylist.id}',
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                      child: _buildCoverArtwork(),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24.0,
+                  vertical: 8.0,
+                ),
+                child: AspectRatio(
+                  aspectRatio: 1,
+                  child: GestureDetector(
+                    onTap:
+                        _currentPlaylist.name.toLowerCase() != 'liked songs'
+                            ? _showCoverPickerModal
+                            : null,
+                    child: Hero(
+                      tag: 'playlist-artwork-${_currentPlaylist.id}',
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                        child: _buildCoverArtwork(),
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
 
-            //Playlist Title
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: Text(
-                _currentPlaylist.name,
-                style: AppStyles.sonoPlayerTitle.copyWith(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
+              //Playlist Title
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Text(
+                  _currentPlaylist.name,
+                  style: AppStyles.sonoPlayerTitle.copyWith(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.left,
                 ),
-                textAlign: TextAlign.left,
               ),
-            ),
 
-            SizedBox(height: AppTheme.spacingXs),
+              SizedBox(height: AppTheme.spacingXs),
 
-            //Song count + duration
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child:
-                  _loadedSongs != null && _loadedSongs!.isNotEmpty
-                      ? Text(
-                        '${_loadedSongs!.length} songs • ${_formatDuration(_calculatePlaylistDuration())}',
-                        style: AppStyles.sonoPlayerArtist.copyWith(
-                          fontSize: 14,
-                          color: Colors.white54,
-                        ),
-                      )
-                      : Text(
-                        '0 songs',
-                        style: AppStyles.sonoPlayerArtist.copyWith(
-                          fontSize: 14,
-                          color: Colors.white54,
-                        ),
-                      ),
-            ),
-
-            SizedBox(height: AppTheme.spacing),
-
-            //Action buttons row - matching Album Page exactly
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: Row(
-                children: [
-                  //Combined left buttons container
-                  Container(
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: AppTheme.elevatedSurfaceDark,
-                      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                      border: Border.all(
-                        color: const Color(0xFF3d3d3d),
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        //Reorder toggle button
-                        IconButton(
-                          icon: Icon(
-                            _isReorderMode
-                                ? Icons.reorder_rounded
-                                : Icons.swap_vert_rounded,
-                            color:
-                                _isReorderMode
-                                    ? AppTheme.brandPink
-                                    : AppTheme.textSecondaryDark,
+              //Song count + duration
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child:
+                    _loadedSongs != null && _loadedSongs!.isNotEmpty
+                        ? Text(
+                          '${_loadedSongs!.length} songs • ${_formatDuration(_calculatePlaylistDuration())}',
+                          style: AppStyles.sonoPlayerArtist.copyWith(
+                            fontSize: 14,
+                            color: Colors.white54,
                           ),
-                          iconSize: 24,
-                          onPressed: () {
-                            setState(() => _isReorderMode = !_isReorderMode);
-                          },
-                          tooltip:
+                        )
+                        : Text(
+                          '0 songs',
+                          style: AppStyles.sonoPlayerArtist.copyWith(
+                            fontSize: 14,
+                            color: Colors.white54,
+                          ),
+                        ),
+              ),
+
+              SizedBox(height: AppTheme.spacing),
+
+              //Action buttons row - matching Album Page exactly
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Row(
+                  children: [
+                    //Combined left buttons container
+                    Container(
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: AppTheme.elevatedSurfaceDark,
+                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                        border: Border.all(
+                          color: const Color(0xFF3d3d3d),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          //Reorder toggle button
+                          IconButton(
+                            icon: Icon(
                               _isReorderMode
-                                  ? 'Exit reorder mode'
-                                  : 'Reorder songs',
-                        ),
-
-                        //Three-dot menu button
-                        IconButton(
-                          icon: const Icon(
-                            Icons.more_vert_rounded,
-                            color: AppTheme.textSecondaryDark,
+                                  ? Icons.reorder_rounded
+                                  : Icons.swap_vert_rounded,
+                              color:
+                                  _isReorderMode
+                                      ? AppTheme.brandPink
+                                      : AppTheme.textSecondaryDark,
+                            ),
+                            iconSize: 24,
+                            onPressed: () {
+                              setState(() => _isReorderMode = !_isReorderMode);
+                            },
+                            tooltip:
+                                _isReorderMode
+                                    ? 'Exit reorder mode'
+                                    : 'Reorder songs',
                           ),
-                          iconSize: 24,
-                          onPressed: _showPlaylistOptions,
-                        ),
-                      ],
-                    ),
-                  ),
 
-                  const Spacer(),
-
-                  //Shuffle button
-                  Container(
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: AppTheme.elevatedSurfaceDark,
-                      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                      border: Border.all(
-                        color: const Color(0xFF3d3d3d),
-                        width: 1,
+                          //Three-dot menu button
+                          IconButton(
+                            icon: const Icon(
+                              Icons.more_vert_rounded,
+                              color: AppTheme.textSecondaryDark,
+                            ),
+                            iconSize: 24,
+                            onPressed: _showPlaylistOptions,
+                          ),
+                        ],
                       ),
                     ),
-                    child: IconButton(
-                      icon: const Icon(
-                        Icons.shuffle_rounded,
-                        color: AppTheme.textSecondaryDark,
-                      ),
-                      iconSize: 24,
-                      onPressed:
-                          _loadedSongs != null && _loadedSongs!.isNotEmpty
-                              ? () {
-                                final shuffledSongs = List<SongModel>.from(
-                                  _loadedSongs!,
-                                )..shuffle();
-                                SonoPlayer().playNewPlaylist(
-                                  shuffledSongs,
-                                  0,
-                                  context: "Playlist: ${_currentPlaylist.name}",
-                                );
-                              }
-                              : null,
-                    ),
-                  ),
 
-                  SizedBox(width: AppTheme.spacingSm),
+                    const Spacer(),
 
-                  //Play/Pause button - matching Album Page exactly
-                  ValueListenableBuilder<SongModel?>(
-                    valueListenable: SonoPlayer().currentSong,
-                    builder: (context, currentSong, _) {
-                      final isPlaylistPlaying =
-                          _loadedSongs?.any(
-                            (song) => song.id == currentSong?.id,
-                          ) ??
-                          false;
-
-                      return Container(
-                        height: 48,
-                        decoration: BoxDecoration(
-                          color: AppTheme.brandPink,
-                          borderRadius: BorderRadius.circular(
-                            AppTheme.radiusMd,
-                          ),
+                    //Shuffle button
+                    Container(
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: AppTheme.elevatedSurfaceDark,
+                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                        border: Border.all(
+                          color: const Color(0xFF3d3d3d),
+                          width: 1,
                         ),
-                        child: ValueListenableBuilder<bool>(
-                          valueListenable: SonoPlayer().isPlaying,
-                          builder: (context, isPlaying, _) {
-                            return IconButton(
-                              icon: Icon(
-                                (isPlaylistPlaying && isPlaying)
-                                    ? Icons.pause_rounded
-                                    : Icons.play_arrow_rounded,
-                                color: Colors.white,
+                      ),
+                      child: IconButton(
+                        icon: const Icon(
+                          Icons.shuffle_rounded,
+                          color: AppTheme.textSecondaryDark,
+                        ),
+                        iconSize: 24,
+                        onPressed:
+                            _loadedSongs != null && _loadedSongs!.isNotEmpty
+                                ? () {
+                                  final shuffledSongs = List<SongModel>.from(
+                                    _loadedSongs!,
+                                  )..shuffle();
+                                  SonoPlayer().playNewPlaylist(
+                                    shuffledSongs,
+                                    0,
+                                    context:
+                                        "Playlist: ${_currentPlaylist.name}",
+                                  );
+                                }
+                                : null,
+                      ),
+                    ),
+
+                    SizedBox(width: AppTheme.spacingSm),
+
+                    //Play/Pause button - matching Album Page exactly
+                    ValueListenableBuilder<SongModel?>(
+                      valueListenable: SonoPlayer().currentSong,
+                      builder: (context, currentSong, _) {
+                        return ValueListenableBuilder<String?>(
+                          valueListenable: SonoPlayer().playbackContext,
+                          builder: (context, playbackContext, _) {
+                            final expectedContext =
+                                "Playlist: ${_currentPlaylist.name}";
+                            final isPlaylistPlaying =
+                                playbackContext == expectedContext &&
+                                (_loadedSongs?.any(
+                                      (song) => song.id == currentSong?.id,
+                                    ) ??
+                                    false);
+
+                            return Container(
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: AppTheme.brandPink,
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radiusMd,
+                                ),
                               ),
-                              iconSize: 24,
-                              onPressed:
-                                  _loadedSongs != null &&
-                                          _loadedSongs!.isNotEmpty
-                                      ? () {
-                                        if (isPlaylistPlaying && isPlaying) {
-                                          SonoPlayer().pause();
-                                        } else if (isPlaylistPlaying &&
-                                            !isPlaying) {
-                                          SonoPlayer().play();
-                                        } else {
-                                          SonoPlayer().playNewPlaylist(
-                                            _loadedSongs!,
-                                            0,
-                                            context:
-                                                "Playlist: ${_currentPlaylist.name}",
-                                          );
-                                        }
-                                      }
-                                      : null,
+                              child: ValueListenableBuilder<bool>(
+                                valueListenable: SonoPlayer().isPlaying,
+                                builder: (context, isPlaying, _) {
+                                  return IconButton(
+                                    icon: Icon(
+                                      (isPlaylistPlaying && isPlaying)
+                                          ? Icons.pause_rounded
+                                          : Icons.play_arrow_rounded,
+                                      color: Colors.white,
+                                    ),
+                                    iconSize: 24,
+                                    onPressed:
+                                        _loadedSongs != null &&
+                                                _loadedSongs!.isNotEmpty
+                                            ? () {
+                                              if (isPlaylistPlaying &&
+                                                  isPlaying) {
+                                                SonoPlayer().pause();
+                                              } else if (isPlaylistPlaying &&
+                                                  !isPlaying) {
+                                                SonoPlayer().play();
+                                              } else {
+                                                SonoPlayer().playNewPlaylist(
+                                                  _loadedSongs!,
+                                                  0,
+                                                  context:
+                                                      "Playlist: ${_currentPlaylist.name}",
+                                                );
+                                              }
+                                            }
+                                            : null,
+                                  );
+                                },
+                              ),
                             );
                           },
-                        ),
-                      );
-                    },
-                  ),
-                ],
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ),
-            ),
 
-            SizedBox(height: AppTheme.spacing),
+              SizedBox(height: AppTheme.spacing),
 
-            //Songs List
-            _buildSongsList(),
+              //Songs List
+              _buildSongsList(),
 
-            //Bottom padding for player
-            const SizedBox(height: 120),
-          ],
-        ),
+              //Bottom padding for player
+              const SizedBox(height: 120),
+            ],
+          ),
         ),
       ),
     );
@@ -1379,7 +1383,10 @@ class _CoverPickerModal extends StatelessWidget {
                 ),
                 const Spacer(),
                 IconButton(
-                  icon: Icon(Icons.close_rounded, color: AppTheme.textSecondaryDark),
+                  icon: Icon(
+                    Icons.close_rounded,
+                    color: AppTheme.textSecondaryDark,
+                  ),
                   onPressed: () => Navigator.pop(context),
                 ),
               ],

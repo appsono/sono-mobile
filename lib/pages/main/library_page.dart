@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:sono/pages/library/all_items_page.dart';
 import 'package:sono/services/utils/favorites_service.dart';
-import 'package:sono/services/utils/preferences_service.dart';
 import 'package:sono/services/playlist/playlist_service.dart';
 import 'package:sono/styles/text.dart';
 import 'package:sono/utils/audio_filter_utils.dart';
@@ -34,7 +33,6 @@ class LibraryPage extends StatefulWidget {
 class _LibraryPageState extends State<LibraryPage>
     with AutomaticKeepAliveClientMixin {
   final OnAudioQuery _audioQuery = OnAudioQuery();
-  final PreferencesService _prefsService = PreferencesService();
 
   @override
   bool get wantKeepAlive => true;
@@ -58,7 +56,6 @@ class _LibraryPageState extends State<LibraryPage>
               itemsFuture: future,
               itemType: itemType,
               audioQuery: _audioQuery,
-              prefsService: _prefsService,
             ),
       ),
     );
@@ -93,7 +90,6 @@ class _LibraryPageState extends State<LibraryPage>
             if (favIds.isEmpty) return [];
             final allSongs = await AudioFilterUtils.getFilteredSongs(
               _audioQuery,
-              _prefsService,
             );
             return allSongs.where((song) => favIds.contains(song.id)).toList();
           }());
@@ -114,7 +110,6 @@ class _LibraryPageState extends State<LibraryPage>
               if (favIds.isEmpty) return [];
               final allArtists = await AudioFilterUtils.getFilteredArtists(
                 _audioQuery,
-                _prefsService,
               );
               return allArtists
                   .where((artist) => favIds.contains(artist.id))
@@ -129,22 +124,16 @@ class _LibraryPageState extends State<LibraryPage>
         color: Colors.green.shade400,
         onTap: () {
           final favoritesService = context.read<FavoritesService>();
-          _navigateTo(
-            context,
-            "Favorite Albums",
-            ListItemType.album,
-            () async {
-              final favIds = await favoritesService.getFavoriteAlbumIds();
-              if (favIds.isEmpty) return [];
-              final allAlbums = await AudioFilterUtils.getFilteredAlbums(
-                _audioQuery,
-                _prefsService,
-              );
-              return allAlbums
-                  .where((album) => favIds.contains(album.id))
-                  .toList();
-            }(),
-          );
+          _navigateTo(context, "Favorite Albums", ListItemType.album, () async {
+            final favIds = await favoritesService.getFavoriteAlbumIds();
+            if (favIds.isEmpty) return [];
+            final allAlbums = await AudioFilterUtils.getFilteredAlbums(
+              _audioQuery,
+            );
+            return allAlbums
+                .where((album) => favIds.contains(album.id))
+                .toList();
+          }());
         },
       ),
       _LibraryCategory(
@@ -158,7 +147,6 @@ class _LibraryPageState extends State<LibraryPage>
             ListItemType.song,
             AudioFilterUtils.getFilteredSongs(
               _audioQuery,
-              _prefsService,
               sortType: SongSortType.TITLE,
             ),
           );
@@ -175,7 +163,6 @@ class _LibraryPageState extends State<LibraryPage>
             ListItemType.album,
             AudioFilterUtils.getFilteredAlbums(
               _audioQuery,
-              _prefsService,
               sortType: AlbumSortType.ALBUM,
             ),
           );
@@ -192,7 +179,6 @@ class _LibraryPageState extends State<LibraryPage>
             ListItemType.artist,
             AudioFilterUtils.getFilteredArtists(
               _audioQuery,
-              _prefsService,
               sortType: ArtistSortType.ARTIST,
             ),
           );
@@ -209,7 +195,6 @@ class _LibraryPageState extends State<LibraryPage>
             ListItemType.song,
             AudioFilterUtils.getFilteredSongs(
               _audioQuery,
-              _prefsService,
               sortType: SongSortType.DATE_ADDED,
               orderType: OrderType.DESC_OR_GREATER,
             ),
@@ -235,10 +220,7 @@ class _LibraryPageState extends State<LibraryPage>
         color: Colors.brown.shade300,
         onTap: () {
           _navigateTo(context, "Folders", ListItemType.folder, () async {
-            final songs = await AudioFilterUtils.getFilteredSongs(
-              _audioQuery,
-              _prefsService,
-            );
+            final songs = await AudioFilterUtils.getFilteredSongs(_audioQuery);
             final Set<String> folderPaths = {};
             for (var song in songs) {
               if (song.data.isNotEmpty) {
@@ -289,7 +271,7 @@ class _LibraryPageState extends State<LibraryPage>
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [AppTheme.backgroundDark, AppTheme.elevatedSurfaceDark],
+            colors: [AppTheme.backgroundDark, AppTheme.surfaceDark],
           ),
         ),
         child:

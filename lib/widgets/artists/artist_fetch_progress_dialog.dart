@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../services/artists/artist_fetch_progress_service.dart';
-import '../../styles/app_theme.dart';
+import 'package:sono/services/artists/artist_fetch_progress_service.dart';
+import 'package:sono/styles/app_theme.dart';
 
 class ArtistFetchProgressDialog extends StatelessWidget {
   const ArtistFetchProgressDialog({super.key});
@@ -70,7 +70,10 @@ class ArtistFetchProgressDialog extends StatelessWidget {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.close_rounded, color: AppTheme.textSecondaryDark),
+            icon: const Icon(
+              Icons.close_rounded,
+              color: AppTheme.textSecondaryDark,
+            ),
             onPressed: () => Navigator.pop(context),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
@@ -241,39 +244,40 @@ class ArtistFetchProgressDialog extends StatelessWidget {
             color: AppTheme.elevatedSurfaceDark,
             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
           ),
-          child: service.logs.isEmpty
-              ? const Padding(
-                  padding: EdgeInsets.all(AppTheme.spacing),
-                  child: Center(
-                    child: Text(
-                      'No logs yet',
-                      style: TextStyle(
-                        color: AppTheme.textTertiaryDark,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                )
-              : ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: service.logs.length,
-                  reverse: true,
-                  padding: const EdgeInsets.all(AppTheme.spacingSm),
-                  itemBuilder: (context, index) {
-                    final log = service.logs[service.logs.length - 1 - index];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
+          child:
+              service.logs.isEmpty
+                  ? const Padding(
+                    padding: EdgeInsets.all(AppTheme.spacing),
+                    child: Center(
                       child: Text(
-                        log,
-                        style: const TextStyle(
-                          color: AppTheme.textSecondaryDark,
-                          fontSize: 11,
-                          fontFamily: 'monospace',
+                        'No logs yet',
+                        style: TextStyle(
+                          color: AppTheme.textTertiaryDark,
+                          fontSize: 12,
                         ),
                       ),
-                    );
-                  },
-                ),
+                    ),
+                  )
+                  : ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: service.logs.length,
+                    reverse: true,
+                    padding: const EdgeInsets.all(AppTheme.spacingSm),
+                    itemBuilder: (context, index) {
+                      final log = service.logs[service.logs.length - 1 - index];
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: Text(
+                          log,
+                          style: const TextStyle(
+                            color: AppTheme.textSecondaryDark,
+                            fontSize: 11,
+                            fontFamily: 'monospace',
+                          ),
+                        ),
+                      );
+                    },
+                  ),
         ),
       ],
     );

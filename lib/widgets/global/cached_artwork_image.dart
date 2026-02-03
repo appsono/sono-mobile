@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:on_audio_query/on_audio_query.dart';
-import '../../services/utils/artwork_cache_service.dart';
+import 'package:sono/services/utils/artwork_cache_service.dart';
 
 class CachedArtworkImage extends StatefulWidget {
   final int id;
@@ -25,7 +25,11 @@ class _CachedArtworkImageState extends State<CachedArtworkImage> {
   @override
   Widget build(BuildContext context) {
     final double devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
-    final int requestSize = (widget.size * devicePixelRatio).round();
+    int requestSize = (widget.size * devicePixelRatio).round();
+
+    if (widget.type == ArtworkType.ALBUM) {
+      requestSize = requestSize.clamp(300, 600);
+    }
 
     return RepaintBoundary(
       child: FutureBuilder<Uint8List?>(

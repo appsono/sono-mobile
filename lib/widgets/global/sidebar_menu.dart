@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'dart:ui';
-import '../../styles/text.dart';
+import 'package:sono/styles/text.dart';
 
 class Sidebar extends StatelessWidget {
   final VoidCallback? onProfileTap;

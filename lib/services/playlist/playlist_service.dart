@@ -1,10 +1,11 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:on_audio_query/on_audio_query.dart' as oaq;
-import '../../data/repositories/playlists_repository.dart';
-import '../../data/repositories/playlist_songs_repository.dart';
-import '../../data/models/playlist_model.dart';
-import 'mediastore_sync_service.dart';
+import 'package:sono/data/repositories/playlists_repository.dart';
+import 'package:sono/data/repositories/playlist_songs_repository.dart';
+import 'package:sono/data/models/playlist_model.dart';
+import 'package:sono/services/playlist/mediastore_sync_service.dart';
+import 'package:sono/utils/audio_filter_utils.dart';
 import 'playlist_cover_service.dart';
 
 /// Main service for playlist management
@@ -493,9 +494,10 @@ class PlaylistService extends ChangeNotifier {
         );
       }
 
-      //get all songs from MediaStore to match paths
+      //get all filtered songs from MediaStore to match paths
       final audioQuery = oaq.OnAudioQuery();
-      final allSongs = await audioQuery.querySongs(
+      final allSongs = await AudioFilterUtils.getFilteredSongs(
+        audioQuery,
         sortType: null,
         orderType: oaq.OrderType.ASC_OR_SMALLER,
       );
@@ -664,9 +666,9 @@ class PlaylistService extends ChangeNotifier {
         return null;
       }
 
-      //get song data
+      //get filtered song data
       final audioQuery = oaq.OnAudioQuery();
-      final allSongs = await audioQuery.querySongs();
+      final allSongs = await AudioFilterUtils.getFilteredSongs(audioQuery);
 
       final buffer = StringBuffer();
       buffer.writeln('#EXTM3U');

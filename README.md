@@ -55,6 +55,7 @@
 
 ### Player
 - **Fullscreen and mini player** views
+- **Swipe gestures** - intuitive player controls
 - **Queue management** - view and edit the playback queue
 - **Synced lyrics** display
 - **Sleep timer** - fall asleep to your music
@@ -67,7 +68,7 @@
 - **Sync playback across devices** on the same network
 - Connect via QR code scanning
 - Real-time latency and connection quality monitoring
-- Deep link support (`sonoapp://sas`)
+- Deep link support (`sono://sas`)
 
 ### Metadata & Scrobbling
 - **Last.fm integration** - scrobble your listening history
@@ -76,9 +77,11 @@
 - Album artwork with blur effects
 
 ### Customization
-- **Light, dark, and system themes**
-- Multiple accent color options
 - Rotating album art in now-playing view
+
+### App
+- **Auto-updates** - stay up to date automatically
+- **Announcements** - in-app announcements via API
 
 ### Account & Profile
 - User registration and login
@@ -162,6 +165,7 @@ flutter build appbundle --release
 lib/
 ├── main.dart                    # Entry point
 ├── app_scaffold.dart            # Main shell with bottom navigation
+├── firebase_options.dart        # Firebase configuration
 │
 ├── data/
 │   ├── database/tables/         # SQLite table definitions
@@ -169,27 +173,38 @@ lib/
 │   ├── models/                  # Data models (playlist, favorites, etc.)
 │   └── repositories/            # Data access layer
 │
+├── models/
+│   └── search/                  # Search-related models
+│
 ├── pages/
-│   ├── main/                    # Home, Search, Library, Settings
-│   ├── library/                 # Album, Artist, Playlist details
+│   ├── api/admin/               # Admin API pages
 │   ├── auth/                    # Login, Registration
 │   ├── info/                    # Changelog, Credits, Recents
+│   ├── library/                 # Album, Artist, Playlist details
+│   ├── main/settings/           # Home, Search, Library, Settings
 │   └── setup/                   # Onboarding flow
 │
 ├── services/
 │   ├── api/                     # Backend API, Last.fm, MusicBrainz, Lyrics
-│   ├── sas/                     # Shared Audio Session networking
-│   ├── playlist/                # Playlist management
 │   ├── artists/                 # Artist image fetching
+│   ├── playlist/                # Playlist management
+│   ├── sas/                     # Shared Audio Session networking
+│   ├── search/                  # Search services
 │   ├── settings/                # Settings services
 │   └── utils/                   # Theme, analytics, caching, updates
 │
 ├── widgets/
-│   ├── player/                  # Fullscreen player, mini player, queue, lyrics
+│   ├── artists/                 # Artist-related widgets
 │   ├── global/                  # Shared components (dialogs, headers, etc.)
 │   ├── home/                    # Home page widgets
+│   ├── layout/                  # Layout widgets
 │   ├── library/                 # Library page widgets
-│   └── sas/                     # SAS connection UI
+│   ├── navigation/              # Navigation widgets
+│   ├── player/parts/            # Fullscreen player, mini player, queue, lyrics
+│   ├── playlists/               # Playlist widgets
+│   ├── sas/                     # SAS connection UI
+│   ├── search/pages/            # Search widgets
+│   └── settings/                # Settings widgets
 │
 ├── styles/                      # Theme and text styles
 └── utils/                       # Helpers and utilities
@@ -201,13 +216,13 @@ lib/
 
 | Category | Technology |
 |----------|------------|
-| Framework | Flutter |
-| Audio | just_audio, audio_service |
-| Music Library | on_audio_query |
-| State | Provider, RxDart |
-| Database | SQLite (sqflite) |
-| Networking | http, web_socket_channel |
-| Analytics | Firebase Analytics & Crashlytics |
+| Framework | [Flutter](https://flutter.dev) |
+| Audio | [just_audio](https://pub.dev/packages/just_audio), [audio_service](https://pub.dev/packages/audio_service) |
+| Music Library | [on_audio_query](https://github.com/appsono/on_audio_query) (fork) |
+| State | [Provider](https://pub.dev/packages/provider), [RxDart](https://pub.dev/packages/rxdart) |
+| Database | [sqflite](https://pub.dev/packages/sqflite) |
+| Networking | [http](https://pub.dev/packages/http), [web_socket_channel](https://pub.dev/packages/web_socket_channel) |
+| Crash Reporting | [Firebase Crashlytics](https://firebase.google.com/products/crashlytics) |
 
 ---
 

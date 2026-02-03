@@ -19,6 +19,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
+          ref: nightly
           fetch-depth: 2
 
       - name: Check for changes in last 24 hours
@@ -46,6 +47,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'schedule' && 'nightly' || github.ref }}
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -58,6 +61,15 @@ jobs:
         with:
           channel: 'beta'
           cache: true
+
+      - name: Setup Gradle memory
+        run: |
+          mkdir -p ~/.gradle
+          cat > ~/.gradle/gradle.properties << EOF
+          org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError
+          org.gradle.daemon=false
+          org.gradle.parallel=false
+          EOF
 
       - name: Get dependencies
         run: flutter pub get

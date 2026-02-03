@@ -16,7 +16,7 @@ class QueueView extends StatefulWidget {
 
 class _QueueViewState extends State<QueueView> {
   final ScrollController _scrollController = ScrollController();
-  static const double _tileHeight = 72.0;
+  static const double _tileHeight = 80.0;
 
   @override
   void initState() {
@@ -152,7 +152,8 @@ class _QueueViewState extends State<QueueView> {
                 itemCount: queue.length,
                 itemBuilder: (context, index) {
                   final mediaItem = queue[index];
-                  final songId = mediaItem.extras?['songId'] as int?;
+                  final raw = mediaItem.extras?['songId'];
+                  final songId = raw is int ? raw : int.tryParse('$raw');
                   final isCurrent = index == widget.sonoPlayer.currentIndex;
 
                   return SizedBox(
@@ -190,8 +191,7 @@ class _QueueViewState extends State<QueueView> {
                       onDismissed: (_) async {
                         await widget.sonoPlayer.removeQueueItem(mediaItem);
                         if (mounted) {
-                          //ignore: use_build_context_synchronously
-                          ScaffoldMessenger.of(context).showSnackBar(
+                          ScaffoldMessenger.of(this.context).showSnackBar(
                             SnackBar(
                               content: Text(
                                 "Removed '${mediaItem.title}' from queue",
@@ -246,13 +246,15 @@ class _QueueViewState extends State<QueueView> {
                                         songId != null
                                             ? CachedArtworkImage(
                                               id: songId,
-                                              size: AppTheme.responsiveArtworkSize(
-                                                context,
-                                                AppTheme.artworkMd,
-                                              ),
-                                              borderRadius: BorderRadius.circular(
-                                                AppTheme.radiusMd,
-                                              ),
+                                              size:
+                                                  AppTheme.responsiveArtworkSize(
+                                                    context,
+                                                    AppTheme.artworkMd,
+                                                  ),
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                    AppTheme.radiusMd,
+                                                  ),
                                             )
                                             : Container(
                                               color:

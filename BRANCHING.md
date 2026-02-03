@@ -76,19 +76,21 @@ We follow [Semantic Versioning](https://semver.org/):
 
 *Nightly builds are created when code is pushed to the `nightly` branch.
 
+---
+
 ## FAQ
 
 **Q: Which branch should I contribute to?**
-A: Always target `nightly` unless you're making a hotfix.
+A: Always target `nightly`, unless you're making a hotfix.
 
 **Q: How do I get the latest development build?**
-A: Download the latest nightly build from [Releases](../../releases).
+A: Download the latest nightly build from the [Releases](../../releases) page.
 
 **Q: Can I install multiple versions?**
-A: No, installing a new version will replace the existing one (same package name).
+A: No, installing a new version will replace the existing one if it uses the same package name.
 
 **Q: How often are releases made?**
-A: Stable releases are manual. Beta and nightly builds are created on-demand when code is merged.
+A: Stable and Beta releases are made manually. Nightly builds are created every day at 2 a.m. UTC.
 
 ---
 

@@ -17,15 +17,17 @@ class LibrarySettingsService extends BaseSettingsService {
   static const bool _defaultCoverRotation = true;
   static const bool _defaultAutoUpdate = true;
 
-  final ValueNotifier<bool> coverRotationEnabled =
-    ValueNotifier<bool>(_defaultCoverRotation);
-  
+  final ValueNotifier<bool> coverRotationEnabled = ValueNotifier<bool>(
+    _defaultCoverRotation,
+  );
+
   Future<void> init() async {
     coverRotationEnabled.value = await getCoverRotationEnabled();
   }
 
-  final ValueNotifier<bool> autoUpdateEnabled =
-      ValueNotifier<bool>(_defaultAutoUpdate);
+  final ValueNotifier<bool> autoUpdateEnabled = ValueNotifier<bool>(
+    _defaultAutoUpdate,
+  );
 
   ///gets the list of excluded folders
   Future<List<String>> getExcludedFolders() async {
@@ -70,7 +72,7 @@ class LibrarySettingsService extends BaseSettingsService {
   ///sets whether album cover rotation is enabled
   Future<void> setCoverRotationEnabled(bool enabled) async {
     await setSetting<bool>('cover_rotation', enabled);
-    coverRotationEnabled.value = enabled; // 
+    coverRotationEnabled.value = enabled; //
   }
 
   Future<bool> getAutoUpdateEnabled() async {
@@ -80,14 +82,10 @@ class LibrarySettingsService extends BaseSettingsService {
     );
   }
 
-
   Future<void> setAutoUpdateEnabled(bool enabled) async {
     if (autoUpdateEnabled.value == enabled) return;
 
-    await setSetting<bool>(
-      'auto_update_enabled_preference_v1',
-      enabled,
-    );
+    await setSetting<bool>('auto_update_enabled_preference_v1', enabled);
 
     autoUpdateEnabled.value = enabled;
   }

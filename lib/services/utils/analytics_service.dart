@@ -6,11 +6,11 @@ import 'package:sono/services/utils/preferences_service.dart';
 
 class AnalyticsService {
   static FirebaseAnalytics get _analytics => FirebaseAnalytics.instance;
-  
+
   static final FirebaseAnalyticsObserver observer = FirebaseAnalyticsObserver(
     analytics: _analytics,
   );
-  
+
   static final PreferencesService _prefsService = PreferencesService();
 
   static const String _analyticsEnabledKey = 'analytics_enabled_v1';

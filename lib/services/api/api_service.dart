@@ -695,7 +695,7 @@ class ApiService {
       );
 
       final responseBody = json.decode(response.body);
-      if (response.statusCode == 201) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         return responseBody;
       } else {
         throw Exception(
@@ -829,10 +829,27 @@ class ApiService {
     final response = await _makeAuthenticatedMultipartRequest(() async {
       final uri = Uri.parse('$baseUrl/users/me/upload-profile-picture');
       final request = http.MultipartRequest('POST', uri);
-      request.headers.addAll(await _getHeaders(isAuthenticated: true));
+
+      //get auth token
+      final token = await getAccessToken();
+      if (token != null) {
+        request.headers['Authorization'] = 'Bearer $token';
+      }
+
+      //add file with explicit MIME type
+      String? mimeType = lookupMimeType(imageFile.path);
+      mimeType ??= 'image/jpeg';
+      final contentType = mimeType.split('/');
+
       request.files.add(
-        await http.MultipartFile.fromPath('file', imageFile.path),
+        await http.MultipartFile.fromPath(
+          'file',
+          imageFile.path,
+          contentType: MediaType(contentType[0], contentType[1]),
+        ),
       );
+
+      _log('Uploading profile picture with MIME type: $mimeType');
 
       final streamedResponse = await request.send();
       return await http.Response.fromStream(streamedResponse);
@@ -840,7 +857,10 @@ class ApiService {
 
     final responseBody = json.decode(response.body);
     if (response.statusCode == 200) {
-      return _transformUserData(responseBody);
+      final transformedData = await _transformUserData(responseBody);
+      //update cached user data
+      await _cacheUserData(transformedData);
+      return transformedData;
     } else {
       throw Exception(
         'Failed to upload picture: ${response.statusCode} ${responseBody['detail'] ?? response.body}',
@@ -1271,6 +1291,233 @@ class ApiService {
   Future<void> forceTokenRefresh() async {
     _log('Manual token refresh triggered');
     await _performBackgroundRefresh();
+  }
+
+  //============= PASSWORD RESET =============
+
+  /// Request password reset email
+  Future<Map<String, dynamic>> requestPasswordReset(String email) async {
+    final baseUrl = await _getBaseUrl();
+    final body = {'email': email};
+
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/users/forgot-password'),
+        headers: await _getHeaders(),
+        body: json.encode(body),
+      );
+
+      final responseBody = json.decode(response.body);
+      if (response.statusCode == 200) {
+        return responseBody;
+      } else {
+        throw Exception(
+          'Failed to request password reset: ${response.statusCode} ${responseBody['detail'] ?? response.body}',
+        );
+      }
+    } catch (e) {
+      throw Exception('Password reset request failed: $e');
+    }
+  }
+
+  /// Verify reset token validity
+  Future<Map<String, dynamic>> verifyResetToken(String token) async {
+    final baseUrl = await _getBaseUrl();
+    final body = {'token': token};
+
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/users/verify-reset-token'),
+        headers: await _getHeaders(),
+        body: json.encode(body),
+      );
+
+      final responseBody = json.decode(response.body);
+      if (response.statusCode == 200) {
+        return responseBody;
+      } else {
+        throw Exception(
+          'Failed to verify reset token: ${response.statusCode} ${responseBody['detail'] ?? response.body}',
+        );
+      }
+    } catch (e) {
+      throw Exception('Token verification failed: $e');
+    }
+  }
+
+  /// Reset password with token
+  Future<Map<String, dynamic>> resetPassword({
+    required String token,
+    required String newPassword,
+  }) async {
+    final baseUrl = await _getBaseUrl();
+    final body = {'token': token, 'new_password': newPassword};
+
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/users/reset-password'),
+        headers: await _getHeaders(),
+        body: json.encode(body),
+      );
+
+      final responseBody = json.decode(response.body);
+      if (response.statusCode == 200) {
+        return responseBody;
+      } else {
+        throw Exception(
+          'Failed to reset password: ${response.statusCode} ${responseBody['detail'] ?? response.body}',
+        );
+      }
+    } catch (e) {
+      throw Exception('Password reset failed: $e');
+    }
+  }
+
+  //============= CONSENT MANAGEMENT =============
+
+  /// Record user consent (TOS, Privacy Policy, etc.)
+  Future<Map<String, dynamic>> recordConsent({
+    required String consentType,
+    required String consentVersion,
+    String? ipAddress,
+  }) async {
+    final baseUrl = await _getBaseUrl();
+    final body = {
+      'consent_type': consentType,
+      'consent_version': consentVersion,
+      if (ipAddress != null) 'ip_address': ipAddress,
+    };
+
+    final response = await _makeAuthenticatedRequest(() async {
+      return await http.post(
+        Uri.parse('$baseUrl/users/me/consent'),
+        headers: await _getHeaders(isAuthenticated: true),
+        body: json.encode(body),
+      );
+    });
+
+    final responseBody = json.decode(response.body);
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return responseBody;
+    } else {
+      throw Exception(
+        'Failed to record consent: ${response.statusCode} ${responseBody['detail'] ?? response.body}',
+      );
+    }
+  }
+
+  /// Get user consents history
+  Future<List<Map<String, dynamic>>> getUserConsents() async {
+    final baseUrl = await _getBaseUrl();
+
+    final response = await _makeAuthenticatedRequest(() async {
+      return await http.get(
+        Uri.parse('$baseUrl/users/me/consents'),
+        headers: await _getHeaders(isAuthenticated: true),
+      );
+    });
+
+    if (response.statusCode == 200) {
+      final responseBody = json.decode(response.body) as List<dynamic>;
+      return List<Map<String, dynamic>>.from(responseBody);
+    } else {
+      final responseBody = json.decode(response.body);
+      throw Exception(
+        'Failed to get consents: ${response.statusCode} ${responseBody['detail'] ?? response.body}',
+      );
+    }
+  }
+
+  //============= USER DATA EXPORT (GDPR) =============
+
+  /// Export user data (GDPR)
+  Future<Map<String, dynamic>> exportUserData() async {
+    final baseUrl = await _getBaseUrl();
+
+    final response = await _makeAuthenticatedRequest(() async {
+      return await http.get(
+        Uri.parse('$baseUrl/users/me/export-data'),
+        headers: await _getHeaders(isAuthenticated: true),
+      );
+    });
+
+    if (response.statusCode == 200) {
+      final responseBody = json.decode(response.body);
+      return responseBody;
+    } else {
+      final responseBody = json.decode(response.body);
+      throw Exception(
+        'Failed to export data: ${response.statusCode} ${responseBody['detail'] ?? response.body}',
+      );
+    }
+  }
+
+  //============= ANNOUNCEMENTS =============
+
+  /// Get list of published announcements
+  Future<List<Map<String, dynamic>>> getAnnouncements({
+    int skip = 0,
+    int limit = 20,
+  }) async {
+    final baseUrl = await _getBaseUrl();
+
+    final queryParams = {'skip': skip.toString(), 'limit': limit.toString()};
+
+    final uri = Uri.parse(
+      '$baseUrl/announcements',
+    ).replace(queryParameters: queryParams);
+
+    try {
+      final response = await http.get(uri);
+
+      if (response.statusCode == 200) {
+        final responseBody = json.decode(response.body);
+
+        if (responseBody is List) {
+          return List<Map<String, dynamic>>.from(responseBody);
+        } else if (responseBody is Map && responseBody.containsKey('items')) {
+          final items = responseBody['items'] as List<dynamic>;
+          return List<Map<String, dynamic>>.from(items);
+        } else if (responseBody is Map) {
+          final values = responseBody.values.toList();
+          if (values.isNotEmpty && values[0] is List) {
+            return List<Map<String, dynamic>>.from(values[0]);
+          }
+          return [Map<String, dynamic>.from(responseBody)];
+        }
+
+        return [];
+      } else {
+        final responseBody = json.decode(response.body);
+        throw Exception(
+          'Failed to get announcements: ${response.statusCode} ${responseBody['detail'] ?? response.body}',
+        );
+      }
+    } catch (e) {
+      throw Exception('Failed to fetch announcements: $e');
+    }
+  }
+
+  /// Get specific announcement by ID
+  Future<Map<String, dynamic>> getAnnouncement(int announcementId) async {
+    final baseUrl = await _getBaseUrl();
+
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/announcements/$announcementId'),
+      );
+
+      final responseBody = json.decode(response.body);
+      if (response.statusCode == 200) {
+        return responseBody;
+      } else {
+        throw Exception(
+          'Failed to get announcement: ${response.statusCode} ${responseBody['detail'] ?? response.body}',
+        );
+      }
+    } catch (e) {
+      throw Exception('Failed to fetch announcement: $e');
+    }
   }
 
   void dispose() {

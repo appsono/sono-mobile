@@ -77,7 +77,9 @@ class RecentsService {
 
     try {
       await _repository.addRecentPlay(songId, context: context);
-      debugPrint('RecentsService: Added song $songId to recent plays with context: $context');
+      debugPrint(
+        'RecentsService: Added song $songId to recent plays with context: $context',
+      );
     } catch (e) {
       debugPrint('RecentsService: Error adding recent play: $e');
     }

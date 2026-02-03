@@ -181,39 +181,27 @@ class MigrationV8 {
           final jsonValue = jsonEncode(value);
 
           //insert into database
-          await db.insert(
-            'app_settings',
-            {
-              'category': category,
-              'key': newKey,
-              'value': jsonValue,
-              'updated_at': timestamp,
-            },
-            conflictAlgorithm: ConflictAlgorithm.replace,
-          );
+          await db.insert('app_settings', {
+            'category': category,
+            'key': newKey,
+            'value': jsonValue,
+            'updated_at': timestamp,
+          }, conflictAlgorithm: ConflictAlgorithm.replace);
 
           migratedCount++;
-          debugPrint(
-            'SonoDatabase: Migrated $category.$newKey = $value',
-          );
+          debugPrint('SonoDatabase: Migrated $category.$newKey = $value');
         }
       }
 
       //add migration version marker
-      await db.insert(
-        'app_settings',
-        {
-          'category': 'system',
-          'key': 'migration_version',
-          'value': jsonEncode(8),
-          'updated_at': timestamp,
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+      await db.insert('app_settings', {
+        'category': 'system',
+        'key': 'migration_version',
+        'value': jsonEncode(8),
+        'updated_at': timestamp,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
 
-      debugPrint(
-        'SonoDatabase: Migrated $migratedCount settings to database',
-      );
+      debugPrint('SonoDatabase: Migrated $migratedCount settings to database');
     } catch (e) {
       debugPrint('SonoDatabase: Error migrating preferences: $e');
       //don't throw - allow app to continue with defaults
