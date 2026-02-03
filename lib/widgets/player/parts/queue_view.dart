@@ -16,7 +16,7 @@ class QueueView extends StatefulWidget {
 
 class _QueueViewState extends State<QueueView> {
   final ScrollController _scrollController = ScrollController();
-  static const double _tileHeight = 72.0;
+  static const double _tileHeight = 80.0;
 
   @override
   void initState() {
