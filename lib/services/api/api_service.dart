@@ -292,28 +292,36 @@ class ApiService {
 
   Future<void> _checkAndRefreshTokens() async {
     try {
-      if (!await hasValidTokens()) {
-        _log('No valid tokens found, clearing auth state');
-        _authStateController?.add(false);
+      final prefs = await _prefs;
+      final refreshToken = prefs.getString(_refreshTokenKey);
+
+      //no refresh token at all => user is not logged in
+      if (refreshToken == null || refreshToken.isEmpty) {
+        _log('No refresh token found, user not logged in');
         return;
       }
 
-      final prefs = await _prefs;
       final expiryTime = prefs.getInt(_tokenExpiryKey);
+      final now = DateTime.now().millisecondsSinceEpoch;
 
-      if (expiryTime != null) {
-        final now = DateTime.now().millisecondsSinceEpoch;
-        final timeUntilExpiry = expiryTime - now;
+      if (expiryTime == null) {
+        //no expiry info but have refresh token => try to refresh
+        _log('No expiry info found, attempting refresh');
+        await _performBackgroundRefresh();
+        return;
+      }
 
-        const refreshThreshold = 5 * 60 * 1000;
+      final timeUntilExpiry = expiryTime - now;
+      const refreshThreshold = 5 * 60 * 1000;
 
-        if (timeUntilExpiry <= refreshThreshold && timeUntilExpiry > 0) {
-          _log('Token expires soon, performing preemptive refresh');
-          await _performBackgroundRefresh();
-        } else if (timeUntilExpiry <= 0) {
-          _log('Token has expired, attempting refresh');
-          await _performBackgroundRefresh();
-        }
+      if (timeUntilExpiry <= 0) {
+        //token has expired => try to refresh (dont log out immediately!)
+        _log('Token has expired, attempting refresh');
+        await _performBackgroundRefresh();
+      } else if (timeUntilExpiry <= refreshThreshold) {
+        //token expires soon => preemptive refresh
+        _log('Token expires soon, performing preemptive refresh');
+        await _performBackgroundRefresh();
       }
     } catch (e) {
       _logError('Error during token check', e);
