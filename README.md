@@ -22,8 +22,36 @@
     <img src="https://img.shields.io/badge/License-GPLv3-blue?style=flat" alt="License: GPL v3">
   </a>
 
-  [Download](https://github.com/appsono/sono-mobile/releases) | [Branching Strategy](BRANCHING.md) | [Contributing](CONTRIBUTING.md)
+  [Branching Strategy](BRANCHING.md) | [Contributing](CONTRIBUTING.md)
 </div>
+
+---
+
+## Installation
+
+### Stable
+<p align="center">
+  <a href="https://sono.en.uptodown.com/android">
+    <img src="https://stc.utdstc.com/img/mediakit/download-gio-big.png" height="50" alt="Download on Uptodown">
+  </a>
+  <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22wtf.sono.app%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2Fappsono%2Fsono-mobile%22%2C%22author%22%3A%22appsono%22%2C%22name%22%3A%22Sono%22%2C%22preferredApkProvider%22%3A%22GitHub%22%2C%22additionalSettings%22%3A%22%7B%5C%22includePrereleases%5C%22%3Afalse%7D%22%7D">
+    <img src="https://github.com/ImranR98/Obtainium/blob/main/assets/graphics/badge_obtainium.png?raw=true" height="50" alt="Get it on Obtainium">
+  </a>
+</p>
+
+### Beta
+<p align="center">
+  <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22wtf.sono.app.beta%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2Fappsono%2Fsono-mobile%22%2C%22author%22%3A%22appsono%22%2C%22name%22%3A%22Sono%20Beta%22%2C%22preferredApkProvider%22%3A%22GitHub%22%2C%22additionalSettings%22%3A%22%7B%5C%22includePrereleases%5C%22%3Atrue%2C%5C%22fallbackToOlderReleases%5C%22%3Atrue%2C%5C%22filterReleaseTitlesByRegEx%5C%22%3A%5C%22beta%5C%22%7D%22%7D">
+    <img src="https://github.com/ImranR98/Obtainium/blob/main/assets/graphics/badge_obtainium.png?raw=true" height="50" alt="Get it on Obtainium">
+  </a>
+</p>
+
+### Nightly
+<p align="center">
+  <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22wtf.sono.app.nightly%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2Fappsono%2Fsono-mobile%22%2C%22author%22%3A%22appsono%22%2C%22name%22%3A%22Sono%20Nightly%22%2C%22preferredApkProvider%22%3A%22GitHub%22%2C%22additionalSettings%22%3A%22%7B%5C%22includePrereleases%5C%22%3Atrue%2C%5C%22fallbackToOlderReleases%5C%22%3Atrue%2C%5C%22filterReleaseTitlesByRegEx%5C%22%3A%5C%22nightly%5C%22%7D%22%7D">
+    <img src="https://github.com/ImranR98/Obtainium/blob/main/assets/graphics/badge_obtainium.png?raw=true" height="50" alt="Get it on Obtainium">
+  </a>
+</p>
 
 ---
 
