@@ -60,6 +60,7 @@ class SonoDatabaseHelper {
     await db.delete('app_playlists');
     await db.delete('song_metadata');
     await db.delete('artist_metadata');
+    await db.delete('artists');
 
     debugPrint('SonoDatabase: All data cleared');
   }
@@ -78,6 +79,7 @@ class SonoDatabaseHelper {
       'playlist_songs',
       'song_metadata',
       'artist_metadata',
+      'artists',
     ];
 
     final stats = <String, int>{};

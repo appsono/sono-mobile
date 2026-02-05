@@ -9,6 +9,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:sono/services/utils/env_config.dart';
 
+/// READ BEFORE EDITING
+///
+/// Please read the API Docs below before editing anything in this file:
+/// https://github.com/appsono/sono-api/API_REFERENCE
+
 class ApiService {
   /// API prefix for all endpoints
   static const String apiPrefix = "/api/v1";
