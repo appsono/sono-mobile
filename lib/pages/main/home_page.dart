@@ -12,7 +12,7 @@ import 'package:sono/widgets/home/page_header_elements.dart';
 import 'package:sono/pages/library/all_items_page.dart';
 import 'package:sono/pages/info/announcements_changelog_page.dart';
 import 'package:sono/utils/audio_filter_utils.dart';
-import 'package:sono/widgets/global/refresh_indicator.dart';
+import 'package:sono_refresh/sono_refresh.dart';
 
 class HomePage extends StatefulWidget {
   final VoidCallback? onSearchTap;
@@ -416,6 +416,14 @@ class HomePageState extends State<HomePage>
     return SonoRefreshIndicator(
       onRefresh: refreshData,
       edgeOffset: appBarContentHeight,
+      logo: Image.asset(
+        'assets/images/logos/favicon-white.png',
+        width: 28,
+        height: 28,
+        color: AppTheme.backgroundLight,
+        colorBlendMode: BlendMode.srcIn,
+      ),
+      indicatorColor: AppTheme.elevatedSurfaceDark,
       child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: <Widget>[

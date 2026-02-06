@@ -100,6 +100,14 @@ class _LibraryPageState extends State<LibraryPage>
                 }(),
                 itemType: ListItemType.song,
                 audioQuery: _audioQuery,
+                onRefreshOverride: () async {
+                  final favIds = await favoritesService.getFavoriteSongIds();
+                  if (favIds.isEmpty) return [];
+                  final allSongs = await AudioFilterUtils.getFilteredSongs(
+                    _audioQuery,
+                  );
+                  return allSongs.where((song) => favIds.contains(song.id)).toList();
+                },
               ),
             ),
           );
@@ -128,6 +136,16 @@ class _LibraryPageState extends State<LibraryPage>
                 }(),
                 itemType: ListItemType.artist,
                 audioQuery: _audioQuery,
+                onRefreshOverride: () async {
+                  final favIds = await favoritesService.getFavoriteArtistIds();
+                  if (favIds.isEmpty) return [];
+                  final allArtists = await AudioFilterUtils.getFilteredArtists(
+                    _audioQuery,
+                  );
+                  return allArtists
+                      .where((artist) => favIds.contains(artist.id))
+                      .toList();
+                },
               ),
             ),
           );
@@ -156,6 +174,16 @@ class _LibraryPageState extends State<LibraryPage>
                 }(),
                 itemType: ListItemType.album,
                 audioQuery: _audioQuery,
+                onRefreshOverride: () async {
+                  final favIds = await favoritesService.getFavoriteAlbumIds();
+                  if (favIds.isEmpty) return [];
+                  final allAlbums = await AudioFilterUtils.getFilteredAlbums(
+                    _audioQuery,
+                  );
+                  return allAlbums
+                      .where((album) => favIds.contains(album.id))
+                      .toList();
+                },
               ),
             ),
           );

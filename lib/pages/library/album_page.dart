@@ -13,7 +13,7 @@ import 'package:sono/utils/artist_string_utils.dart';
 import 'package:sono/utils/artist_navigation.dart';
 
 import 'package:sono/widgets/sas/sas_modal.dart';
-import 'package:sono/widgets/global/refresh_indicator.dart';
+import 'package:sono_refresh/sono_refresh.dart';
 import 'package:sono/widgets/library/artist_artwork_widget.dart';
 import 'package:provider/provider.dart';
 
@@ -937,6 +937,14 @@ class _AlbumPageState extends State<AlbumPage> {
         ),
         body: SonoRefreshIndicator(
           onRefresh: _onRefresh,
+          logo: Image.asset(
+            'assets/images/logos/favicon-white.png',
+            width: 28,
+            height: 28,
+            color: AppTheme.backgroundLight,
+            colorBlendMode: BlendMode.srcIn,
+          ),
+          indicatorColor: AppTheme.elevatedSurfaceDark,
           child: ListView(
             padding: const EdgeInsets.all(0),
             children: [

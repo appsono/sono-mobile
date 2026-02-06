@@ -13,7 +13,7 @@ import 'package:sono/utils/artist_string_utils.dart';
 import 'package:sono/utils/audio_filter_utils.dart';
 import 'package:sono/services/utils/artwork_cache_service.dart';
 import 'package:sono/widgets/global/add_to_playlist_dialog.dart';
-import 'package:sono/widgets/global/refresh_indicator.dart';
+import 'package:sono_refresh/sono_refresh.dart';
 
 class PlaylistDetailsPage extends StatefulWidget {
   final db.PlaylistModel playlist;
@@ -1092,6 +1092,14 @@ class _PlaylistDetailsPageState extends State<PlaylistDetailsPage> {
         ),
         body: SonoRefreshIndicator(
           onRefresh: _loadPlaylistData,
+          logo: Image.asset(
+            'assets/images/logos/favicon-white.png',
+            width: 28,
+            height: 28,
+            color: AppTheme.backgroundLight,
+            colorBlendMode: BlendMode.srcIn,
+          ),
+          indicatorColor: AppTheme.elevatedSurfaceDark,
           child: ListView(
             padding: EdgeInsets.zero,
             children: [

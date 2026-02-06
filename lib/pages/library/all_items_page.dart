@@ -25,7 +25,7 @@ import 'package:sono/widgets/player/sono_player.dart';
 import 'package:sono/styles/text.dart';
 import 'package:sono/styles/app_theme.dart';
 import 'package:sono/widgets/global/cached_artwork_image.dart';
-import 'package:sono/widgets/global/refresh_indicator.dart';
+import 'package:sono_refresh/sono_refresh.dart';
 import 'package:sono/widgets/library/artist_artwork_widget.dart';
 
 enum ListItemType { song, album, artist, playlist, genre, folder }
@@ -41,6 +41,7 @@ class AllItemsPage extends StatefulWidget {
   final GenreSortType? genreSortType;
   final OrderType? orderType;
   final String? path;
+  final Future<List<dynamic>> Function()? onRefreshOverride;
 
   const AllItemsPage({
     super.key,
@@ -54,6 +55,7 @@ class AllItemsPage extends StatefulWidget {
     this.genreSortType,
     this.orderType,
     this.path,
+    this.onRefreshOverride,
   });
 
   @override
@@ -80,41 +82,47 @@ class _AllItemsPageState extends State<AllItemsPage> {
 
   Future<void> _onRefresh() async {
     final Future<List<dynamic>> newFuture;
-    switch (widget.itemType) {
-      case ListItemType.playlist:
-        newFuture = PlaylistService().getAllPlaylists();
-        break;
-      case ListItemType.song:
-        newFuture = AudioFilterUtils.getFilteredSongs(
-          widget.audioQuery,
-          sortType: widget.songSortType,
-          orderType: widget.orderType,
-          path: widget.path,
-        );
-        break;
-      case ListItemType.album:
-        newFuture = AudioFilterUtils.getFilteredAlbums(
-          widget.audioQuery,
-          sortType: widget.albumSortType,
-          orderType: widget.orderType,
-        );
-        break;
-      case ListItemType.artist:
-        newFuture = AudioFilterUtils.getFilteredArtists(
-          widget.audioQuery,
-          sortType: widget.artistSortType,
-          orderType: widget.orderType,
-        );
-        break;
-      case ListItemType.genre:
-        newFuture = widget.audioQuery.queryGenres(
-          sortType: widget.genreSortType,
-          orderType: widget.orderType,
-        );
-        break;
-      case ListItemType.folder:
-        newFuture = widget.audioQuery.queryAllPath();
-        break;
+
+    //use custom refresh logic if provided (e.g. for favorites pages)
+    if (widget.onRefreshOverride != null) {
+      newFuture = widget.onRefreshOverride!();
+    } else {
+      switch (widget.itemType) {
+        case ListItemType.playlist:
+          newFuture = PlaylistService().getAllPlaylists();
+          break;
+        case ListItemType.song:
+          newFuture = AudioFilterUtils.getFilteredSongs(
+            widget.audioQuery,
+            sortType: widget.songSortType,
+            orderType: widget.orderType,
+            path: widget.path,
+          );
+          break;
+        case ListItemType.album:
+          newFuture = AudioFilterUtils.getFilteredAlbums(
+            widget.audioQuery,
+            sortType: widget.albumSortType,
+            orderType: widget.orderType,
+          );
+          break;
+        case ListItemType.artist:
+          newFuture = AudioFilterUtils.getFilteredArtists(
+            widget.audioQuery,
+            sortType: widget.artistSortType,
+            orderType: widget.orderType,
+          );
+          break;
+        case ListItemType.genre:
+          newFuture = widget.audioQuery.queryGenres(
+            sortType: widget.genreSortType,
+            orderType: widget.orderType,
+          );
+          break;
+        case ListItemType.folder:
+          newFuture = widget.audioQuery.queryAllPath();
+          break;
+      }
     }
 
     await newFuture;
@@ -292,6 +300,14 @@ class _AllItemsPageState extends State<AllItemsPage> {
         floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
         body: SonoRefreshIndicator(
           onRefresh: _onRefresh,
+          logo: Image.asset(
+            'assets/images/logos/favicon-white.png',
+            width: 28,
+            height: 28,
+            color: AppTheme.backgroundLight,
+            colorBlendMode: BlendMode.srcIn,
+          ),
+          indicatorColor: AppTheme.elevatedSurfaceDark,
           child: CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: <Widget>[

@@ -1186,6 +1186,15 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  sono_refresh:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: "v1.0.0"
+      resolved-ref: ba69a5e9ebbd554f73294b2805be90f25f1e79fd
+      url: "https://github.com/appsono/sono_refresh"
+    source: git
+    version: "1.0.0"
   source_span:
     dependency: transitive
     description:

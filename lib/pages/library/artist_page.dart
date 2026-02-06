@@ -21,7 +21,7 @@ import 'package:sono/services/artists/artist_profile_image_service.dart';
 import 'package:sono/services/artists/artist_image_fetch_service.dart';
 import 'package:sono/data/repositories/artists_repository.dart';
 import 'package:sono/data/repositories/artist_data_repository.dart';
-import 'package:sono/widgets/global/refresh_indicator.dart';
+import 'package:sono_refresh/sono_refresh.dart';
 import 'package:sono/widgets/artist/popular_songs_section.dart';
 import 'package:sono/widgets/artist/about_section.dart';
 import 'package:sono/widgets/artist/about_modal.dart';
@@ -899,6 +899,14 @@ class _ArtistPageState extends State<ArtistPage> {
             await _fetchPopularSongs(forceRefresh: true);
             await _fetchArtistInfo();
           },
+          logo: Image.asset(
+            'assets/images/logos/favicon-white.png',
+            width: 28,
+            height: 28,
+            color: AppTheme.backgroundLight,
+            colorBlendMode: BlendMode.srcIn,
+          ),
+          indicatorColor: AppTheme.elevatedSurfaceDark,
           child: CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: <Widget>[
