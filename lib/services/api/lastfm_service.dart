@@ -14,7 +14,7 @@ class LastfmService {
   static const String _sessionKeyPref = 'lastfm_session_key_v3';
   static const String _userNamePref = 'lastfm_username_v3';
   static const String _artistInfoCachePrefix = 'lastfm_artist_info_cache_v1_';
-
+  
   Future<SharedPreferences> get _prefs async =>
       await SharedPreferences.getInstance();
 

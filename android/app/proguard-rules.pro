@@ -21,7 +21,7 @@
 -dontwarn com.lucasjosino.on_audio_query.**
 -keepattributes Signature, InnerClasses
 
-#FileProvider for APK installation
+-keep class canta.ran.OpenFilex.** { *; }
 -keep class androidx.core.content.FileProvider { *; }
 
 -keep class com.google.android.exoplayer2.** { *; }

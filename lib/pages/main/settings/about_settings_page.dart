@@ -55,7 +55,10 @@ class _AboutSettingsPageState extends State<AboutSettingsPage> {
             elevation: 0,
             pinned: true,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+              icon: const Icon(
+                Icons.arrow_back_ios_rounded,
+                color: Colors.white,
+              ),
               onPressed: () => Navigator.of(context).pop(),
             ),
             title: const Text(
@@ -152,7 +155,7 @@ class _AboutSettingsPageState extends State<AboutSettingsPage> {
         'icon': Icons.code_rounded,
         'title': 'GitHub',
         'subtitle': 'View source code',
-        'url': 'https://github.com/appsono/sono-mobile',
+        'url': 'https://github.com/appsono',
         'color': Colors.white,
       },
       {

@@ -81,7 +81,7 @@ class MusicBrainzService {
     }
     const int maxRetries = 3;
     const Duration baseDelay = Duration(milliseconds: 500);
-    final String userAgent = 'SonoApp/1.0.9 ( mathis@mathiiis.de )';
+    final String userAgent = 'SonoApp/1.0.8 ( mathis@mathiiis.de )';
 
     //helper to perform GET with retry/backoff on network errors
     Future<http.Response?> getWithRetries(Uri url) async {

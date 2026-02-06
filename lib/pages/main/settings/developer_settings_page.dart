@@ -84,7 +84,7 @@ class _DeveloperSettingsPageState extends State<DeveloperSettingsPage> {
         backgroundColor: AppTheme.backgroundDark,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios_rounded, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: const Text(
@@ -119,10 +119,9 @@ class _DeveloperSettingsPageState extends State<DeveloperSettingsPage> {
                   _buildSwitchTile(
                     icon: Icons.cloud_rounded,
                     title: 'Production API Mode',
-                    subtitle:
-                        _useProductionApi
-                            ? 'Using production Sono API'
-                            : 'Using development Sono API',
+                    subtitle: _useProductionApi
+                        ? 'Using production Sono API'
+                        : 'Using development Sono API',
                     value: _useProductionApi,
                     onChanged: (value) async {
                       setState(() => _useProductionApi = value);
@@ -155,10 +154,9 @@ class _DeveloperSettingsPageState extends State<DeveloperSettingsPage> {
                   _buildSwitchTile(
                     icon: Icons.bug_report_outlined,
                     title: 'Crash Reporting',
-                    subtitle:
-                        _crashlyticsEnabled
-                            ? 'Send crash reports to help fix bugs'
-                            : 'Crash reports disabled',
+                    subtitle: _crashlyticsEnabled
+                        ? 'Send crash reports to help fix bugs'
+                        : 'Crash reports disabled',
                     value: _crashlyticsEnabled,
                     onChanged: (value) async {
                       setState(() => _crashlyticsEnabled = value);
@@ -166,10 +164,9 @@ class _DeveloperSettingsPageState extends State<DeveloperSettingsPage> {
 
                       if (mounted) {
                         _showSnackBar(
-                          message:
-                              value
-                                  ? 'Crash reporting enabled. Restart app for full effect.'
-                                  : 'Crash reporting disabled. Restart app for full effect.',
+                          message: value
+                              ? 'Crash reporting enabled. Restart app for full effect.'
+                              : 'Crash reporting disabled. Restart app for full effect.',
                           isError: false,
                         );
                       }
@@ -276,10 +273,9 @@ class _DeveloperSettingsPageState extends State<DeveloperSettingsPage> {
                     icon: Icons.storage_rounded,
                     iconColor: AppTheme.info,
                     title: 'Database Statistics',
-                    subtitle:
-                        _dbStats == null
-                            ? 'Tap to load statistics'
-                            : _formatDbStats(_dbStats!),
+                    subtitle: _dbStats == null
+                        ? 'Tap to load statistics'
+                        : _formatDbStats(_dbStats!),
                     trailing: Icon(
                       Icons.refresh_rounded,
                       color: Colors.white.withAlpha((0.5 * 255).round()),

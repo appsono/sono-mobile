@@ -162,35 +162,6 @@ class SonoBouncingScrollPhysics extends BouncingScrollPhysics {
   }
 
   @override
-  double applyBoundaryConditions(ScrollMetrics position, double value) {
-    final double delta = value - position.pixels;
-
-    if (value > position.maxScrollExtent) {
-      const double maxBottomOverscroll = 100.0;
-      final double maxAllowed = position.maxScrollExtent + maxBottomOverscroll;
-      if (value > maxAllowed && delta > 0) {
-        if (position.pixels >= maxAllowed) {
-          return delta;
-        }
-        return value - maxAllowed;
-      }
-    }
-
-    if (value < position.minScrollExtent) {
-      const double maxTopOverscroll = 200.0;
-      final double minAllowed = position.minScrollExtent - maxTopOverscroll;
-      if (value < minAllowed && delta < 0) {
-        if (position.pixels <= minAllowed) {
-          return delta;
-        }
-        return value - minAllowed;
-      }
-    }
-
-    return 0.0;
-  }
-
-  @override
   double get dragStartDistanceMotionThreshold => 3.5;
 }
 
@@ -326,7 +297,10 @@ class _SonoSliverRefreshControlState extends State<SonoSliverRefreshControl>
                 angle: rotation,
                 child: Transform.scale(
                   scale: scale,
-                  child: Opacity(opacity: percentageComplete, child: child),
+                  child: Opacity(
+                    opacity: percentageComplete,
+                    child: child,
+                  ),
                 ),
               );
             },
@@ -348,8 +322,6 @@ class _SonoSliverRefreshControlState extends State<SonoSliverRefreshControl>
     return CupertinoSliverRefreshControl(
       onRefresh: _handleRefresh,
       builder: _buildRefreshIndicator,
-      refreshTriggerPullDistance: 140.0,
-      refreshIndicatorExtent: 80.0,
     );
   }
 }

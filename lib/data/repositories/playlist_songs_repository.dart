@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:sono/data/database/database_helper.dart';
-import 'package:sono/data/models/playlist_model.dart';
+import '../database/database_helper.dart';
+import '../models/playlist_model.dart';
 
 ///repository for managing songs within playlists
 class PlaylistSongsRepository {

@@ -18,15 +18,11 @@ class CrashlyticsService {
     if (_isInitialized) return;
 
     _isEnabled = await _prefsService.isCrashlyticsEnabled();
-    await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(
-      _isEnabled,
-    );
+    await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(_isEnabled);
     _isInitialized = true;
 
     if (kDebugMode) {
-      print(
-        'CrashlyticsService: Initialized with collection ${_isEnabled ? 'enabled' : 'disabled'}',
-      );
+      print('CrashlyticsService: Initialized with collection ${_isEnabled ? 'enabled' : 'disabled'}');
     }
   }
 
@@ -62,9 +58,7 @@ class CrashlyticsService {
       );
 
       if (kDebugMode) {
-        print(
-          'CrashlyticsService: Error recorded${reason != null ? ' - $reason' : ''}',
-        );
+        print('CrashlyticsService: Error recorded${reason != null ? ' - $reason' : ''}');
       }
     } catch (e) {
       if (kDebugMode) {

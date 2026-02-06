@@ -4,7 +4,6 @@ import 'package:sono/services/settings/library_settings_service.dart';
 import 'package:sono/services/api/lastfm_service.dart';
 import 'package:sono/services/utils/preferences_service.dart';
 import 'package:sono/widgets/global/bottom_sheet.dart';
-import 'package:sono/widgets/global/skeleton_loader.dart';
 import 'excluded_folders_page.dart';
 
 /// Library & Scrobbling Settings Page
@@ -24,7 +23,7 @@ class _LibraryScrobblingSettingsPageState
   final PreferencesService _prefsService = PreferencesService();
 
   List<String> _excludedFolders = [];
-  bool _isLoadingLastfm = true;
+  bool _isLoading = true;
   bool _isLastfmLoggedIn = false;
   String? _lastfmUsername;
   bool _isLastfmLoggingIn = false;
@@ -48,15 +47,9 @@ class _LibraryScrobblingSettingsPageState
   }
 
   Future<void> _loadSettings() async {
-    setState(() {
-      _isLoadingLastfm = true;
-    });
+    setState(() => _isLoading = true);
 
     final folders = await _librarySettings.getExcludedFolders();
-    setState(() {
-      _excludedFolders = folders;
-    });
-
     final lastfmLoggedIn = await _lastfmService.validateSession();
     String? username;
     if (lastfmLoggedIn) {
@@ -65,10 +58,11 @@ class _LibraryScrobblingSettingsPageState
     final scrobblingEnabled = await _prefsService.isLastfmScrobblingEnabled();
 
     setState(() {
+      _excludedFolders = folders;
       _isLastfmLoggedIn = lastfmLoggedIn;
       _lastfmUsername = username;
       _isScrobblingEnabled = scrobblingEnabled;
-      _isLoadingLastfm = false;
+      _isLoading = false;
     });
   }
 
@@ -108,10 +102,9 @@ class _LibraryScrobblingSettingsPageState
                     ),
                     prefixIcon: Icon(
                       Icons.person_rounded,
-                      color:
-                          _isLastfmLoggingIn
-                              ? Colors.white.withAlpha((0.3 * 255).round())
-                              : Colors.white.withAlpha((0.7 * 255).round()),
+                      color: _isLastfmLoggingIn
+                          ? Colors.white.withAlpha((0.3 * 255).round())
+                          : Colors.white.withAlpha((0.7 * 255).round()),
                     ),
                   ),
                 ),
@@ -142,10 +135,9 @@ class _LibraryScrobblingSettingsPageState
                     ),
                     prefixIcon: Icon(
                       Icons.lock_rounded,
-                      color:
-                          _isLastfmLoggingIn
-                              ? Colors.white.withAlpha((0.3 * 255).round())
-                              : Colors.white.withAlpha((0.7 * 255).round()),
+                      color: _isLastfmLoggingIn
+                          ? Colors.white.withAlpha((0.3 * 255).round())
+                          : Colors.white.withAlpha((0.7 * 255).round()),
                     ),
                   ),
                 ),
@@ -157,14 +149,13 @@ class _LibraryScrobblingSettingsPageState
       ),
       actions: [
         TextButton(
-          onPressed:
-              _isLastfmLoggingIn
-                  ? null
-                  : () {
-                    _lastfmUserController.clear();
-                    _lastfmPasswordController.clear();
-                    Navigator.of(context).pop();
-                  },
+          onPressed: _isLastfmLoggingIn
+              ? null
+              : () {
+                  _lastfmUserController.clear();
+                  _lastfmPasswordController.clear();
+                  Navigator.of(context).pop();
+                },
           child: Text(
             "CANCEL",
             style: TextStyle(
@@ -181,20 +172,19 @@ class _LibraryScrobblingSettingsPageState
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           ),
-          child:
-              _isLastfmLoggingIn
-                  ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
-                  )
-                  : const Text(
-                    "LOGIN",
-                    style: TextStyle(fontFamily: 'VarelaRound'),
+          child: _isLastfmLoggingIn
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                   ),
+                )
+              : const Text(
+                  "LOGIN",
+                  style: TextStyle(fontFamily: 'VarelaRound'),
+                ),
         ),
       ],
     );
@@ -205,20 +195,14 @@ class _LibraryScrobblingSettingsPageState
     final password = _lastfmPasswordController.text;
 
     if (username.isEmpty || password.isEmpty) {
-      _showSnackBar(
-        message: "Please enter both username and password.",
-        isError: true,
-      );
+      _showSnackBar(message: "Please enter both username and password.", isError: true);
       return;
     }
 
     setState(() => _isLastfmLoggingIn = true);
 
     try {
-      final success = await _lastfmService.authenticateDirect(
-        username,
-        password,
-      );
+      final success = await _lastfmService.authenticateDirect(username, password);
 
       if (success) {
         _lastfmUserController.clear();
@@ -226,10 +210,7 @@ class _LibraryScrobblingSettingsPageState
         if (mounted) Navigator.of(context).pop();
         await _loadSettings();
 
-        _showSnackBar(
-          message: "Connected to Last.fm as $username!",
-          isError: false,
-        );
+        _showSnackBar(message: "Connected to Last.fm as $username!", isError: false);
       } else {
         throw Exception("Authentication failed");
       }
@@ -254,10 +235,7 @@ class _LibraryScrobblingSettingsPageState
       await _loadSettings();
       _showSnackBar(message: "Disconnected from Last.fm", isError: false);
     } catch (e) {
-      _showSnackBar(
-        message: "Failed to disconnect from Last.fm",
-        isError: true,
-      );
+      _showSnackBar(message: "Failed to disconnect from Last.fm", isError: true);
     }
   }
 
@@ -283,7 +261,7 @@ class _LibraryScrobblingSettingsPageState
         backgroundColor: AppTheme.backgroundDark,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios_rounded, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: const Text(
@@ -296,78 +274,79 @@ class _LibraryScrobblingSettingsPageState
           ),
         ),
       ),
-      body: ListView(
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text(
-            'LIBRARY',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 13,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1.2,
-              fontFamily: 'VarelaRound',
-            ),
-          ),
-          const SizedBox(height: 12),
-          _buildNavigationTile(
-            icon: Icons.folder_off_rounded,
-            title: 'Excluded Folders',
-            subtitle:
-                _excludedFolders.isEmpty
-                    ? 'No folders excluded'
-                    : '${_excludedFolders.length} folder(s) excluded',
-            onTap: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const ExcludedFoldersPage(),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : ListView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.all(16),
+              children: [
+                const Text(
+                  'LIBRARY',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2,
+                    fontFamily: 'VarelaRound',
+                  ),
                 ),
-              );
-              _loadSettings();
-            },
-          ),
-          const SizedBox(height: 24),
-          const Text(
-            'LAST.FM SCROBBLING',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 13,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1.2,
-              fontFamily: 'VarelaRound',
-            ),
-          ),
-          const SizedBox(height: 12),
-          if (_isLoadingLastfm) ...[
-            const SkeletonListTile(),
-            const SizedBox(height: 8),
-            const SkeletonListTile(),
-          ] else ...[
-            _buildLastfmTile(),
-            const SizedBox(height: 8),
-            _buildSwitchTile(
-              icon: Icons.multitrack_audio_rounded,
-              title: 'Enable Scrobbling',
-              subtitle:
-                  _isScrobblingEnabled
+                const SizedBox(height: 12),
+
+                _buildNavigationTile(
+                  icon: Icons.folder_off_rounded,
+                  title: 'Excluded Folders',
+                  subtitle: _excludedFolders.isEmpty
+                      ? 'No folders excluded'
+                      : '${_excludedFolders.length} folder(s) excluded',
+                  onTap: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ExcludedFoldersPage(),
+                      ),
+                    );
+                    _loadSettings();
+                  },
+                ),
+
+                const SizedBox(height: 24),
+
+                const Text(
+                  'LAST.FM SCROBBLING',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2,
+                    fontFamily: 'VarelaRound',
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                _buildLastfmTile(),
+                const SizedBox(height: 8),
+
+                _buildSwitchTile(
+                  icon: Icons.multitrack_audio_rounded,
+                  title: 'Enable Scrobbling',
+                  subtitle: _isScrobblingEnabled
                       ? 'Your tracks will be scrobbled to Last.fm'
                       : 'Scrobbling is disabled',
-              value: _isScrobblingEnabled,
-              enabled: _isLastfmLoggedIn,
-              onChanged: (value) async {
-                await _prefsService.setLastfmScrobblingEnabled(value);
-                setState(() => _isScrobblingEnabled = value);
-                _showSnackBar(
-                  message: value ? 'Scrobbling enabled' : 'Scrobbling disabled',
-                  isError: false,
-                );
-              },
+                  value: _isScrobblingEnabled,
+                  enabled: _isLastfmLoggedIn,
+                  onChanged: (value) async {
+                    await _prefsService.setLastfmScrobblingEnabled(value);
+                    setState(() => _isScrobblingEnabled = value);
+                    _showSnackBar(
+                      message: value
+                          ? 'Scrobbling enabled'
+                          : 'Scrobbling disabled',
+                      isError: false,
+                    );
+                  },
+                ),
+              ],
             ),
-          ],
-        ],
-      ),
     );
   }
 
@@ -454,43 +433,39 @@ class _LibraryScrobblingSettingsPageState
           if (_isLastfmLoggedIn) {
             showDialog(
               context: context,
-              builder:
-                  (context) => AlertDialog(
-                    backgroundColor: AppTheme.backgroundDark,
-                    title: const Text(
-                      'Disconnect from Last.fm?',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontFamily: 'VarelaRound',
-                      ),
-                    ),
-                    content: Text(
-                      'This will stop scrobbling your tracks.',
-                      style: TextStyle(
-                        color: Colors.white.withAlpha((0.8 * 255).round()),
-                        fontFamily: 'VarelaRound',
-                      ),
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text(
-                          'Cancel',
-                          style: TextStyle(fontFamily: 'VarelaRound'),
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          _handleLastfmLogout();
-                        },
-                        child: const Text(
-                          'Disconnect',
-                          style: TextStyle(fontFamily: 'VarelaRound'),
-                        ),
-                      ),
-                    ],
+              builder: (context) => AlertDialog(
+                backgroundColor: AppTheme.backgroundDark,
+                title: const Text(
+                  'Disconnect from Last.fm?',
+                  style: TextStyle(color: Colors.white, fontFamily: 'VarelaRound'),
+                ),
+                content: Text(
+                  'This will stop scrobbling your tracks.',
+                  style: TextStyle(
+                    color: Colors.white.withAlpha((0.8 * 255).round()),
+                    fontFamily: 'VarelaRound',
                   ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text(
+                      'Cancel',
+                      style: TextStyle(fontFamily: 'VarelaRound'),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _handleLastfmLogout();
+                    },
+                    child: const Text(
+                      'Disconnect',
+                      style: TextStyle(fontFamily: 'VarelaRound'),
+                    ),
+                  ),
+                ],
+              ),
             );
           } else {
             _showLastfmLoginDialog();
@@ -513,20 +488,18 @@ class _LibraryScrobblingSettingsPageState
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color:
-                      _isLastfmLoggedIn
-                          ? AppTheme.success.withAlpha((0.15 * 255).round())
-                          : Colors.white.withAlpha((0.1 * 255).round()),
+                  color: _isLastfmLoggedIn
+                      ? AppTheme.success.withAlpha((0.15 * 255).round())
+                      : Colors.white.withAlpha((0.1 * 255).round()),
                   borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                 ),
                 child: Icon(
                   _isLastfmLoggedIn
                       ? Icons.check_circle_outline
                       : Icons.music_note_rounded,
-                  color:
-                      _isLastfmLoggedIn
-                          ? AppTheme.success
-                          : Colors.white.withAlpha((0.7 * 255).round()),
+                  color: _isLastfmLoggedIn
+                      ? AppTheme.success
+                      : Colors.white.withAlpha((0.7 * 255).round()),
                   size: 20,
                 ),
               ),
@@ -606,19 +579,14 @@ class _LibraryScrobblingSettingsPageState
             color:
                 value && enabled
                     ? AppTheme.brandPink
-                    : Colors.white.withAlpha(
-                      ((enabled ? 0.7 : 0.3) * 255).round(),
-                    ),
+                    : Colors.white.withAlpha(((enabled ? 0.7 : 0.3) * 255).round()),
             size: 20,
           ),
         ),
         title: Text(
           title,
           style: TextStyle(
-            color:
-                enabled
-                    ? Colors.white
-                    : Colors.white.withAlpha((0.5 * 255).round()),
+            color: enabled ? Colors.white : Colors.white.withAlpha((0.5 * 255).round()),
             fontFamily: 'VarelaRound',
             fontWeight: FontWeight.w500,
           ),
@@ -626,9 +594,7 @@ class _LibraryScrobblingSettingsPageState
         subtitle: Text(
           subtitle,
           style: TextStyle(
-            color: Colors.white.withAlpha(
-              ((enabled ? 0.7 : 0.4) * 255).round(),
-            ),
+            color: Colors.white.withAlpha(((enabled ? 0.7 : 0.4) * 255).round()),
             fontFamily: 'VarelaRound',
           ),
         ),

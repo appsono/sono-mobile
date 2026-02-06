@@ -13,10 +13,12 @@ class ArtworkCacheService {
   final Map<String, Uint8List?> _cache = {};
   final List<String> _accessOrder = [];
   static const int _maxCacheSize = 50;
-  static const int _cacheCleanupThreshold = 50;
+  static const int _cacheCleanupThreshold =
+      50;
 
   int _estimatedMemoryUsageBytes = 0;
-  static const int _maxMemoryUsageMB = 20;
+  static const int _maxMemoryUsageMB =
+      20; 
 
   /// Gets artwork with caching and memory management
   Future<Uint8List?> getArtwork(

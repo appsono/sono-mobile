@@ -13,7 +13,10 @@ class ArtistNavigation {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => ArtistPage(artist: artist, audioQuery: audioQuery),
+        builder: (_) => ArtistPage(
+          artist: artist,
+          audioQuery: audioQuery,
+        ),
       ),
     );
   }
@@ -53,24 +56,11 @@ class ArtistNavigation {
       //query all artists
       final artists = await audioQuery.queryArtists();
 
-      //try exact match first (case-insensitive)
-      var artist = artists.cast<ArtistModel?>().firstWhere(
-        (a) => a?.artist.toLowerCase() == artistName.toLowerCase(),
-        orElse: () => null,
+      //find artist by name (case-insensitive)
+      final artist = artists.firstWhere(
+        (a) => a.artist.toLowerCase() == artistName.toLowerCase(),
+        orElse: () => throw Exception('Artist not found'),
       );
-
-      //if no exact match found, try partial matching
-      //handles cases where "Tyler, The Creator" was split into "Tyler"
-      //but we are searching for the full name
-      artist ??= artists.cast<ArtistModel?>().firstWhere(
-        (a) =>
-            artistName.toLowerCase().startsWith('${a!.artist.toLowerCase()},'),
-        orElse: () => null,
-      );
-
-      if (artist == null) {
-        throw Exception('Artist not found');
-      }
 
       if (!context.mounted) return;
 
@@ -83,7 +73,10 @@ class ArtistNavigation {
 
   static void _showError(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), duration: const Duration(seconds: 2)),
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(seconds: 2),
+      ),
     );
   }
 }

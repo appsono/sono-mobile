@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:sono/services/utils/analytics_service.dart';
 import 'package:sono/services/api/api_service.dart';
 import 'package:sono/styles/app_theme.dart';
-import 'package:sono/pages/auth/forgot_password_page.dart';
-import 'package:sono/widgets/global/consent_dialog.dart';
-import 'package:sono/pages/info/privacy_page.dart';
-import 'package:sono/pages/info/terms_page.dart';
 
 class LoginPage extends StatefulWidget {
   final VoidCallback onLoginSuccess;
@@ -32,6 +29,8 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
+
+    AnalyticsService.logScreenView('LoginPage');
   }
 
   Future<void> _performLogin() async {
@@ -44,12 +43,6 @@ class _LoginPageState extends State<LoginPage> {
       try {
         //pass _loginIdentifier as the username to the ApiService
         await _apiService.login(_loginIdentifier, _password);
-
-        //check if user has consented to privacy and terms
-        if (mounted) {
-          await _checkConsent();
-        }
-
         widget.onLoginSuccess();
       } catch (e) {
         if (mounted) {
@@ -64,99 +57,6 @@ class _LoginPageState extends State<LoginPage> {
           });
         }
       }
-    }
-  }
-
-  Future<void> _checkConsent() async {
-    const consentVersion = '2.0';
-
-    //check privacy policy consent
-    final privacyAccepted = await ConsentDialog.showIfNeeded(
-      context: context,
-      consentType: 'privacy_policy',
-      consentVersion: consentVersion,
-      title: 'Privacy Policy',
-      content: '''
-By using Sono, you agree to our Privacy Policy.
-
-Key points:
-• App can be used locally without any account - no data collection for local use
-• Creating a Sono Account is OPTIONAL and enables uploading to CDN and cloud playlists
-• Crash logs are optional and can be disabled in Settings
-• Your data is never sold to third parties
-• You have full GDPR rights (access, deletion, portability)
-
-Age requirement for accounts: 13+ years old
-
-Tap "Read Full Policy" below to view the complete Privacy Policy.
-      ''',
-      onViewFullDocument: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const PrivacyPage()),
-        );
-      },
-      onDeclined: () async {
-        //logout if declined
-        await _apiService.logout();
-      },
-    );
-
-    if (privacyAccepted == null || !privacyAccepted) {
-      //user declined, logout
-      await _apiService.logout();
-      if (mounted) {
-        setState(() {
-          _errorMessage = 'You must accept the Privacy Policy to use Sono';
-        });
-      }
-      return;
-    }
-
-    //check terms of service consent
-    if (!mounted) return;
-    final termsAccepted = await ConsentDialog.showIfNeeded(
-      context: context,
-      consentType: 'terms_of_service',
-      consentVersion: consentVersion,
-      title: 'Terms of Service',
-      content: '''
-By using Sono, you agree to our Terms of Service.
-
-Key terms:
-• App can be used locally without any account for all basic features
-• Creating a Sono Account is OPTIONAL and requires being 13+ years old
-• Sono Accounts enable uploading songs to CDN and cloud playlists
-• You must have legal rights to upload any content
-• Do not violate copyright laws or abuse the service
-• SAS sessions are peer-to-peer, no audio data stored on our servers
-
-Operated by: Mathis Laarmanns, Germany
-Contact: business@mail.sono.wtf
-
-Tap "Read Full Terms" below to view the complete Terms of Service.
-      ''',
-      onViewFullDocument: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const TermsPage()),
-        );
-      },
-      onDeclined: () async {
-        //logout if declined
-        await _apiService.logout();
-      },
-    );
-
-    if (termsAccepted == null || !termsAccepted) {
-      //user declined, logout
-      await _apiService.logout();
-      if (mounted) {
-        setState(() {
-          _errorMessage = 'You must accept the Terms of Service to use Sono';
-        });
-      }
-      return;
     }
   }
 
@@ -255,32 +155,7 @@ Tap "Read Full Terms" below to view the complete Terms of Service.
                     onSaved: (value) => _password = value!,
                   ),
                   SizedBox(height: AppTheme.spacingMd),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const ForgotPasswordPage(),
-                          ),
-                        );
-                      },
-                      style: TextButton.styleFrom(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: AppTheme.spacingSm,
-                          vertical: AppTheme.spacingXs,
-                        ),
-                      ),
-                      child: Text(
-                        'Forgot Password?',
-                        style: TextStyle(
-                          color: Theme.of(context).primaryColor,
-                          fontSize: AppTheme.fontBody,
-                        ),
-                      ),
-                    ),
-                  ),
+                  // TODO: Implement Forgot Password functionality
                   SizedBox(height: AppTheme.spacingLg),
 
                   if (_errorMessage != null)
