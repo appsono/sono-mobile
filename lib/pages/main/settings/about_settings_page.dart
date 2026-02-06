@@ -152,7 +152,7 @@ class _AboutSettingsPageState extends State<AboutSettingsPage> {
         'icon': Icons.code_rounded,
         'title': 'GitHub',
         'subtitle': 'View source code',
-        'url': 'https://github.com/appsono',
+        'url': 'https://github.com/appsono/sono-mobile',
         'color': Colors.white,
       },
       {
