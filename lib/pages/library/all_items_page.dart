@@ -12,7 +12,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:sono/services/utils/preferences_service.dart';
 import 'package:sono/utils/audio_filter_utils.dart';
+import 'package:sono/utils/artist_string_utils.dart';
+import 'package:sono/services/utils/analytics_service.dart';
 import 'package:sono/widgets/global/bottom_sheet.dart';
 import 'package:sono/data/models/playlist_model.dart' as db;
 import 'package:sono/services/playlist/playlist_service.dart';
@@ -24,9 +27,8 @@ import 'package:sono/widgets/player/sono_player.dart';
 import 'package:sono/styles/text.dart';
 import 'package:sono/styles/app_theme.dart';
 import 'package:sono/widgets/global/cached_artwork_image.dart';
-import 'package:sono_refresh/sono_refresh.dart';
+import 'package:sono/widgets/global/refresh_indicator.dart';
 import 'package:sono/widgets/library/artist_artwork_widget.dart';
-import 'package:sono/widgets/library/album_artist_text.dart';
 
 enum ListItemType { song, album, artist, playlist, genre, folder }
 
@@ -35,13 +37,7 @@ class AllItemsPage extends StatefulWidget {
   final Future<List<dynamic>> itemsFuture;
   final ListItemType itemType;
   final OnAudioQuery audioQuery;
-  final SongSortType? songSortType;
-  final AlbumSortType? albumSortType;
-  final ArtistSortType? artistSortType;
-  final GenreSortType? genreSortType;
-  final OrderType? orderType;
-  final String? path;
-  final Future<List<dynamic>> Function()? onRefreshOverride;
+  final PreferencesService prefsService;
 
   const AllItemsPage({
     super.key,
@@ -49,13 +45,7 @@ class AllItemsPage extends StatefulWidget {
     required this.itemsFuture,
     required this.itemType,
     required this.audioQuery,
-    this.songSortType,
-    this.albumSortType,
-    this.artistSortType,
-    this.genreSortType,
-    this.orderType,
-    this.path,
-    this.onRefreshOverride,
+    required this.prefsService,
   });
 
   @override
@@ -70,6 +60,9 @@ class _AllItemsPageState extends State<AllItemsPage> {
   void initState() {
     super.initState();
     _itemsFuture = widget.itemsFuture;
+
+    String screenName = 'AllItemsPage_${widget.itemType.name}';
+    AnalyticsService.logScreenView(screenName);
   }
 
   void _refreshPlaylists() {
@@ -81,58 +74,33 @@ class _AllItemsPageState extends State<AllItemsPage> {
   }
 
   Future<void> _onRefresh() async {
-    final Future<List<dynamic>> newFuture;
-
-    //use custom refresh logic if provided (e.g. for favorites pages)
-    if (widget.onRefreshOverride != null) {
-      newFuture = widget.onRefreshOverride!();
-    } else {
+    setState(() {
+      _resolvedItems = null;
       switch (widget.itemType) {
         case ListItemType.playlist:
-          newFuture = PlaylistService().getAllPlaylists();
+          _itemsFuture = PlaylistService().getAllPlaylists();
           break;
         case ListItemType.song:
-          newFuture = AudioFilterUtils.getFilteredSongs(
+          _itemsFuture = AudioFilterUtils.getFilteredSongs(
             widget.audioQuery,
-            sortType: widget.songSortType,
-            orderType: widget.orderType,
-            path: widget.path,
+            widget.prefsService,
           );
           break;
         case ListItemType.album:
-          newFuture = AudioFilterUtils.getFilteredAlbums(
-            widget.audioQuery,
-            sortType: widget.albumSortType,
-            orderType: widget.orderType,
-          );
+          _itemsFuture = widget.audioQuery.queryAlbums();
           break;
         case ListItemType.artist:
-          newFuture = AudioFilterUtils.getFilteredArtists(
-            widget.audioQuery,
-            sortType: widget.artistSortType,
-            orderType: widget.orderType,
-          );
+          _itemsFuture = widget.audioQuery.queryArtists();
           break;
         case ListItemType.genre:
-          newFuture = widget.audioQuery.queryGenres(
-            sortType: widget.genreSortType,
-            orderType: widget.orderType,
-          );
+          _itemsFuture = widget.audioQuery.queryGenres();
           break;
         case ListItemType.folder:
-          newFuture = widget.audioQuery.queryAllPath();
+          _itemsFuture = widget.audioQuery.queryAllPath();
           break;
       }
-    }
-
-    await newFuture;
-
-    if (mounted) {
-      setState(() {
-        _itemsFuture = newFuture;
-        _resolvedItems = null;
-      });
-    }
+    });
+    await _itemsFuture;
   }
 
   Future<void> _showCreatePlaylistDialog() async {
@@ -236,6 +204,15 @@ class _AllItemsPageState extends State<AllItemsPage> {
     );
   }
 
+  void _playAll() {
+    if (_resolvedItems != null && _resolvedItems!.isNotEmpty) {
+      final songs = _resolvedItems!.cast<SongModel>();
+      if (songs.isNotEmpty) {
+        SonoPlayer().playNewPlaylist(songs, 0, context: widget.pageTitle);
+      }
+    }
+  }
+
   Widget _buildSkeletonListItem() {
     return RepaintBoundary(
       child: Shimmer.fromColors(
@@ -298,132 +275,122 @@ class _AllItemsPageState extends State<AllItemsPage> {
         backgroundColor: Colors.transparent,
         floatingActionButton: _buildFab(),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-        body: SonoRefreshIndicator(
-          onRefresh: _onRefresh,
-          logo: Image.asset(
-            'assets/images/logos/favicon-white.png',
-            width: 28,
-            height: 28,
-            color: AppTheme.backgroundLight,
-            colorBlendMode: BlendMode.srcIn,
-          ),
-          indicatorColor: AppTheme.elevatedSurfaceDark,
-          child: CustomScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            slivers: <Widget>[
-              SliverAppBar(
-                title: Text(
-                  widget.pageTitle,
-                  style: AppStyles.sonoPlayerTitle.copyWith(fontSize: 18),
-                ),
-                backgroundColor: AppTheme.backgroundDark.withAlpha(204),
-                elevation: 0,
-                pinned: true,
-                leading: IconButton(
-                  icon: const Icon(
-                    Icons.arrow_back_rounded,
-                    color: AppTheme.textPrimaryDark,
-                  ),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
+        body: CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: <Widget>[
+            SliverAppBar(
+              title: Text(
+                widget.pageTitle,
+                style: AppStyles.sonoPlayerTitle.copyWith(fontSize: 18),
               ),
-              //content list
-              FutureBuilder<List<dynamic>>(
-                future: _itemsFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) => _buildSkeletonListItem(),
-                        childCount: 15,
-                      ),
-                    );
-                  }
-                  if (snapshot.hasError) {
-                    return SliverFillRemaining(
-                      child: Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(AppTheme.spacing),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.error_outline_rounded,
-                                size: AppTheme.iconHero,
+              backgroundColor: AppTheme.backgroundDark.withAlpha(204),
+              elevation: 0,
+              pinned: true,
+              leading: IconButton(
+                icon: const Icon(
+                  Icons.arrow_back_ios_rounded,
+                  color: AppTheme.textPrimaryDark,
+                ),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ),
+            SonoSliverRefreshControl(onRefresh: _onRefresh),
+            //content list
+            FutureBuilder<List<dynamic>>(
+              future: _itemsFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) => _buildSkeletonListItem(),
+                      childCount: 15,
+                    ),
+                  );
+                }
+                if (snapshot.hasError) {
+                  return SliverFillRemaining(
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppTheme.spacing),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.error_outline_rounded,
+                              size: AppTheme.iconHero,
+                              color: AppTheme.textTertiaryDark,
+                            ),
+                            const SizedBox(height: AppTheme.spacing),
+                            Text(
+                              'Error loading items',
+                              style: TextStyle(
+                                color: AppTheme.textSecondaryDark,
+                                fontSize: AppTheme.font,
+                              ),
+                            ),
+                            const SizedBox(height: AppTheme.spacingSm),
+                            Text(
+                              '${snapshot.error}',
+                              style: TextStyle(
                                 color: AppTheme.textTertiaryDark,
+                                fontSize: AppTheme.fontSm,
                               ),
-                              const SizedBox(height: AppTheme.spacing),
-                              Text(
-                                'Error loading items',
-                                style: TextStyle(
-                                  color: AppTheme.textSecondaryDark,
-                                  fontSize: AppTheme.font,
-                                ),
-                              ),
-                              const SizedBox(height: AppTheme.spacingSm),
-                              Text(
-                                '${snapshot.error}',
-                                style: TextStyle(
-                                  color: AppTheme.textTertiaryDark,
-                                  fontSize: AppTheme.fontSm,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
-                          ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
                         ),
-                      ),
-                    );
-                  }
-                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return SliverFillRemaining(
-                      child: Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(AppTheme.spacing),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                _getEmptyIcon(),
-                                size: AppTheme.iconHero,
-                                color: AppTheme.textTertiaryDark,
-                              ),
-                              const SizedBox(height: AppTheme.spacing),
-                              Text(
-                                _getEmptyMessage(),
-                                style: TextStyle(
-                                  color: AppTheme.textSecondaryDark,
-                                  fontSize: AppTheme.font,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  }
-
-                  _resolvedItems = snapshot.data!;
-                  return SliverPadding(
-                    padding: const EdgeInsets.only(bottom: 100),
-                    sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final item = _resolvedItems![index];
-                          return RepaintBoundary(
-                            child: _buildListItem(context, item),
-                          );
-                        },
-                        childCount: _resolvedItems!.length,
-                        addAutomaticKeepAlives: false,
-                        addRepaintBoundaries: false,
                       ),
                     ),
                   );
-                },
-              ),
-            ],
-          ),
+                }
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return SliverFillRemaining(
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppTheme.spacing),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              _getEmptyIcon(),
+                              size: AppTheme.iconHero,
+                              color: AppTheme.textTertiaryDark,
+                            ),
+                            const SizedBox(height: AppTheme.spacing),
+                            Text(
+                              _getEmptyMessage(),
+                              style: TextStyle(
+                                color: AppTheme.textSecondaryDark,
+                                fontSize: AppTheme.font,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }
+
+                _resolvedItems = snapshot.data!;
+                return SliverPadding(
+                  padding: const EdgeInsets.only(bottom: 100),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        final item = _resolvedItems![index];
+                        return RepaintBoundary(
+                          child: _buildListItem(context, item),
+                        );
+                      },
+                      childCount: _resolvedItems!.length,
+                      addAutomaticKeepAlives: false,
+                      addRepaintBoundaries: false,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
         ),
       ),
     );
@@ -479,6 +446,21 @@ class _AllItemsPageState extends State<AllItemsPage> {
       );
     }
 
+    if (widget.itemType == ListItemType.song &&
+        _resolvedItems != null &&
+        _resolvedItems!.isNotEmpty) {
+      return FloatingActionButton.extended(
+        onPressed: _playAll,
+        label: Text(
+          "PLAY ALL",
+          style: AppStyles.sonoButtonTextSmaller.copyWith(
+            color: AppTheme.textPrimaryDark,
+          ),
+        ),
+        icon: const Icon(Icons.play_arrow, color: AppTheme.textPrimaryDark),
+        backgroundColor: AppTheme.brandPink,
+      );
+    }
     return null;
   }
 
@@ -574,7 +556,7 @@ class _AllItemsPageState extends State<AllItemsPage> {
                         ),
                         itemType: ListItemType.song,
                         audioQuery: widget.audioQuery,
-                        songSortType: SongSortType.TITLE,
+                        prefsService: widget.prefsService,
                       ),
                 ),
               ),
@@ -595,13 +577,13 @@ class _AllItemsPageState extends State<AllItemsPage> {
                         pageTitle: folderName,
                         itemsFuture: AudioFilterUtils.getFilteredSongs(
                           widget.audioQuery,
+                          widget.prefsService,
                           sortType: SongSortType.TITLE,
                           path: folderPath,
                         ),
                         itemType: ListItemType.song,
                         audioQuery: widget.audioQuery,
-                        songSortType: SongSortType.TITLE,
-                        path: folderPath,
+                        prefsService: widget.prefsService,
                       ),
                 ),
               ),
@@ -632,13 +614,14 @@ class _AlbumListTile extends StatelessWidget {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
-      subtitle: AlbumArtistText(
-        albumId: album.id,
-        fallbackArtist: album.artist,
+      subtitle: Text(
+        ArtistStringUtils.getShortDisplay(
+          album.artist ?? 'Unknown Artist',
+          maxArtists: 2,
+        ),
         style: AppStyles.sonoListItemSubtitle,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        maxArtists: 2,
       ),
       onTap: onTap,
       contentPadding: const EdgeInsets.symmetric(

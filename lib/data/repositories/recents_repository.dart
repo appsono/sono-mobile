@@ -1,7 +1,7 @@
 import 'package:sqflite/sqflite.dart';
-import 'package:sono/data/database/database_helper.dart';
-import 'package:sono/data/database/tables/recents_table.dart';
-import 'package:sono/data/models/recent_play_model.dart';
+import '../database/database_helper.dart';
+import '../database/tables/recents_table.dart';
+import '../models/recent_play_model.dart';
 
 ///repository for managing recent plays data
 class RecentsRepository {

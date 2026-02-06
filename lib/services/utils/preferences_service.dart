@@ -14,15 +14,11 @@ class PreferencesService with ChangeNotifier {
   static const String albumCoverRotationKey = 'album_cover_rotation_v1';
   static const String themeModeKey = 'theme_mode_v1';
   static const String accentColorKey = 'accent_color_v1';
-  static const String experimentalThemesEnabledKey =
-      'experimental_themes_enabled_v1';
+  static const String experimentalThemesEnabledKey = 'experimental_themes_enabled_v1';
   static const String apiModeIsProdKey = 'api_mode_is_prod_preference_v1';
-  static const String backgroundPlaybackEnabledKey =
-      'background_playback_enabled_v1';
-  static const String resumeAfterRebootEnabledKey =
-      'resume_after_reboot_enabled_v1';
-  static const String lastfmScrobblingEnabledKey =
-      'lastfm_scrobbling_enabled_v1';
+  static const String backgroundPlaybackEnabledKey = 'background_playback_enabled_v1';
+  static const String resumeAfterRebootEnabledKey = 'resume_after_reboot_enabled_v1';
+  static const String lastfmScrobblingEnabledKey = 'lastfm_scrobbling_enabled_v1';
   static const String crashlyticsEnabledKey = 'crashlytics_enabled_v1';
 
   SharedPreferences? _prefs;
@@ -50,16 +46,10 @@ class PreferencesService with ChangeNotifier {
       _cache[albumCoverRotationKey] = prefs.getBool(albumCoverRotationKey);
       _cache[themeModeKey] = prefs.getInt(themeModeKey);
       _cache[accentColorKey] = prefs.getInt(accentColorKey);
-      _cache[experimentalThemesEnabledKey] = prefs.getBool(
-        experimentalThemesEnabledKey,
-      );
+      _cache[experimentalThemesEnabledKey] = prefs.getBool(experimentalThemesEnabledKey);
       _cache[apiModeIsProdKey] = prefs.getBool(apiModeIsProdKey);
-      _cache[backgroundPlaybackEnabledKey] = prefs.getBool(
-        backgroundPlaybackEnabledKey,
-      );
-      _cache[resumeAfterRebootEnabledKey] = prefs.getBool(
-        resumeAfterRebootEnabledKey,
-      );
+      _cache[backgroundPlaybackEnabledKey] = prefs.getBool(backgroundPlaybackEnabledKey);
+      _cache[resumeAfterRebootEnabledKey] = prefs.getBool(resumeAfterRebootEnabledKey);
 
       _cacheInitialized = true;
       debugPrint('PreferencesService: Cache initialized');
@@ -503,25 +493,32 @@ class PreferencesService with ChangeNotifier {
 
   Future<bool> isLastfmScrobblingEnabled() async {
     return await _getCachedValue<bool>(
-          lastfmScrobblingEnabledKey,
-          () => true,
-        ) ??
-        true;
+      lastfmScrobblingEnabledKey,
+      () => true,
+    ) ?? true;
   }
 
   Future<void> setLastfmScrobblingEnabled(bool enabled) async {
-    await _setCachedValue<bool>(lastfmScrobblingEnabledKey, enabled);
+    await _setCachedValue<bool>(
+      lastfmScrobblingEnabledKey,
+      enabled,
+    );
   }
 
   //--- Crashlytics Settings ---
 
   Future<bool> isCrashlyticsEnabled() async {
-    return await _getCachedValue<bool>(crashlyticsEnabledKey, () => true) ??
-        true;
+    return await _getCachedValue<bool>(
+      crashlyticsEnabledKey,
+      () => true,
+    ) ?? true;
   }
 
   Future<void> setCrashlyticsEnabled(bool enabled) async {
-    await _setCachedValue<bool>(crashlyticsEnabledKey, enabled);
+    await _setCachedValue<bool>(
+      crashlyticsEnabledKey,
+      enabled,
+    );
   }
 
   //--- Utility Methods ---

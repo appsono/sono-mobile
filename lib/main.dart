@@ -38,8 +38,7 @@ Future<void> _initializeFirebase() async {
 
     //only set up error handlers if crashlytics is enabled
     if (CrashlyticsService.instance.isEnabled) {
-      FlutterError.onError =
-          FirebaseCrashlytics.instance.recordFlutterFatalError;
+      FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
       PlatformDispatcher.instance.onError = (error, stack) {
         FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
         return true;
@@ -74,7 +73,10 @@ void main() async {
   }
 
   //run independent initializations
-  await Future.wait([EnvConfig.initialize(), _initializeFirebase()]);
+  await Future.wait([
+    EnvConfig.initialize(),
+    _initializeFirebase(),
+  ]);
 
   runApp(
     MultiProvider(
@@ -113,6 +115,7 @@ class _SonoState extends State<Sono> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    //_savePlaybackStateForResume();
     _linkSubscription?.cancel();
     super.dispose();
   }
@@ -148,7 +151,7 @@ class _SonoState extends State<Sono> with WidgetsBindingObserver {
       debugPrint('Received deep link: $uri');
     }
 
-    if (uri.scheme == 'sono' && (uri.host == 'sas' || uri.host == 'sas')) {
+    if (uri.scheme == 'sonoapp' && (uri.host == 'sas' || uri.host == 'jam')) {
       _handleSASDeepLink(uri);
     }
   }
@@ -308,39 +311,23 @@ class _SonoState extends State<Sono> with WidgetsBindingObserver {
   }
 
   ThemeData _buildThemeData(MaterialColor primaryColor, Brightness brightness) {
+    //ignore: unused_local_variable
     final isDark = brightness == Brightness.dark;
+    final primary = primaryColor;
     final background = AppTheme.background(brightness);
     final onBackground = AppTheme.textPrimary(brightness);
     final surface = AppTheme.surface(brightness);
 
     return ThemeData(
       brightness: brightness,
-      primaryColor: primaryColor,
+      primaryColor: primary,
+      primarySwatch: primary,
       scaffoldBackgroundColor: background,
       fontFamily: AppTheme.fontFamily,
-      canvasColor: background,
-      cardColor: AppTheme.card(brightness),
-      dividerColor: AppTheme.border(brightness),
-      colorScheme:
-          isDark
-              ? ColorScheme.dark(
-                primary: primaryColor,
-                secondary: primaryColor,
-                surface: surface,
-                onSurface: onBackground,
-              )
-              : ColorScheme.light(
-                primary: primaryColor,
-                secondary: primaryColor,
-                surface: surface,
-                onSurface: onBackground,
-              ),
       appBarTheme: AppBarTheme(
-        backgroundColor: Colors.transparent,
+        backgroundColor: surface,
         foregroundColor: onBackground,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
+        elevation: AppTheme.elevationNone,
         centerTitle: true,
         titleTextStyle: TextStyle(
           color: onBackground,
@@ -349,11 +336,17 @@ class _SonoState extends State<Sono> with WidgetsBindingObserver {
           fontFamily: AppTheme.fontFamily,
         ),
       ),
+      colorScheme: ColorScheme.fromSwatch(
+        primarySwatch: primary,
+        brightness: brightness,
+      ).copyWith(surface: surface),
       textTheme: TextTheme(
         bodyLarge: TextStyle(color: onBackground),
         bodyMedium: TextStyle(color: onBackground),
         titleLarge: TextStyle(color: onBackground),
       ),
+      dividerColor: AppTheme.border(brightness),
+      cardColor: AppTheme.card(brightness),
     );
   }
 }

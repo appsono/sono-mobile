@@ -3,7 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:on_audio_query/on_audio_query.dart';
-import 'package:sono/data/repositories/artists_repository.dart';
+import '../../data/repositories/artists_repository.dart';
 
 /// Widget that displays artist artwork with priority:
 /// 1. Custom image (user-selected from gallery)
@@ -76,43 +76,20 @@ class ArtistArtworkWidget extends StatelessWidget {
     _imageInfoCache[artistName] = imageInfo;
 
     if (kDebugMode) {
-      print(
-        'ArtistArtworkWidget [$artistName]: Fetched and cached - customPath=${imageInfo['customPath']}, fetchedUrl=${imageInfo['fetchedUrl']}',
-      );
+      print('ArtistArtworkWidget [$artistName]: Fetched and cached - customPath=${imageInfo['customPath']}, fetchedUrl=${imageInfo['fetchedUrl']}');
     }
 
     return imageInfo;
   }
 
-  /// Clear the cache for a specific artist
+  /// Clear the cache for a specific artist (useful after updating their image)
   static void clearCacheForArtist(String artistName) {
-    //clear metadata cache
     _imageInfoCache.remove(artistName);
-  }
-
-  /// Clear the cache for a specific artist including Flutters image cache
-  static Future<void> clearCacheForArtistWithFile(
-    String artistName,
-    String? filePath,
-  ) async {
-    //clear metadata cache
-    _imageInfoCache.remove(artistName);
-
-    //clear flutter image cache for file if path provided
-    if (filePath != null && filePath.isNotEmpty) {
-      final file = File(filePath);
-      final fileImage = FileImage(file);
-      await fileImage.evict();
-      //also: clear with exact file provider
-      PaintingBinding.instance.imageCache.evict(fileImage);
-    }
   }
 
   /// Clear all cached artist image info
   static void clearAllCache() {
     _imageInfoCache.clear();
-    //also: clear flutter image cache
-    PaintingBinding.instance.imageCache.clear();
   }
 
   /// Build custom image from local file
@@ -124,9 +101,6 @@ class ArtistArtworkWidget extends StatelessWidget {
       child: Image.file(
         file,
         fit: fit,
-        filterQuality: FilterQuality.high,
-        cacheWidth: 800,
-        cacheHeight: 800,
         errorBuilder: (context, error, stackTrace) {
           //if custom image fails to load => fall back to MediaStore
           return _buildMediaStoreArtwork();
@@ -151,9 +125,6 @@ class ArtistArtworkWidget extends StatelessWidget {
       child: CachedNetworkImage(
         imageUrl: url,
         fit: fit,
-        memCacheWidth: 800,
-        memCacheHeight: 800,
-        filterQuality: FilterQuality.high,
         placeholder: (context, url) => _buildPlaceholder(),
         errorWidget: (context, url, error) {
           //if fetched image fails to load => fall back to MediaStore
@@ -188,8 +159,9 @@ class ArtistArtworkWidget extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final iconSize =
-            constraints.maxWidth > 0 ? constraints.maxWidth * 0.4 : 40.0;
+        final iconSize = constraints.maxWidth > 0
+            ? constraints.maxWidth * 0.4
+            : 40.0;
 
         return Container(
           decoration: BoxDecoration(

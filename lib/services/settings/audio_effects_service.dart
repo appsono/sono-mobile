@@ -14,10 +14,7 @@ class AudioEffectsService extends BaseSettingsService {
 
   ///gets whether equalizer is enabled
   Future<bool> getEqualizerEnabled() async {
-    return await getSetting<bool>(
-      'equalizer_enabled',
-      _defaultEqualizerEnabled,
-    );
+    return await getSetting<bool>('equalizer_enabled', _defaultEqualizerEnabled);
   }
 
   ///sets whether equalizer is enabled

@@ -1,7 +1,10 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:sono/services/utils/analytics_service.dart';
 import 'package:sono/services/api/api_service.dart';
+import 'package:sono/styles/text.dart';
 import 'package:sono/utils/error_handler.dart';
 import 'package:sono/styles/app_theme.dart';
 
@@ -21,24 +24,79 @@ class ProfilePage extends StatefulWidget {
   State<ProfilePage> createState() => _ProfilePageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> {
+class _ProfilePageState extends State<ProfilePage>
+    with SingleTickerProviderStateMixin {
   final ApiService _apiService = ApiService();
   final ImagePicker _picker = ImagePicker();
-  bool _isLoading = false;
-  Map<String, dynamic>? _localUserData;
+  final _formKey = GlobalKey<FormState>();
 
-  Map<String, dynamic>? get _currentUserData =>
-      _localUserData ?? widget.currentUser;
+  late TextEditingController _displayNameController;
+  late TextEditingController _bioController;
 
-  String get _username => _currentUserData?['username'] ?? '';
-  String get _email => _currentUserData?['email'] ?? '';
-  String get _displayName => _currentUserData?['display_name'] ?? '';
-  String get _bio => _currentUserData?['bio'] ?? '';
-  String? get _profilePictureUrl => _currentUserData?['profile_picture_url'];
+  bool _isEditMode = false;
+  bool _isSaving = false;
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+
+  String _username = '';
+  String _email = '';
+  String _displayName = '';
+  String _bio = '';
+  String? _profilePictureUrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _fadeAnimation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    );
+
+    _displayNameController = TextEditingController();
+    _bioController = TextEditingController();
+
+    _loadUserData();
+    AnalyticsService.logScreenView('ProfilePage');
+  }
+
+  @override
+  void dispose() {
+    _displayNameController.dispose();
+    _bioController.dispose();
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  void _loadUserData() {
+    setState(() {
+      _username = widget.currentUser?['username'] ?? '';
+      _email = widget.currentUser?['email'] ?? '';
+      _displayName = widget.currentUser?['display_name'] ?? '';
+      _bio = widget.currentUser?['bio'] ?? '';
+      _profilePictureUrl = widget.currentUser?['profile_picture_url'];
+    });
+    _displayNameController.text = _displayName;
+    _bioController.text = _bio;
+  }
+
+  void _toggleEditMode() {
+    setState(() {
+      _isEditMode = !_isEditMode;
+      if (_isEditMode) {
+        _animationController.forward();
+      } else {
+        _animationController.reverse();
+        _displayNameController.text = _displayName;
+        _bioController.text = _bio;
+      }
+    });
+  }
 
   Future<void> _handleImagePick() async {
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
-
     final XFile? image = await _picker.pickImage(
       source: ImageSource.gallery,
       maxWidth: 1024,
@@ -47,29 +105,18 @@ class _ProfilePageState extends State<ProfilePage> {
     );
 
     if (image != null) {
-      setState(() => _isLoading = true);
+      setState(() => _isSaving = true);
       try {
         await _apiService.uploadProfilePicture(File(image.path));
-
-        //fetch updated user data to get the new profile picture URL
-        final updatedUser = await _apiService.getCurrentUser();
-
-        //update parent scaffold
         await widget.onProfileUpdate();
-
         if (mounted) {
-          setState(() {
-            _localUserData = updatedUser;
-            _isLoading = false;
-          });
-
-          scaffoldMessenger.showSnackBar(
+          ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Row(
+              content: const Row(
                 children: [
                   Icon(Icons.check_circle_rounded, color: Colors.white),
-                  SizedBox(width: AppTheme.spacingSm),
-                  const Text('Profile picture updated!'),
+                  SizedBox(width: 12),
+                  Text("Profile picture updated!"),
                 ],
               ),
               backgroundColor: Colors.green[700],
@@ -82,7 +129,6 @@ class _ProfilePageState extends State<ProfilePage> {
         }
       } catch (e, s) {
         if (mounted) {
-          setState(() => _isLoading = false);
           ErrorHandler.showErrorSnackbar(
             context: context,
             message: "Failed to upload image",
@@ -90,434 +136,107 @@ class _ProfilePageState extends State<ProfilePage> {
             stackTrace: s,
           );
         }
+      } finally {
+        if (mounted) setState(() => _isSaving = false);
       }
     }
   }
 
-  void _showEditDialog() {
-    final displayNameController = TextEditingController(text: _displayName);
-    final bioController = TextEditingController(text: _bio);
-    final formKey = GlobalKey<FormState>();
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder:
-          (context) => Container(
-            decoration: BoxDecoration(
-              color: AppTheme.surfaceDark,
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(AppTheme.radiusXl),
-                topRight: Radius.circular(AppTheme.radiusXl),
-              ),
-            ),
-            padding: EdgeInsets.only(
-              top: AppTheme.spacing,
-              left: AppTheme.spacingXl,
-              right: AppTheme.spacingXl,
-              bottom:
-                  MediaQuery.of(context).viewInsets.bottom + AppTheme.spacingXl,
-            ),
-            child: Form(
-              key: formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
+  Future<void> _handleProfileUpdate() async {
+    if (_formKey.currentState?.validate() ?? false) {
+      setState(() => _isSaving = true);
+      try {
+        await _apiService.updateCurrentUser(
+          displayName: _displayNameController.text.trim(),
+          bio: _bioController.text.trim(),
+        );
+        await widget.onProfileUpdate();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Row(
                 children: [
-                  Center(
-                    child: Container(
-                      width: 40,
-                      height: 4,
-                      margin: EdgeInsets.only(bottom: AppTheme.spacingLg),
-                      decoration: BoxDecoration(
-                        color: AppTheme.textTertiaryDark,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                  ),
-                  Text(
-                    'Edit Profile',
-                    style: TextStyle(
-                      color: AppTheme.textPrimaryDark,
-                      fontFamily: AppTheme.fontFamily,
-                      fontSize: AppTheme.fontTitle,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(height: AppTheme.spacingXl),
-                  TextFormField(
-                    controller: displayNameController,
-                    style: TextStyle(
-                      color: AppTheme.textPrimaryDark,
-                      fontFamily: AppTheme.fontFamily,
-                    ),
-                    decoration: InputDecoration(
-                      labelText: 'Display Name',
-                      labelStyle: TextStyle(
-                        color: AppTheme.textSecondaryDark,
-                        fontFamily: AppTheme.fontFamily,
-                      ),
-                      prefixIcon: Icon(
-                        Icons.person_outline_rounded,
-                        color: Theme.of(context).primaryColor,
-                      ),
-                      filled: true,
-                      fillColor: AppTheme.textPrimaryDark.opacity10,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Please enter a display name';
-                      }
-                      return null;
-                    },
-                  ),
-                  SizedBox(height: AppTheme.spacing),
-                  TextFormField(
-                    controller: bioController,
-                    style: TextStyle(
-                      color: AppTheme.textPrimaryDark,
-                      fontFamily: AppTheme.fontFamily,
-                    ),
-                    maxLines: 4,
-                    decoration: InputDecoration(
-                      labelText: 'Bio',
-                      labelStyle: TextStyle(
-                        color: AppTheme.textSecondaryDark,
-                        fontFamily: AppTheme.fontFamily,
-                      ),
-                      prefixIcon: Icon(
-                        Icons.info_outline_rounded,
-                        color: Theme.of(context).primaryColor,
-                      ),
-                      filled: true,
-                      fillColor: AppTheme.textPrimaryDark.opacity10,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: AppTheme.spacingXl),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        if (formKey.currentState?.validate() ?? false) {
-                          Navigator.pop(context);
-                          setState(() => _isLoading = true);
-                          try {
-                            await _apiService.updateCurrentUser(
-                              displayName: displayNameController.text.trim(),
-                              bio: bioController.text.trim(),
-                            );
-
-                            //fetch updated user data
-                            final updatedUser =
-                                await _apiService.getCurrentUser();
-
-                            //update parent scaffold
-                            await widget.onProfileUpdate();
-
-                            if (mounted) {
-                              setState(() {
-                                _localUserData = updatedUser;
-                                _isLoading = false;
-                              });
-
-                              scaffoldMessenger.showSnackBar(
-                                SnackBar(
-                                  content: Row(
-                                    children: [
-                                      Icon(
-                                        Icons.check_circle_rounded,
-                                        color: Colors.white,
-                                      ),
-                                      SizedBox(width: AppTheme.spacingSm),
-                                      const Text('Profile updated!'),
-                                    ],
-                                  ),
-                                  backgroundColor: Colors.green[700],
-                                  behavior: SnackBarBehavior.floating,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(
-                                      AppTheme.radiusMd,
-                                    ),
-                                  ),
-                                ),
-                              );
-                            }
-                          } catch (e, s) {
-                            if (mounted && context.mounted) {
-                              ErrorHandler.showErrorSnackbar(
-                                context: context,
-                                message: "Failed to update profile",
-                                error: e,
-                                stackTrace: s,
-                              );
-                            }
-                          } finally {
-                            if (mounted) setState(() => _isLoading = false);
-                          }
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).primaryColor,
-                        padding: EdgeInsets.symmetric(
-                          vertical: AppTheme.spacing,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(
-                            AppTheme.radiusMd,
-                          ),
-                        ),
-                      ),
-                      child: Text(
-                        'SAVE',
-                        style: TextStyle(
-                          color: AppTheme.textPrimaryDark,
-                          fontWeight: FontWeight.bold,
-                          fontSize: AppTheme.fontBody,
-                        ),
-                      ),
-                    ),
-                  ),
+                  Icon(Icons.check_circle_rounded, color: Colors.white),
+                  SizedBox(width: 12),
+                  Text("Profile updated successfully!"),
                 ],
               ),
+              backgroundColor: Colors.green[700],
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+              ),
             ),
-          ),
-    );
+          );
+          _toggleEditMode();
+        }
+      } catch (e, s) {
+        if (mounted) {
+          ErrorHandler.showErrorSnackbar(
+            context: context,
+            message: "Failed to update profile",
+            error: e,
+            stackTrace: s,
+          );
+        }
+      } finally {
+        if (mounted) setState(() => _isSaving = false);
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+      ),
+    );
+
     if (widget.currentUser == null) {
-      return Scaffold(
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && Navigator.canPop(context)) {
+          Navigator.pop(context);
+        }
+      });
+      return const Scaffold(
         backgroundColor: AppTheme.backgroundDark,
-        body: Center(
-          child: CircularProgressIndicator(
-            color: Theme.of(context).primaryColor,
-          ),
-        ),
+        body: Center(child: CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundDark,
-      appBar: AppBar(
-        backgroundColor: AppTheme.surfaceDark,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_rounded, color: AppTheme.textPrimaryDark),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          'Profile',
-          style: TextStyle(
-            color: AppTheme.textPrimaryDark,
-            fontFamily: AppTheme.fontFamily,
-            fontSize: AppTheme.fontTitle,
-            fontWeight: FontWeight.bold,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [AppTheme.surfaceDark, AppTheme.backgroundDark],
           ),
         ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.edit_rounded, color: AppTheme.textPrimaryDark),
-            onPressed: _showEditDialog,
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(AppTheme.spacingXl),
-              decoration: BoxDecoration(
-                color: AppTheme.surfaceDark,
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(AppTheme.radiusXl),
-                  bottomRight: Radius.circular(AppTheme.radiusXl),
-                ),
-              ),
-              child: Column(
-                children: [
-                  Stack(
+        child: CustomScrollView(
+          slivers: [
+            _buildAppBar(),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      CircleAvatar(
-                        radius: 60,
-                        backgroundColor: Theme.of(context).primaryColor,
-                        backgroundImage:
-                            _profilePictureUrl != null
-                                ? NetworkImage(_profilePictureUrl!)
-                                : null,
-                        child:
-                            _profilePictureUrl == null
-                                ? Text(
-                                  _displayName.isNotEmpty
-                                      ? _displayName[0].toUpperCase()
-                                      : _username[0].toUpperCase(),
-                                  style: TextStyle(
-                                    fontSize: 40,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppTheme.textPrimaryDark,
-                                    fontFamily: AppTheme.fontFamily,
-                                  ),
-                                )
-                                : null,
-                      ),
-                      Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: Material(
-                          color: Theme.of(context).primaryColor,
-                          shape: const CircleBorder(),
-                          elevation: 4,
-                          child: InkWell(
-                            onTap: _isLoading ? null : _handleImagePick,
-                            customBorder: const CircleBorder(),
-                            child: Container(
-                              padding: EdgeInsets.all(AppTheme.spacingSm),
-                              child: Icon(
-                                Icons.camera_alt_rounded,
-                                color: AppTheme.textPrimaryDark,
-                                size: 20,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      if (_isLoading)
-                        Positioned.fill(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Colors.black54,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Center(
-                              child: CircularProgressIndicator(
-                                color: Theme.of(context).primaryColor,
-                              ),
-                            ),
-                          ),
-                        ),
+                      _buildProfileHeader(),
+                      SizedBox(height: AppTheme.spacing2xl),
+                      if (_isEditMode) ...[
+                        _buildEditSection(),
+                      ] else ...[
+                        _buildViewSection(),
+                      ],
                     ],
                   ),
-                  SizedBox(height: AppTheme.spacing),
-                  Text(
-                    _displayName.isNotEmpty ? _displayName : _username,
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.textPrimaryDark,
-                      fontFamily: AppTheme.fontFamily,
-                    ),
-                  ),
-                  SizedBox(height: AppTheme.spacingXs),
-                  Text(
-                    '@$_username',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: AppTheme.textTertiaryDark,
-                      fontFamily: AppTheme.fontFamily,
-                    ),
-                  ),
-                  if (_bio.isNotEmpty) ...[
-                    SizedBox(height: AppTheme.spacing),
-                    Text(
-                      _bio,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: AppTheme.fontBody,
-                        color: AppTheme.textSecondaryDark,
-                        fontFamily: AppTheme.fontFamily,
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.all(AppTheme.spacing),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'ACCOUNT INFO',
-                    style: TextStyle(
-                      color: AppTheme.textTertiaryDark,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.2,
-                      fontFamily: AppTheme.fontFamily,
-                    ),
-                  ),
-                  SizedBox(height: AppTheme.spacingSm),
-                  _buildInfoTile(
-                    icon: Icons.email_rounded,
-                    label: 'Email',
-                    value: _email,
-                  ),
-                  SizedBox(height: AppTheme.spacingSm),
-                  _buildInfoTile(
-                    icon: Icons.person_outline_rounded,
-                    label: 'Username',
-                    value: _username,
-                  ),
-                  SizedBox(height: AppTheme.spacingXl),
-                  Text(
-                    'ACTIONS',
-                    style: TextStyle(
-                      color: AppTheme.textTertiaryDark,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.2,
-                      fontFamily: AppTheme.fontFamily,
-                    ),
-                  ),
-                  SizedBox(height: AppTheme.spacingSm),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        widget.onLogout();
-                        Navigator.pop(context);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red.shade600,
-                        padding: EdgeInsets.symmetric(
-                          vertical: AppTheme.spacing,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(
-                            AppTheme.radiusMd,
-                          ),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.logout_rounded, color: Colors.white),
-                          SizedBox(width: AppTheme.spacingSm),
-                          Text(
-                            'LOGOUT',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: AppTheme.fontBody,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ],
@@ -526,26 +245,368 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildInfoTile({
+  Widget _buildAppBar() {
+    return SliverAppBar(
+      expandedHeight: 100,
+      floating: false,
+      pinned: true,
+      backgroundColor: AppTheme.surfaceDark,
+      elevation: 0,
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back_ios_rounded, color: Colors.white),
+        onPressed: () => Navigator.of(context).pop(),
+      ),
+      actions: [
+        if (_isSaving)
+          const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+            ),
+          )
+        else
+          IconButton(
+            icon: Icon(_isEditMode ? Icons.close_rounded : Icons.edit_rounded),
+            onPressed: _isSaving ? null : _toggleEditMode,
+            tooltip: _isEditMode ? 'Cancel' : 'Edit Profile',
+          ),
+      ],
+      flexibleSpace: FlexibleSpaceBar(
+        title: Text(
+          _isEditMode ? 'Edit Profile' : 'Profile',
+          style: AppStyles.sonoPlayerTitle.copyWith(fontSize: 18),
+        ),
+        centerTitle: true,
+      ),
+    );
+  }
+
+  Widget _buildProfileHeader() {
+    return Center(
+      child: Column(
+        children: [
+          Stack(
+            children: [
+              Hero(
+                tag: 'profile_picture',
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Theme.of(
+                          context,
+                        ).primaryColor.withValues(alpha: 0.3),
+                        blurRadius: 20,
+                        spreadRadius: 5,
+                      ),
+                    ],
+                  ),
+                  child: CircleAvatar(
+                    radius: 60,
+                    backgroundColor: Theme.of(
+                      context,
+                    ).primaryColor.withValues(alpha: 0.3),
+                    backgroundImage:
+                        _profilePictureUrl != null
+                            ? NetworkImage(_profilePictureUrl!)
+                            : null,
+                    child:
+                        _profilePictureUrl == null
+                            ? Text(
+                              _displayName.isNotEmpty
+                                  ? _displayName[0].toUpperCase()
+                                  : 'U',
+                              style: const TextStyle(
+                                fontSize: 40,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            )
+                            : null,
+                  ),
+                ),
+              ),
+              if (_isEditMode)
+                Positioned(
+                  bottom: 0,
+                  right: 0,
+                  child: Material(
+                    color: Theme.of(context).primaryColor,
+                    shape: const CircleBorder(),
+                    elevation: 4,
+                    child: InkWell(
+                      onTap: _isSaving ? null : _handleImagePick,
+                      customBorder: const CircleBorder(),
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        child: const Icon(
+                          Icons.camera_alt_rounded,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          SizedBox(height: AppTheme.spacing),
+          Text(
+            _displayName.isNotEmpty ? _displayName : _username,
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              fontFamily: 'VarelaRound',
+            ),
+          ),
+          SizedBox(height: AppTheme.spacingXs),
+          Text(
+            '@$_username',
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.white.withValues(alpha: 0.6),
+              fontFamily: 'VarelaRound',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEditSection() {
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSectionTitle('Display Name'),
+          _buildTextField(
+            controller: _displayNameController,
+            label: 'Display Name',
+            icon: Icons.person_outline_rounded,
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return 'Please enter a display name';
+              }
+              return null;
+            },
+          ),
+          SizedBox(height: AppTheme.spacingLg),
+          _buildSectionTitle('Bio'),
+          _buildTextField(
+            controller: _bioController,
+            label: 'Tell us about yourself',
+            icon: Icons.info_outline_rounded,
+            maxLines: 4,
+          ),
+          SizedBox(height: AppTheme.spacing2xl),
+          SizedBox(
+            width: double.infinity,
+            height: 54,
+            child: ElevatedButton(
+              onPressed: _isSaving ? null : _handleProfileUpdate,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).primaryColor,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+                ),
+              ),
+              child:
+                  _isSaving
+                      ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
+                        ),
+                      )
+                      : const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.save_rounded),
+                          SizedBox(width: 8),
+                          Text(
+                            'Save Changes',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildViewSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionTitle('Account Information'),
+        _buildInfoCard(
+          icon: Icons.email_rounded,
+          label: 'Email',
+          value: _email,
+        ),
+        SizedBox(height: AppTheme.spacingSm),
+        _buildInfoCard(
+          icon: Icons.person_outline_rounded,
+          label: 'Username',
+          value: _username,
+        ),
+        if (_bio.isNotEmpty) ...[
+          SizedBox(height: AppTheme.spacingXl),
+          _buildSectionTitle('About'),
+          _buildInfoCard(
+            icon: Icons.info_outline_rounded,
+            label: 'Bio',
+            value: _bio,
+            maxLines: null,
+          ),
+        ],
+        SizedBox(height: AppTheme.spacing2xl),
+        _buildSectionTitle('Actions'),
+        SizedBox(
+          width: double.infinity,
+          height: 54,
+          child: ElevatedButton(
+            onPressed: () {
+              widget.onLogout();
+              if (Navigator.canPop(context)) {
+                Navigator.pop(context);
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red.shade600,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+              ),
+            ),
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.logout_rounded),
+                SizedBox(width: 8),
+                Text(
+                  'Logout',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0, left: 4.0),
+      child: Text(
+        title.toUpperCase(),
+        style: TextStyle(
+          color: Colors.white.withValues(alpha: 0.5),
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 1.2,
+          fontFamily: 'VarelaRound',
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    String? Function(String?)? validator,
+    int maxLines = 1,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.1),
+          width: 1,
+        ),
+      ),
+      child: TextFormField(
+        controller: controller,
+        style: const TextStyle(color: Colors.white, fontSize: 16),
+        maxLines: maxLines,
+        validator: validator,
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: TextStyle(
+            color: Colors.white.withValues(alpha: 0.5),
+            fontSize: 14,
+          ),
+          prefixIcon: Icon(
+            icon,
+            color: Theme.of(context).primaryColor,
+            size: 22,
+          ),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 16,
+          ),
+          floatingLabelBehavior: FloatingLabelBehavior.auto,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoCard({
     required IconData icon,
     required String label,
     required String value,
+    int? maxLines = 1,
   }) {
     return Container(
-      padding: EdgeInsets.all(AppTheme.spacing),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceDark,
-        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white.withValues(alpha: 0.05),
+            Colors.white.withValues(alpha: 0.02),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.1),
+          width: 1,
+        ),
       ),
       child: Row(
         children: [
           Container(
-            padding: EdgeInsets.all(AppTheme.spacingSm),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: Theme.of(context).primaryColor.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+              borderRadius: BorderRadius.circular(AppTheme.radiusMd),
             ),
-            child: Icon(icon, color: Theme.of(context).primaryColor, size: 20),
+            child: Icon(icon, color: Theme.of(context).primaryColor, size: 22),
           ),
           SizedBox(width: AppTheme.spacing),
           Expanded(
@@ -555,20 +616,21 @@ class _ProfilePageState extends State<ProfilePage> {
                 Text(
                   label,
                   style: TextStyle(
-                    color: AppTheme.textTertiaryDark,
+                    color: Colors.white.withValues(alpha: 0.6),
                     fontSize: 12,
-                    fontFamily: AppTheme.fontFamily,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 SizedBox(height: AppTheme.spacingXs),
                 Text(
                   value,
-                  style: TextStyle(
-                    color: AppTheme.textPrimaryDark,
-                    fontSize: AppTheme.fontBody,
-                    fontFamily: AppTheme.fontFamily,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
                     fontWeight: FontWeight.w500,
                   ),
+                  maxLines: maxLines,
+                  overflow: maxLines != null ? TextOverflow.ellipsis : null,
                 ),
               ],
             ),

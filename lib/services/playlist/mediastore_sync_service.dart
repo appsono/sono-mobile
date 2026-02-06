@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:on_audio_query/on_audio_query.dart' as query;
-import 'package:sono/data/repositories/playlists_repository.dart';
-import 'package:sono/data/repositories/playlist_songs_repository.dart';
-import 'package:sono/data/models/playlist_model.dart';
+import '../../data/repositories/playlists_repository.dart';
+import '../../data/repositories/playlist_songs_repository.dart';
+import '../../data/models/playlist_model.dart';
 
 /// Service for synchronizing playlists with Android MediaStore
 /// Handles creating, updating, and deleting MediaStore playlists

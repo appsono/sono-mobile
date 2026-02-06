@@ -836,26 +836,26 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/on_audio_query"
-      ref: "v2.9.6"
-      resolved-ref: "55af32478ddc0c2bc12336f3f39ee70a227204e0"
+      ref: "v2.9.5"
+      resolved-ref: c876df3f47b5c8bc2f4695b43ebd518bc18832a4
       url: "https://github.com/appsono/on_audio_query.git"
     source: git
-    version: "2.9.6"
+    version: "2.9.5"
   on_audio_query_android:
     dependency: transitive
     description:
       path: "packages/on_audio_query_android"
-      ref: "55af32478ddc0c2bc12336f3f39ee70a227204e0"
-      resolved-ref: "55af32478ddc0c2bc12336f3f39ee70a227204e0"
+      ref: c876df3f47b5c8bc2f4695b43ebd518bc18832a4
+      resolved-ref: c876df3f47b5c8bc2f4695b43ebd518bc18832a4
       url: "https://github.com/appsono/on_audio_query.git"
     source: git
-    version: "1.1.6"
+    version: "1.1.5"
   on_audio_query_ios:
     dependency: transitive
     description:
       path: "packages/on_audio_query_ios"
-      ref: "55af32478ddc0c2bc12336f3f39ee70a227204e0"
-      resolved-ref: "55af32478ddc0c2bc12336f3f39ee70a227204e0"
+      ref: c876df3f47b5c8bc2f4695b43ebd518bc18832a4
+      resolved-ref: c876df3f47b5c8bc2f4695b43ebd518bc18832a4
       url: "https://github.com/appsono/on_audio_query.git"
     source: git
     version: "1.1.2"
@@ -863,8 +863,8 @@ packages:
     dependency: transitive
     description:
       path: "packages/on_audio_query_platform_interface"
-      ref: "55af32478ddc0c2bc12336f3f39ee70a227204e0"
-      resolved-ref: "55af32478ddc0c2bc12336f3f39ee70a227204e0"
+      ref: c876df3f47b5c8bc2f4695b43ebd518bc18832a4
+      resolved-ref: c876df3f47b5c8bc2f4695b43ebd518bc18832a4
       url: "https://github.com/appsono/on_audio_query.git"
     source: git
     version: "1.7.2"
@@ -872,11 +872,19 @@ packages:
     dependency: transitive
     description:
       path: "packages/on_audio_query_web"
-      ref: "55af32478ddc0c2bc12336f3f39ee70a227204e0"
-      resolved-ref: "55af32478ddc0c2bc12336f3f39ee70a227204e0"
+      ref: c876df3f47b5c8bc2f4695b43ebd518bc18832a4
+      resolved-ref: c876df3f47b5c8bc2f4695b43ebd518bc18832a4
       url: "https://github.com/appsono/on_audio_query.git"
     source: git
     version: "1.6.0"
+  open_filex:
+    dependency: "direct main"
+    description:
+      name: open_filex
+      sha256: "9976da61b6a72302cf3b1efbce259200cd40232643a467aac7370addf94d6900"
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.7.0"
   package_info_plus:
     dependency: "direct main"
     description:
@@ -1186,15 +1194,6 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-  sono_refresh:
-    dependency: "direct main"
-    description:
-      path: "."
-      ref: "v1.0.0"
-      resolved-ref: ba69a5e9ebbd554f73294b2805be90f25f1e79fd
-      url: "https://github.com/appsono/sono_refresh"
-    source: git
-    version: "1.0.0"
   source_span:
     dependency: transitive
     description:

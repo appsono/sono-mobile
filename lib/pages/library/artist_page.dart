@@ -1,34 +1,24 @@
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:sono/services/utils/favorites_service.dart';
-import 'package:sono/services/utils/artwork_cache_service.dart';
-import 'package:sono/services/utils/album_artist_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:sono/services/utils/analytics_service.dart';
 import 'package:sono/utils/error_handler.dart';
 import 'package:sono/utils/string_cleanup.dart';
 import 'package:sono/widgets/player/sono_player.dart';
 import 'package:sono/widgets/home/page_items.dart';
-import 'package:sono/pages/library/album_page.dart';
-import 'package:sono/widgets/global/add_to_playlist_dialog.dart';
 import 'package:sono/services/api/lastfm_service.dart';
 import 'package:sono/styles/app_theme.dart';
 import 'package:sono/styles/text.dart';
 import 'package:sono/widgets/library/artist_artwork_widget.dart';
 import 'package:sono/widgets/library/artist_picture_picker_dialog.dart';
 import 'package:sono/services/artists/artist_profile_image_service.dart';
-import 'package:sono/services/artists/artist_image_fetch_service.dart';
 import 'package:sono/data/repositories/artists_repository.dart';
-import 'package:sono/data/repositories/artist_data_repository.dart';
-import 'package:sono_refresh/sono_refresh.dart';
-import 'package:sono/widgets/artist/popular_songs_section.dart';
-import 'package:sono/widgets/artist/about_section.dart';
-import 'package:sono/widgets/artist/about_modal.dart';
-import 'package:sono/models/popular_song.dart';
+import 'package:sono/widgets/global/refresh_indicator.dart';
 import 'package:provider/provider.dart';
-import 'package:sono/pages/library/artist_albums_page.dart';
 
 class ArtistPage extends StatefulWidget {
   final ArtistModel artist;
@@ -52,80 +42,25 @@ class ArtistPage extends StatefulWidget {
 
 class _ArtistPageState extends State<ArtistPage> {
   final LastfmService _lastfmService = LastfmService();
-  final ArtistDataRepository _artistDataRepository = ArtistDataRepository();
 
   List<AlbumModel> _albums = [];
-  List<AlbumModel> _singles = [];
+  List<AlbumModel> _singlesAndEps = [];
   List<AlbumModel> _appearsOn = [];
   List<SongModel> _allArtistSongs = [];
 
   bool _isLoading = true;
   Map<String, dynamic>? _artistInfo;
   bool _isLoadingArtistInfo = true;
+  bool _bioExpanded = false;
   bool _isArtistFavorite = false;
-
-  //popular songs state
-  List<PopularSong> _popularSongs = [];
-  bool _isLoadingPopularSongs = true;
-  String? _popularSongsError;
-  int? _sonoMonthlyListeners;
 
   @override
   void initState() {
     super.initState();
-    _loadArtistData().then((_) {
-      //fetch popular songs AFTER library data loads so it can be matched
-      if (mounted) {
-        _fetchPopularSongs(forceRefresh: false);
-      }
-    });
+    _loadArtistData();
     _fetchArtistInfo();
     _loadFavoriteStatus();
-  }
-
-  @override
-  void dispose() {
-    //clear any pending operations
-    super.dispose();
-  }
-
-  /// Gets the artist name to use for API calls
-  /// Checks if the artist name is an incomplete version of an exception artist
-  /// (e.g. "Tyler" should become "Tyler, The Creator")
-  String _getArtistNameForAPI(String artistName) {
-    final lowerArtist = artistName.toLowerCase().trim();
-
-    //first check if artist IS an exception (exact match) => return as-is
-    const exceptions = {
-      'tyler, the creator': 'Tyler, The Creator',
-      'panic! at the disco': 'Panic! at the Disco',
-      'florence + the machine': 'Florence + The Machine',
-      'florence and the machine': 'Florence and the Machine',
-      'simon & garfunkel': 'Simon & Garfunkel',
-      'hall & oates': 'Hall & Oates',
-      'earth, wind & fire': 'Earth, Wind & Fire',
-    };
-
-    if (exceptions.containsKey(lowerArtist)) {
-      return exceptions[lowerArtist]!;
-    }
-
-    //check if this artist name is the START of any exception artist
-    //e.g. "tyler" -> "Tyler, The Creator"
-    for (final entry in exceptions.entries) {
-      final exception = entry.key;
-      final properName = entry.value;
-
-      if (exception.startsWith('$lowerArtist,') ||
-          exception.startsWith('$lowerArtist &') ||
-          exception.startsWith('$lowerArtist +') ||
-          exception.startsWith('$lowerArtist and ')) {
-        return properName;
-      }
-    }
-
-    //fallback: return artist name as-is (dont split exception artists)
-    return artistName;
+    AnalyticsService.logScreenView('ArtistPage');
   }
 
   Widget _buildSkeletonLoader({
@@ -283,15 +218,14 @@ class _ArtistPageState extends State<ArtistPage> {
 
     final result = await showDialog<ArtistPictureResult>(
       context: context,
-      builder:
-          (context) => ArtistPicturePickerDialog(artistName: widget.artistName),
+      builder: (context) => ArtistPicturePickerDialog(
+        artistName: widget.artistName,
+      ),
     );
 
     if (result != null && mounted) {
       if (result.remove) {
         await _removeArtistImage();
-      } else if (result.refetch) {
-        await _refetchArtistImage();
       } else if (result.imagePath != null) {
         await _saveArtistImage(result.imagePath!);
       }
@@ -301,13 +235,7 @@ class _ArtistPageState extends State<ArtistPage> {
   Future<void> _saveArtistImage(String path) async {
     try {
       final service = ArtistProfileImageService();
-      final savedPath = await service.saveArtistImage(widget.artistName, path);
-
-      //clear both metadata cache and flutter image cache for file
-      await ArtistArtworkWidget.clearCacheForArtistWithFile(
-        widget.artistName,
-        savedPath,
-      );
+      await service.saveArtistImage(widget.artistName, path);
 
       if (mounted) {
         setState(() {}); //refresh to show new image
@@ -337,21 +265,10 @@ class _ArtistPageState extends State<ArtistPage> {
   Future<void> _removeArtistImage() async {
     try {
       final service = ArtistProfileImageService();
-
-      //get file path before deleting so cache can get cleared
-      final imageFile = await service.getArtistImageFile(widget.artistName);
-      final filePath = imageFile?.path;
-
       await service.deleteArtistImage(widget.artistName);
 
       final repo = ArtistsRepository();
       await repo.removeCustomImage(widget.artistName);
-
-      //clear both metadata cache and flutter image cache for file
-      await ArtistArtworkWidget.clearCacheForArtistWithFile(
-        widget.artistName,
-        filePath,
-      );
 
       if (mounted) {
         setState(() {}); //refresh to show fallback image
@@ -371,67 +288,6 @@ class _ArtistPageState extends State<ArtistPage> {
         ErrorHandler.showErrorSnackbar(
           context: context,
           message: 'Failed to remove artist picture',
-          error: e,
-          stackTrace: stackTrace,
-        );
-      }
-    }
-  }
-
-  Future<void> _refetchArtistImage() async {
-    try {
-      final repo = ArtistsRepository();
-      final fetchService = ArtistImageFetchService();
-
-      //clear existing fetched image to allow refetch
-      await repo.clearFetchedImageForArtist(widget.artistName);
-
-      //clear the widget cache for this artist
-      ArtistArtworkWidget.clearCacheForArtist(widget.artistName);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Fetching artist picture...'),
-            backgroundColor: AppTheme.brandPink,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-            ),
-            duration: const Duration(seconds: 1),
-          ),
-        );
-      }
-
-      //fetch new image from API
-      final newUrl = await fetchService.fetchArtistImage(widget.artistName);
-
-      if (mounted) {
-        //clear cache again to pick up new image
-        ArtistArtworkWidget.clearCacheForArtist(widget.artistName);
-        setState(() {}); //refresh UI
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              newUrl != null
-                  ? 'Artist picture updated'
-                  : 'No picture found for this artist',
-            ),
-            backgroundColor:
-                newUrl != null ? AppTheme.success : AppTheme.warning,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-            ),
-          ),
-        );
-      }
-    } catch (e, stackTrace) {
-      if (mounted) {
-        ErrorHandler.showErrorSnackbar(
-          context: context,
-          message: 'Failed to fetch artist picture',
           error: e,
           stackTrace: stackTrace,
         );
@@ -460,8 +316,8 @@ class _ArtistPageState extends State<ArtistPage> {
           widget.artist.artist,
         );
 
-        //if didnt get all expected songs, artist might appear in combined strings
-        //fall back to filtering all songs
+        // If didnt get all expected songs, the artist might appear in combined strings
+        // Fall back to filtering all songs
         final expectedTracks = widget.artist.numberOfTracks ?? 0;
         if (_allArtistSongs.length < expectedTracks && expectedTracks > 0) {
           debugPrint(
@@ -538,23 +394,15 @@ class _ArtistPageState extends State<ArtistPage> {
       final singles = <AlbumModel>[];
       final appearsOn = <AlbumModel>[];
 
-      final albumArtistService = AlbumArtistService();
-
       for (final album in artistAlbums) {
-        final properAlbumArtist = await albumArtistService.getAlbumArtist(
-          album.id,
-          album.artist,
-        );
-
-        if (getPrimaryArtist(properAlbumArtist) !=
-            getPrimaryArtist(widget.artistName)) {
+        if (album.artist != null &&
+            getPrimaryArtist(album.artist) !=
+                getPrimaryArtist(widget.artistName)) {
           appearsOn.add(album);
         } else {
-          //albums & EPs: 4+ songs ONLY, Singles: 1-3 songs
-          if (album.numOfSongs >= 4) {
+          if (album.numOfSongs >= 7) {
             albums.add(album);
           } else {
-            //singles (1-3 songs)
             singles.add(album);
           }
         }
@@ -566,7 +414,7 @@ class _ArtistPageState extends State<ArtistPage> {
                 (a, b) =>
                     a.album.toLowerCase().compareTo(b.album.toLowerCase()),
               );
-          _singles =
+          _singlesAndEps =
               singles..sort(
                 (a, b) =>
                     a.album.toLowerCase().compareTo(b.album.toLowerCase()),
@@ -596,7 +444,7 @@ class _ArtistPageState extends State<ArtistPage> {
     if (!mounted) return;
     setState(() => _isLoadingArtistInfo = true);
     try {
-      final primaryArtist = _getArtistNameForAPI(widget.artistName);
+      final primaryArtist = getPrimaryArtist(widget.artistName);
       final info = await _lastfmService.getArtistInfo(primaryArtist);
       if (mounted) {
         setState(() => _artistInfo = info);
@@ -615,328 +463,6 @@ class _ArtistPageState extends State<ArtistPage> {
         setState(() => _isLoadingArtistInfo = false);
       }
     }
-  }
-
-  Future<void> _fetchPopularSongs({bool forceRefresh = false}) async {
-    if (!mounted) return;
-    setState(() {
-      _isLoadingPopularSongs = true;
-      _popularSongsError = null;
-    });
-
-    try {
-      final primaryArtist = _getArtistNameForAPI(widget.artistName);
-      debugPrint(
-        'ArtistPage: Fetching popular songs for: $primaryArtist (forceRefresh: $forceRefresh)',
-      );
-
-      final artistData = await _artistDataRepository.getArtistData(
-        primaryArtist,
-        forceRefresh: forceRefresh,
-      );
-
-      if (artistData != null && mounted) {
-        debugPrint(
-          'ArtistPage: Got ${artistData.topSongs.length} songs from API',
-        );
-        debugPrint(
-          'ArtistPage: Monthly listeners: ${artistData.monthlyListeners}',
-        );
-
-        //check if cache is corrupted (empty songs or empty titles)
-        final hasValidSongs = artistData.topSongs.any(
-          (song) => song.title.isNotEmpty,
-        );
-
-        //if cache returned 0 songs or corrupted data => force refresh
-        if (!forceRefresh && (artistData.topSongs.isEmpty || !hasValidSongs)) {
-          debugPrint(
-            'ArtistPage: Cache has invalid data (${artistData.topSongs.length} songs, valid: $hasValidSongs), forcing fresh fetch',
-          );
-          return _fetchPopularSongs(forceRefresh: true);
-        }
-
-        //match popular songs with library
-        final matchedSongs = await _artistDataRepository.matchSongsWithLibrary(
-          artistData.topSongs,
-          _allArtistSongs,
-        );
-
-        debugPrint(
-          'ArtistPage: Matched ${matchedSongs.length} songs with library',
-        );
-        debugPrint(
-          'ArtistPage: Songs in library: ${matchedSongs.where((s) => s.isInLibrary).length}',
-        );
-
-        //validate matched songs have proper data
-        final validSongs =
-            matchedSongs.where((song) {
-              if (song.title.isEmpty) {
-                debugPrint(
-                  'ArtistPage: WARNING - Song with empty title: ${song.toJson()}',
-                );
-                return false;
-              }
-              return true;
-            }).toList();
-
-        if (validSongs.length != matchedSongs.length) {
-          debugPrint(
-            'ArtistPage: Filtered out ${matchedSongs.length - validSongs.length} songs with empty titles',
-          );
-        }
-
-        setState(() {
-          _popularSongs = validSongs;
-          _sonoMonthlyListeners = artistData.monthlyListeners;
-          _isLoadingPopularSongs = false;
-        });
-      } else if (mounted) {
-        debugPrint('ArtistPage: No artist data returned from API');
-        setState(() {
-          _popularSongs = [];
-          _sonoMonthlyListeners = null;
-          _isLoadingPopularSongs = false;
-        });
-      }
-    } catch (e, stackTrace) {
-      debugPrint('ArtistPage: Error fetching popular songs: $e');
-      debugPrint('ArtistPage: Stack trace: $stackTrace');
-      if (mounted) {
-        setState(() {
-          _popularSongsError = e.toString();
-          _isLoadingPopularSongs = false;
-        });
-      }
-    }
-  }
-
-  /// Builds a playlist starting with popular songs in library order,
-  /// followed by all remaining artist songs in random order.
-  List<SongModel> _buildArtistPlaylist() {
-    final popularLocalSongs =
-        _popularSongs
-            .where((s) => s.localSong != null)
-            .take(5)
-            .map((s) => s.localSong!)
-            .toList();
-    final popularIds = popularLocalSongs.map((s) => s.id).toSet();
-    final remainingSongs = List<SongModel>.from(
-      _allArtistSongs.where((s) => !popularIds.contains(s.id)),
-    )..shuffle();
-    return [...popularLocalSongs, ...remainingSongs];
-  }
-
-  void _onPopularSongTap(PopularSong song) {
-    if (song.localSong != null) {
-      //find index in all artist songs
-      final index = _allArtistSongs.indexWhere(
-        (s) => s.id == song.localSong!.id,
-      );
-      if (index >= 0) {
-        SonoPlayer().playNewPlaylist(
-          _allArtistSongs,
-          index,
-          context: "Artist: ${widget.artistName}",
-        );
-      } else {
-        //fallback: play just this song
-        SonoPlayer().playNewPlaylist(
-          [song.localSong!],
-          0,
-          context: "Artist: ${widget.artistName}",
-        );
-      }
-    }
-  }
-
-  void _showPopularSongOptions(PopularSong song) {
-    if (song.localSong == null) return;
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        return Container(
-          decoration: const BoxDecoration(
-            color: Color(0xFF1A1A1A),
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              //drag handle
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                child: Container(
-                  width: 40,
-                  height: 5,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[700],
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-              //song header with artwork
-              ListTile(
-                leading: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: SizedBox(
-                    width: 50,
-                    height: 50,
-                    child: FutureBuilder<Uint8List?>(
-                      future: ArtworkCacheService.instance.getArtwork(
-                        song.localSong!.id,
-                        size: 150,
-                      ),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.done &&
-                            snapshot.hasData &&
-                            snapshot.data != null) {
-                          return Image.memory(
-                            snapshot.data!,
-                            fit: BoxFit.cover,
-                            gaplessPlayback: true,
-                            cacheWidth: 150,
-                            cacheHeight: 150,
-                          );
-                        }
-                        return Container(
-                          width: 50,
-                          height: 50,
-                          color: Colors.grey.shade800,
-                          child: const Icon(
-                            Icons.music_note_rounded,
-                            color: Colors.white70,
-                            size: 24,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-                title: Text(
-                  song.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppStyles.sonoPlayerTitle,
-                ),
-                subtitle: Text(
-                  song.artist,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppStyles.sonoPlayerArtist,
-                ),
-              ),
-              const Divider(color: Colors.white24, indent: 20, endIndent: 20),
-              //play next
-              ListTile(
-                leading: const Icon(
-                  Icons.playlist_play_rounded,
-                  color: Colors.white70,
-                ),
-                title: const Text(
-                  'Play next',
-                  style: TextStyle(color: Colors.white, fontSize: 16),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  SonoPlayer().addSongToPlayNext(song.localSong!);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: const Text('Added to play next'),
-                      backgroundColor: AppTheme.success,
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                      ),
-                    ),
-                  );
-                },
-              ),
-              //add to queue
-              ListTile(
-                leading: const Icon(
-                  Icons.queue_music_rounded,
-                  color: Colors.white70,
-                ),
-                title: const Text(
-                  'Add to queue',
-                  style: TextStyle(color: Colors.white, fontSize: 16),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  SonoPlayer().addSongsToQueue([song.localSong!]);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: const Text('Added to queue'),
-                      backgroundColor: AppTheme.success,
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                      ),
-                    ),
-                  );
-                },
-              ),
-              //add to playlist
-              ListTile(
-                leading: const Icon(
-                  Icons.playlist_add_rounded,
-                  color: Colors.white70,
-                ),
-                title: const Text(
-                  'Add to playlist...',
-                  style: TextStyle(color: Colors.white, fontSize: 16),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  showModalBottomSheet(
-                    context: context,
-                    backgroundColor: Colors.transparent,
-                    isScrollControlled: true,
-                    builder: (context) {
-                      return Padding(
-                        padding: EdgeInsets.only(
-                          bottom: MediaQuery.of(context).viewInsets.bottom,
-                        ),
-                        child: AddToPlaylistSheet(song: song.localSong!),
-                      );
-                    },
-                  );
-                },
-              ),
-              const SizedBox(height: 20),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  void _showAboutModalSheet() {
-    final bio = _artistInfo?['bio']?['content']?.toString() ?? '';
-    if (bio.isEmpty) return;
-
-    final stats = _artistInfo?['stats'];
-    final playcount =
-        stats != null
-            ? int.tryParse(stats['playcount']?.toString() ?? '0')
-            : null;
-
-    AboutModal.show(
-      context,
-      artistName: getPrimaryArtist(widget.artistName),
-      bio: bio,
-      monthlyListeners: _sonoMonthlyListeners,
-      totalPlays: playcount,
-      artistUrl: _artistInfo?['url'],
-    );
-  }
-
-  void _openLastFmLink() {
-    _launchURL(_artistInfo?['url']);
   }
 
   Future<void> _launchURL(String? urlString) async {
@@ -961,620 +487,158 @@ class _ArtistPageState extends State<ArtistPage> {
       ),
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        body: SonoRefreshIndicator(
-          onRefresh: () async {
-            await _loadArtistData();
-            await _fetchPopularSongs(forceRefresh: true);
-            await _fetchArtistInfo();
-          },
-          logo: Image.asset(
-            'assets/images/logos/favicon-white.png',
-            width: 28,
-            height: 28,
-            color: AppTheme.backgroundLight,
-            colorBlendMode: BlendMode.srcIn,
-          ),
-          indicatorColor: AppTheme.elevatedSurfaceDark,
-          child: CustomScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            slivers: <Widget>[
-              SliverAppBar(
-                expandedHeight: 280.0,
-                floating: false,
-                pinned: true,
-                stretch: true,
-                backgroundColor: AppTheme.backgroundDark,
-                elevation: 0,
-                leading: IconButton(
+        floatingActionButton:
+            _allArtistSongs.isNotEmpty
+                ? FloatingActionButton.extended(
+                  onPressed: () {
+                    SonoPlayer().playNewPlaylist(
+                      _allArtistSongs..shuffle(),
+                      0,
+                      context: "Artist: ${widget.artistName}",
+                    );
+                  },
+                  label: Text(
+                    "SHUFFLE",
+                    style: AppStyles.sonoButtonTextSmaller.copyWith(
+                      color: AppTheme.textPrimaryDark,
+                    ),
+                  ),
                   icon: const Icon(
-                    Icons.arrow_back_rounded,
+                    Icons.shuffle_rounded,
                     color: AppTheme.textPrimaryDark,
                   ),
-                  onPressed: () => Navigator.of(context).pop(),
+                  backgroundColor: AppTheme.brandPink,
+                )
+                : null,
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+        body: CustomScrollView(
+          slivers: <Widget>[
+            SonoSliverRefreshControl(onRefresh: _loadArtistData),
+            SliverAppBar(
+              expandedHeight: 300.0,
+              floating: false,
+              pinned: true,
+              stretch: true,
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              leading: IconButton(
+                icon: const Icon(
+                  Icons.arrow_back_ios_rounded,
+                  color: AppTheme.textPrimaryDark,
                 ),
-                flexibleSpace: LayoutBuilder(
-                  builder: (context, constraints) {
-                    //calculate collapse ratio: 1.0 = expanded, 0.0 = collapsed
-                    final expandRatio = ((constraints.maxHeight -
-                                kToolbarHeight) /
-                            (280.0 - kToolbarHeight))
-                        .clamp(0.0, 1.0);
-
-                    //crossfade: big title fades out while collapsed title fades in
-                    final bigTitleOpacity = ((expandRatio - 0.3) / 0.3).clamp(
-                      0.0,
-                      1.0,
-                    );
-                    final collapsedTitleOpacity = ((0.7 - expandRatio) / 0.2)
-                        .clamp(0.0, 1.0);
-
-                    return FlexibleSpaceBar(
-                      title:
-                          expandRatio < 0.7
-                              ? Opacity(
-                                opacity: collapsedTitleOpacity,
-                                child: Text(
-                                  widget.artistName,
-                                  style: const TextStyle(
-                                    fontFamily: AppTheme.fontFamily,
-                                    color: AppTheme.textPrimaryDark,
-                                    fontSize: AppTheme.fontTitle,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              )
-                              : null,
-                      titlePadding: const EdgeInsets.only(left: 56, bottom: 16),
-                      background: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          Hero(
-                            tag: 'artist-artwork-${widget.artistId}',
-                            child: ArtistArtworkWidget(
-                              artistName: widget.artistName,
-                              artistId: widget.artistId,
-                              fit: BoxFit.cover,
-                              placeholderWidget: _buildArtworkPlaceholder(),
-                            ),
-                          ),
-                          DecoratedBox(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [
-                                  Colors.black.withValues(alpha: 0.3),
-                                  Colors.black.withValues(alpha: 0.7),
-                                  AppTheme.backgroundDark,
-                                ],
-                                stops: [0.0, 0.7, 1.0],
-                              ),
-                            ),
-                          ),
-                          Positioned(
-                            bottom: AppTheme.spacing,
-                            left: AppTheme.spacing,
-                            right: AppTheme.spacing,
-                            child: Opacity(
-                              opacity: bigTitleOpacity,
-                              child: Text(
-                                widget.artistName,
-                                style: const TextStyle(
-                                  fontFamily: AppTheme.fontFamily,
-                                  color: AppTheme.textPrimaryDark,
-                                  fontSize: 32,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
+                onPressed: () => Navigator.of(context).pop(),
               ),
-              //actions row
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppTheme.spacing,
-                    vertical: AppTheme.spacingMd,
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.edit_rounded),
+                  color: AppTheme.textPrimaryDark,
+                  iconSize: 24,
+                  tooltip: "Edit Artist Picture",
+                  onPressed: _openImagePicker,
+                ),
+                IconButton(
+                  icon: Icon(
+                    _isArtistFavorite
+                        ? Icons.star_rounded
+                        : Icons.star_border_rounded,
                   ),
-                  child: _buildActionsRow(),
-                ),
-              ),
-              //popular songs section
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.only(top: AppTheme.spacing),
-                  child: PopularSongsSection(
-                    songs: _popularSongs,
-                    isLoading: _isLoadingPopularSongs,
-                    errorMessage: _popularSongsError,
-                    onSongTap: _onPopularSongTap,
-                    onMoreTap: _showPopularSongOptions,
-                  ),
-                ),
-              ),
-              if (_isLoading)
-                _buildArtistPageSkeleton()
-              else ...[
-                _buildAlbumsSection(),
-                _buildDiscographySection("Singles", _singles, 165, 110),
-                _buildDiscographySection("Appears On", _appearsOn, 165, 110),
-                _buildAboutSection(),
-              ],
-              const SliverToBoxAdapter(child: SizedBox(height: 100)),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildActionsRow() {
-    return Row(
-      children: [
-        //combined left buttons container
-        Container(
-          height: 48,
-          decoration: BoxDecoration(
-            color: AppTheme.elevatedSurfaceDark,
-            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-            border: Border.all(color: const Color(0xFF3d3d3d), width: 1),
-          ),
-          child: Row(
-            children: [
-              //favorite button
-              IconButton(
-                icon: Icon(
-                  _isArtistFavorite
-                      ? Icons.star_rounded
-                      : Icons.star_border_rounded,
                   color:
                       _isArtistFavorite
-                          ? AppTheme.textPrimaryDark
-                          : AppTheme.textSecondaryDark,
+                          ? Colors.amber
+                          : AppTheme.textPrimaryDark,
+                  iconSize: 28,
+                  tooltip: "Favorite Artist",
+                  onPressed: _toggleFavorite,
                 ),
-                iconSize: 24,
-                onPressed: _toggleFavorite,
-              ),
-
-              //external link button (Last.fm)
-              IconButton(
-                icon: const Icon(
-                  Icons.open_in_new_rounded,
-                  color: AppTheme.textSecondaryDark,
+              ],
+              flexibleSpace: FlexibleSpaceBar(
+                centerTitle: true,
+                title: Text(
+                  widget.artistName,
+                  style: AppStyles.sonoPlayerTitle.copyWith(fontSize: 16),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                iconSize: 24,
-                onPressed: _artistInfo?['url'] != null ? _openLastFmLink : null,
-              ),
-
-              //three-dot menu button
-              IconButton(
-                icon: const Icon(
-                  Icons.more_vert_rounded,
-                  color: AppTheme.textSecondaryDark,
+                background: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Hero(
+                      tag: 'artist-artwork-${widget.artistId}',
+                      child: ArtistArtworkWidget(
+                        artistName: widget.artistName,
+                        artistId: widget.artistId,
+                        fit: BoxFit.cover,
+                        placeholderWidget: _buildArtworkPlaceholder(),
+                      ),
+                    ),
+                    const DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.black26,
+                            Colors.black87,
+                          ],
+                          stops: [0.0, 0.5, 1.0],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                iconSize: 24,
-                onPressed: _showArtistOptionsBottomSheet,
               ),
-            ],
-          ),
-        ),
-
-        const Spacer(),
-
-        //shuffle button
-        Container(
-          height: 48,
-          decoration: BoxDecoration(
-            color: AppTheme.elevatedSurfaceDark,
-            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-            border: Border.all(color: const Color(0xFF3d3d3d), width: 1),
-          ),
-          child: IconButton(
-            icon: const Icon(
-              Icons.shuffle_rounded,
-              color: AppTheme.textSecondaryDark,
             ),
-            iconSize: 24,
-            onPressed:
-                _allArtistSongs.isNotEmpty
-                    ? () {
-                      final shuffledSongs = List<SongModel>.from(
-                        _allArtistSongs,
-                      )..shuffle();
-                      SonoPlayer().playNewPlaylist(
-                        shuffledSongs,
-                        0,
-                        context: "Artist: ${widget.artistName}",
-                      );
-                    }
-                    : null,
-          ),
-        ),
-
-        SizedBox(width: AppTheme.spacingSm),
-
-        //play/pause button
-        ValueListenableBuilder<SongModel?>(
-          valueListenable: SonoPlayer().currentSong,
-          builder: (context, currentSong, _) {
-            return ValueListenableBuilder<String?>(
-              valueListenable: SonoPlayer().playbackContext,
-              builder: (context, playbackContext, _) {
-                final expectedContext = "Artist: ${widget.artistName}";
-                final isArtistPlaying =
-                    playbackContext == expectedContext &&
-                    (_allArtistSongs.any((song) => song.id == currentSong?.id));
-
-                return Container(
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: AppTheme.brandPink,
-                    borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                  ),
-                  child: ValueListenableBuilder<bool>(
-                    valueListenable: SonoPlayer().isPlaying,
-                    builder: (context, isPlaying, _) {
-                      return IconButton(
-                        icon: Icon(
-                          (isArtistPlaying && isPlaying)
-                              ? Icons.pause_rounded
-                              : Icons.play_arrow_rounded,
-                          color: Colors.white,
-                        ),
-                        iconSize: 24,
-                        onPressed:
-                            _allArtistSongs.isNotEmpty
-                                ? () {
-                                  if (isArtistPlaying && isPlaying) {
-                                    SonoPlayer().pause();
-                                  } else if (isArtistPlaying && !isPlaying) {
-                                    SonoPlayer().play();
-                                  } else {
-                                    SonoPlayer().playNewPlaylist(
-                                      _buildArtistPlaylist(),
-                                      0,
-                                      context: "Artist: ${widget.artistName}",
-                                    );
-                                  }
-                                }
-                                : null,
-                      );
-                    },
-                  ),
-                );
-              },
-            );
-          },
-        ),
-      ],
-    );
-  }
-
-  Future<void> _refreshAllArtistData() async {
-    if (!mounted) return;
-
-    //show loading indicator
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Refreshing artist data...'),
-        duration: Duration(seconds: 2),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-
-    try {
-      //clear Last.fm cache for artist
-      await _lastfmService.clearCache();
-
-      //reload all artist data
-      await _loadArtistData();
-
-      if (mounted) {
-        //fetch fresh artist info from Last.fm
-        await _fetchArtistInfo();
-
-        //fetch fresh popular songs data
-        await _fetchPopularSongs(forceRefresh: true);
-      }
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Artist data refreshed successfully'),
-            backgroundColor: AppTheme.success,
-            behavior: SnackBarBehavior.floating,
-            duration: Duration(seconds: 2),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to refresh artist data: $e'),
-            backgroundColor: AppTheme.error,
-            behavior: SnackBarBehavior.floating,
-            duration: const Duration(seconds: 3),
-          ),
-        );
-      }
-    }
-  }
-
-  void _showArtistOptionsBottomSheet() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppTheme.bottomSheetBackground,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              //drag handle
-              Container(
-                width: 40,
-                height: 5,
-                margin: const EdgeInsets.only(top: 12, bottom: 16),
-                decoration: BoxDecoration(
-                  color: AppTheme.textTertiaryDark,
-                  borderRadius: BorderRadius.circular(2.5),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppTheme.spacing,
+                  AppTheme.spacingXl,
+                  AppTheme.spacing,
+                  AppTheme.spacingSm,
                 ),
-              ),
-              //refresh artist data
-              ListTile(
-                leading: const Icon(
-                  Icons.refresh_rounded,
-                  color: AppTheme.textPrimaryDark,
-                ),
-                title: const Text(
-                  'Refresh artist data',
-                  style: TextStyle(color: AppTheme.textPrimaryDark),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _refreshAllArtistData();
-                },
-              ),
-              //add all to queue
-              ListTile(
-                leading: const Icon(
-                  Icons.queue_music_rounded,
-                  color: AppTheme.textPrimaryDark,
-                ),
-                title: const Text(
-                  'Add all to queue',
-                  style: TextStyle(color: AppTheme.textPrimaryDark),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  if (_allArtistSongs.isNotEmpty) {
-                    SonoPlayer().addSongsToQueue(_allArtistSongs);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          'Added ${_allArtistSongs.length} songs to queue',
-                        ),
-                        backgroundColor: AppTheme.success,
-                        behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(
-                            AppTheme.radiusMd,
+                child: GestureDetector(
+                  onTap: () => _launchURL(_artistInfo?['url']),
+                  child: Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          widget.artistName,
+                          style: AppStyles.sonoPlayerTitle.copyWith(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
-                    );
-                  }
-                },
-              ),
-              //edit artist picture
-              ListTile(
-                leading: const Icon(
-                  Icons.image_rounded,
-                  color: AppTheme.textPrimaryDark,
+                      if (_artistInfo?['url'] != null)
+                        const Padding(
+                          padding: EdgeInsets.only(left: AppTheme.spacingSm),
+                          child: Icon(
+                            Icons.open_in_new_rounded,
+                            color: Colors.white54,
+                            size: 16,
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
-                title: const Text(
-                  'Edit artist picture',
-                  style: TextStyle(color: AppTheme.textPrimaryDark),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _openImagePicker();
-                },
               ),
-              const SizedBox(height: 8),
+            ),
+            if (_isLoading)
+              _buildArtistPageSkeleton()
+            else ...[
+              _buildDiscographySection("Albums", _albums, 165, 110),
+              _buildDiscographySection(
+                "Singles & EPs",
+                _singlesAndEps,
+                165,
+                110,
+              ),
+              _buildDiscographySection("Appears On", _appearsOn, 165, 110),
+              _buildArtistInfoBox(),
             ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildAlbumsSection() {
-    if (_albums.isEmpty) {
-      return const SliverToBoxAdapter(child: SizedBox.shrink());
-    }
-
-    return SliverToBoxAdapter(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(
-              left: AppTheme.spacing,
-              right: AppTheme.spacing,
-              top: AppTheme.spacingXl,
-              bottom: AppTheme.spacingMd,
-            ),
-            child: Text(
-              'Albums & EPs',
-              style: AppStyles.sonoButtonText.copyWith(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          //show only first 2 albums
-          ..._albums
-              .take(2)
-              .map(
-                (album) => Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppTheme.spacing,
-                    vertical: AppTheme.spacingSm,
-                  ),
-                  child: InkWell(
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder:
-                              (context) => AlbumPage(
-                                album: album,
-                                audioQuery: widget.audioQuery,
-                              ),
-                        ),
-                      );
-                    },
-                    borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                    child: Row(
-                      children: [
-                        //album artwork
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(
-                            AppTheme.radiusSm,
-                          ),
-                          child: SizedBox(
-                            width: 80,
-                            height: 80,
-                            child: QueryArtworkWidget(
-                              id: album.id,
-                              type: ArtworkType.ALBUM,
-                              nullArtworkWidget: Container(
-                                color: AppTheme.elevatedSurfaceDark,
-                                child: const Center(
-                                  child: Icon(
-                                    Icons.album_rounded,
-                                    color: AppTheme.textTertiaryDark,
-                                    size: 32,
-                                  ),
-                                ),
-                              ),
-                              artworkFit: BoxFit.cover,
-                              artworkBorder: BorderRadius.zero,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: AppTheme.spacingMd),
-                        //album info
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                album.album,
-                                style: const TextStyle(
-                                  fontFamily: AppTheme.fontFamily,
-                                  color: AppTheme.textPrimaryDark,
-                                  fontSize: AppTheme.font,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Album',
-                                style: const TextStyle(
-                                  fontFamily: AppTheme.fontFamily,
-                                  color: AppTheme.textSecondaryDark,
-                                  fontSize: AppTheme.fontSm,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-          //show all button if more than 2
-          if (_albums.length > 2)
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppTheme.spacing,
-                vertical: AppTheme.spacingSm,
-              ),
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder:
-                            (context) => ArtistAlbumsPage(
-                              artistName: widget.artistName,
-                              albums: _albums,
-                              eps: _singles,
-                              audioQuery: widget.audioQuery,
-                            ),
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.elevatedSurfaceDark,
-                    foregroundColor: AppTheme.textPrimaryDark,
-                    elevation: 0,
-                    side: const BorderSide(color: Color(0xFF3d3d3d), width: 1),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                  child: const Text(
-                    'Show all',
-                    style: TextStyle(
-                      fontFamily: AppTheme.fontFamily,
-                      fontSize: AppTheme.fontBody,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAboutSection() {
-    final stats = _artistInfo?['stats'];
-    final playcount =
-        stats != null
-            ? int.tryParse(stats['playcount']?.toString() ?? '0')
-            : null;
-    final bio = _artistInfo?['bio']?['content']?.toString();
-
-    return SliverToBoxAdapter(
-      child: Padding(
-        padding: const EdgeInsets.only(top: AppTheme.spacing),
-        child: AboutSection(
-          bio: bio,
-          monthlyListeners: _sonoMonthlyListeners,
-          totalPlays: playcount,
-          artistUrl: _artistInfo?['url'],
-          isLoading: _isLoadingArtistInfo,
-          onViewMore: _showAboutModalSheet,
-          onLinkTap: _openLastFmLink,
+            const SliverToBoxAdapter(child: SizedBox(height: 100)),
+          ],
         ),
       ),
     );
@@ -1622,14 +686,11 @@ class _ArtistPageState extends State<ArtistPage> {
                   padding: const EdgeInsets.only(right: AppTheme.spacing),
                   child: SizedBox(
                     width: itemWidth,
-                    child:
-                        album.numOfSongs == 1 && title == "Singles"
-                            ? _buildSingleSongItem(album, itemWidth)
-                            : HomePageAlbumItem(
-                              album: album,
-                              audioQuery: widget.audioQuery,
-                              artworkSize: itemWidth,
-                            ),
+                    child: HomePageAlbumItem(
+                      album: album,
+                      audioQuery: widget.audioQuery,
+                      artworkSize: itemWidth,
+                    ),
                   ),
                 );
               },
@@ -1640,78 +701,123 @@ class _ArtistPageState extends State<ArtistPage> {
     );
   }
 
-  Widget _buildSingleSongItem(AlbumModel album, double artworkSize) {
-    return FutureBuilder<List<SongModel>>(
-      future: widget.audioQuery.queryAudiosFrom(
-        AudiosFromType.ALBUM_ID,
-        album.id,
-      ),
-      builder: (context, snapshot) {
-        final songName =
-            snapshot.hasData && snapshot.data!.isNotEmpty
-                ? snapshot.data!.first.title
-                : album.album;
-
-        return InkWell(
-          onTap:
-              () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder:
-                      (context) => AlbumPage(
-                        album: album,
-                        audioQuery: widget.audioQuery,
-                      ),
-                ),
-              ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(AppTheme.radius),
-                child: SizedBox(
-                  width: artworkSize,
-                  height: artworkSize,
-                  child: QueryArtworkWidget(
-                    id: album.id,
-                    type: ArtworkType.ALBUM,
-                    artworkFit: BoxFit.cover,
-                    artworkBorder: BorderRadius.circular(AppTheme.radius),
-                    keepOldArtwork: true,
-                    nullArtworkWidget: Container(
-                      width: artworkSize,
-                      height: artworkSize,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade800,
-                        borderRadius: BorderRadius.circular(AppTheme.radius),
-                      ),
-                      child: const Icon(
-                        Icons.music_note_rounded,
-                        color: Colors.white54,
-                        size: 40,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                songName,
-                style: AppStyles.sonoPlayerTitle.copyWith(fontSize: 12),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              Text(
-                'Single',
-                style: AppStyles.sonoPlayerArtist.copyWith(fontSize: 10),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
+  Widget _buildArtistInfoBox() {
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.all(AppTheme.spacing),
+        child: Container(
+          padding: const EdgeInsets.all(AppTheme.spacing),
+          decoration: BoxDecoration(
+            color: Colors.black.withAlpha(51),
+            borderRadius: BorderRadius.circular(AppTheme.radius),
           ),
-        );
-      },
+          child:
+              _isLoadingArtistInfo
+                  ? const Center(
+                    child: CircularProgressIndicator(
+                      color: AppTheme.brandPink,
+                      strokeWidth: 2.0,
+                    ),
+                  )
+                  : _artistInfo == null
+                  ? const SizedBox.shrink()
+                  : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "About ${getPrimaryArtist(widget.artistName)}",
+                        style: AppStyles.sonoPlayerTitle.copyWith(fontSize: 16),
+                      ),
+                      const SizedBox(height: AppTheme.spacing),
+                      _buildStatsRow(),
+                      const SizedBox(height: AppTheme.spacing),
+                      _buildBioText(),
+                    ],
+                  ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatsRow() {
+    final stats = _artistInfo?['stats'];
+    if (stats == null) return const SizedBox.shrink();
+
+    final listeners = int.tryParse(stats['listeners']?.toString() ?? '0') ?? 0;
+    final playcount = int.tryParse(stats['playcount']?.toString() ?? '0') ?? 0;
+
+    if (listeners == 0 && playcount == 0) return const SizedBox.shrink();
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        _buildStatItem(
+          Icons.play_circle_fill_rounded,
+          NumberFormat.compact().format(playcount),
+          "Total Plays",
+        ),
+        _buildStatItem(
+          Icons.people_alt_rounded,
+          NumberFormat.compact().format(listeners),
+          "Listeners",
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBioText() {
+    final bio = _artistInfo?['bio'];
+    if (bio == null) return const SizedBox.shrink();
+
+    final bioSummary =
+        bio['summary']?.toString().split(' <a href')[0] ??
+        'No biography available.';
+    if (bioSummary.isEmpty || bioSummary == 'No biography available.') {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          bioSummary,
+          maxLines: _bioExpanded ? 100 : 3,
+          overflow: TextOverflow.ellipsis,
+          style: AppStyles.sonoPlayerArtist.copyWith(fontSize: 14, height: 1.5),
+        ),
+        if (bioSummary.length > 150)
+          InkWell(
+            onTap: () => setState(() => _bioExpanded = !_bioExpanded),
+            child: Padding(
+              padding: const EdgeInsets.only(top: AppTheme.spacingSm),
+              child: Text(
+                _bioExpanded ? "Show Less" : "Read More",
+                style: TextStyle(
+                  color: Theme.of(context).primaryColor,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildStatItem(IconData icon, String value, String label) {
+    return Column(
+      children: [
+        Icon(icon, color: AppTheme.textSecondaryDark, size: 28),
+        const SizedBox(height: AppTheme.spacingSm),
+        Text(
+          value,
+          style: AppStyles.sonoPlayerTitle.copyWith(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: AppTheme.spacingXs),
+        Text(label, style: AppStyles.sonoPlayerArtist.copyWith(fontSize: 12)),
+      ],
     );
   }
 }

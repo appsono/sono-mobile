@@ -2,8 +2,7 @@ import 'package:flutter/foundation.dart';
 
 /// Service to track artist image fetch progress globally
 class ArtistFetchProgressService extends ChangeNotifier {
-  static final ArtistFetchProgressService _instance =
-      ArtistFetchProgressService._internal();
+  static final ArtistFetchProgressService _instance = ArtistFetchProgressService._internal();
   factory ArtistFetchProgressService() => _instance;
   ArtistFetchProgressService._internal();
 
@@ -51,7 +50,7 @@ class ArtistFetchProgressService extends ChangeNotifier {
     _startTime = DateTime.now();
     _successCount = 0;
     _failureCount = 0;
-    _addLog('Started fetching $total artists from API');
+    _addLog('Started fetching $total artists from Last.fm');
     notifyListeners();
   }
 
@@ -84,9 +83,7 @@ class ArtistFetchProgressService extends ChangeNotifier {
   void completeFetch() {
     _isFetching = false;
     final duration = DateTime.now().difference(_startTime ?? DateTime.now());
-    _addLog(
-      'Completed! Total: $_totalArtists, Success: $_successCount, Failed: $_failureCount',
-    );
+    _addLog('Completed! Total: $_totalArtists, Success: $_successCount, Failed: $_failureCount');
     _addLog('Time taken: ${duration.inMinutes}m ${duration.inSeconds % 60}s');
     _currentArtist = null;
     notifyListeners();
@@ -101,8 +98,7 @@ class ArtistFetchProgressService extends ChangeNotifier {
 
   void _addLog(String message) {
     final timestamp = DateTime.now();
-    final timeStr =
-        '${timestamp.hour.toString().padLeft(2, '0')}:${timestamp.minute.toString().padLeft(2, '0')}:${timestamp.second.toString().padLeft(2, '0')}';
+    final timeStr = '${timestamp.hour.toString().padLeft(2, '0')}:${timestamp.minute.toString().padLeft(2, '0')}:${timestamp.second.toString().padLeft(2, '0')}';
     _logs.add('[$timeStr] $message');
 
     //keep only last 100 logs to prevent memory issues
