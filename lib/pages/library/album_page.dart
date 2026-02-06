@@ -790,10 +790,10 @@ class _AlbumPageState extends State<AlbumPage> {
     );
     final displayArtists = artists.take(2).toList();
 
-    // Return empty if artists haven't loaded yet
-    if (_artistLookup.isEmpty) {
-      return const SizedBox(width: 24, height: 24);
-    }
+    //return empty if artists havent loaded yet
+    //if (_artistLookup.isEmpty) {
+    //  return const SizedBox(width: 24, height: 24);
+    //}
 
     return SizedBox(
       width: displayArtists.length == 1 ? 26 : 38,

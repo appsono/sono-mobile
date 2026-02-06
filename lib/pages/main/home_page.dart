@@ -129,7 +129,43 @@ class HomePageState extends State<HomePage>
   /// Refreshes the home page data
   Future<void> refreshData() async {
     if (!widget.hasPermission || !mounted) return;
-    _initializeDataFutures();
+
+    //fetch all data in parallel while keeping existing data visible
+    final recentSongsFuture = AudioFilterUtils.getFilteredSongs(
+      _audioQuery,
+      sortType: SongSortType.DATE_ADDED,
+      orderType: OrderType.DESC_OR_GREATER,
+    ).then((s) => s.take(15).toList());
+
+    final albumsFuture = AudioFilterUtils.getFilteredAlbums(_audioQuery)
+        .then((a) => a..sort((x, y) => (x.album).compareTo(y.album)))
+        .then((a) => a.take(15).toList());
+
+    final artistsFuture = AudioFilterUtils.getFilteredArtists(_audioQuery)
+        .then((a) => a..sort((x, y) => (x.artist).compareTo(y.artist)))
+        .then((a) => a.take(15).toList());
+
+    final allSongsFuture = AudioFilterUtils.getFilteredSongs(
+      _audioQuery,
+      sortType: SongSortType.TITLE,
+      orderType: OrderType.ASC_OR_SMALLER,
+    );
+
+    final recentSongs = await recentSongsFuture;
+    final albums = await albumsFuture;
+    final artists = await artistsFuture;
+    final allSongs = await allSongsFuture;
+
+    if (!mounted) return;
+
+    //single setState with pre-resolved future => one rebuild
+    setState(() {
+      _recentlyAddedSongsPreviewFuture = Future.value(recentSongs);
+      _albumsPreviewFuture = Future.value(albums);
+      _artistsPreviewFuture = Future.value(artists);
+      _allSongs = allSongs;
+      _paginatedSongs = allSongs.toList();
+    });
   }
 
   void _handleShuffleAll() async {
@@ -377,11 +413,13 @@ class HomePageState extends State<HomePage>
   Widget _buildHomepage(BuildContext context) {
     const double appBarContentHeight = 70.0;
 
-    return CustomScrollView(
-      physics: const BouncingScrollPhysics(),
-      slivers: <Widget>[
-        SonoSliverRefreshControl(onRefresh: refreshData),
-        SliverAppBar(
+    return SonoRefreshIndicator(
+      onRefresh: refreshData,
+      edgeOffset: appBarContentHeight,
+      child: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: <Widget>[
+          SliverAppBar(
           pinned: true,
           floating: false,
           automaticallyImplyLeading: false,
@@ -543,6 +581,7 @@ class HomePageState extends State<HomePage>
         //if (_hasMoreSongs) _buildLoadMoreButton(),
         const SliverToBoxAdapter(child: SizedBox(height: 150)),
       ],
+      ),
     );
   }
 

@@ -893,14 +893,16 @@ class _ArtistPageState extends State<ArtistPage> {
       ),
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        body: CustomScrollView(
-          slivers: <Widget>[
-            SonoSliverRefreshControl(onRefresh: () async {
-              await _loadArtistData();
-              await _fetchPopularSongs(forceRefresh: true);
-              await _fetchArtistInfo();
-            }),
-            SliverAppBar(
+        body: SonoRefreshIndicator(
+          onRefresh: () async {
+            await _loadArtistData();
+            await _fetchPopularSongs(forceRefresh: true);
+            await _fetchArtistInfo();
+          },
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: <Widget>[
+              SliverAppBar(
               expandedHeight: 280.0,
               floating: false,
               pinned: true,
@@ -1024,6 +1026,7 @@ class _ArtistPageState extends State<ArtistPage> {
             ],
             const SliverToBoxAdapter(child: SizedBox(height: 100)),
           ],
+          ),
         ),
       ),
     );

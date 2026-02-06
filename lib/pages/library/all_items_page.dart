@@ -79,46 +79,52 @@ class _AllItemsPageState extends State<AllItemsPage> {
   }
 
   Future<void> _onRefresh() async {
-    setState(() {
-      _resolvedItems = null;
-      switch (widget.itemType) {
-        case ListItemType.playlist:
-          _itemsFuture = PlaylistService().getAllPlaylists();
-          break;
-        case ListItemType.song:
-          _itemsFuture = AudioFilterUtils.getFilteredSongs(
-            widget.audioQuery,
-            sortType: widget.songSortType,
-            orderType: widget.orderType,
-            path: widget.path,
-          );
-          break;
-        case ListItemType.album:
-          _itemsFuture = AudioFilterUtils.getFilteredAlbums(
-            widget.audioQuery,
-            sortType: widget.albumSortType,
-            orderType: widget.orderType,
-          );
-          break;
-        case ListItemType.artist:
-          _itemsFuture = AudioFilterUtils.getFilteredArtists(
-            widget.audioQuery,
-            sortType: widget.artistSortType,
-            orderType: widget.orderType,
-          );
-          break;
-        case ListItemType.genre:
-          _itemsFuture = widget.audioQuery.queryGenres(
-            sortType: widget.genreSortType,
-            orderType: widget.orderType,
-          );
-          break;
-        case ListItemType.folder:
-          _itemsFuture = widget.audioQuery.queryAllPath();
-          break;
-      }
-    });
-    await _itemsFuture;
+    final Future<List<dynamic>> newFuture;
+    switch (widget.itemType) {
+      case ListItemType.playlist:
+        newFuture = PlaylistService().getAllPlaylists();
+        break;
+      case ListItemType.song:
+        newFuture = AudioFilterUtils.getFilteredSongs(
+          widget.audioQuery,
+          sortType: widget.songSortType,
+          orderType: widget.orderType,
+          path: widget.path,
+        );
+        break;
+      case ListItemType.album:
+        newFuture = AudioFilterUtils.getFilteredAlbums(
+          widget.audioQuery,
+          sortType: widget.albumSortType,
+          orderType: widget.orderType,
+        );
+        break;
+      case ListItemType.artist:
+        newFuture = AudioFilterUtils.getFilteredArtists(
+          widget.audioQuery,
+          sortType: widget.artistSortType,
+          orderType: widget.orderType,
+        );
+        break;
+      case ListItemType.genre:
+        newFuture = widget.audioQuery.queryGenres(
+          sortType: widget.genreSortType,
+          orderType: widget.orderType,
+        );
+        break;
+      case ListItemType.folder:
+        newFuture = widget.audioQuery.queryAllPath();
+        break;
+    }
+
+    await newFuture;
+
+    if (mounted) {
+      setState(() {
+        _itemsFuture = newFuture;
+        _resolvedItems = null;
+      });
+    }
   }
 
   Future<void> _showCreatePlaylistDialog() async {
@@ -284,26 +290,27 @@ class _AllItemsPageState extends State<AllItemsPage> {
         backgroundColor: Colors.transparent,
         floatingActionButton: _buildFab(),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-        body: CustomScrollView(
-          physics: const BouncingScrollPhysics(),
-          slivers: <Widget>[
-            SliverAppBar(
-              title: Text(
-                widget.pageTitle,
-                style: AppStyles.sonoPlayerTitle.copyWith(fontSize: 18),
-              ),
-              backgroundColor: AppTheme.backgroundDark.withAlpha(204),
-              elevation: 0,
-              pinned: true,
-              leading: IconButton(
-                icon: const Icon(
-                  Icons.arrow_back_rounded,
-                  color: AppTheme.textPrimaryDark,
+        body: SonoRefreshIndicator(
+          onRefresh: _onRefresh,
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: <Widget>[
+              SliverAppBar(
+                title: Text(
+                  widget.pageTitle,
+                  style: AppStyles.sonoPlayerTitle.copyWith(fontSize: 18),
                 ),
-                onPressed: () => Navigator.of(context).pop(),
+                backgroundColor: AppTheme.backgroundDark.withAlpha(204),
+                elevation: 0,
+                pinned: true,
+                leading: IconButton(
+                  icon: const Icon(
+                    Icons.arrow_back_rounded,
+                    color: AppTheme.textPrimaryDark,
+                  ),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
               ),
-            ),
-            SonoSliverRefreshControl(onRefresh: _onRefresh),
             //content list
             FutureBuilder<List<dynamic>>(
               future: _itemsFuture,
@@ -400,6 +407,7 @@ class _AllItemsPageState extends State<AllItemsPage> {
               },
             ),
           ],
+          ),
         ),
       ),
     );

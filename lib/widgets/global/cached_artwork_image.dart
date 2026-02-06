@@ -22,22 +22,57 @@ class CachedArtworkImage extends StatefulWidget {
 }
 
 class _CachedArtworkImageState extends State<CachedArtworkImage> {
+  Future<Uint8List?>? _artworkFuture;
+  int _requestSize = 0;
+  int _lastId = -1;
+  ArtworkType? _lastType;
+
   @override
-  Widget build(BuildContext context) {
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _initializeFuture();
+  }
+
+  @override
+  void didUpdateWidget(CachedArtworkImage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.id != widget.id ||
+        oldWidget.type != widget.type ||
+        oldWidget.size != widget.size) {
+      _initializeFuture();
+    }
+  }
+
+  void _initializeFuture() {
     final double devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
-    int requestSize = (widget.size * devicePixelRatio).round();
+    int newRequestSize = (widget.size * devicePixelRatio).round();
 
     if (widget.type == ArtworkType.ALBUM) {
-      requestSize = requestSize.clamp(300, 600);
+      newRequestSize = newRequestSize.clamp(300, 600);
     }
 
+    if (_artworkFuture != null &&
+        _requestSize == newRequestSize &&
+        _lastId == widget.id &&
+        _lastType == widget.type) {
+      return;
+    }
+
+    _requestSize = newRequestSize;
+    _lastId = widget.id;
+    _lastType = widget.type;
+    _artworkFuture = ArtworkCacheService.instance.getArtwork(
+      widget.id,
+      type: widget.type,
+      size: _requestSize,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return RepaintBoundary(
       child: FutureBuilder<Uint8List?>(
-        future: ArtworkCacheService.instance.getArtwork(
-          widget.id,
-          type: widget.type,
-          size: requestSize,
-        ),
+        future: _artworkFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done &&
               snapshot.hasData &&
@@ -49,8 +84,8 @@ class _CachedArtworkImageState extends State<CachedArtworkImage> {
               fit: BoxFit.cover,
               gaplessPlayback: true,
               filterQuality: FilterQuality.high,
-              cacheWidth: requestSize,
-              cacheHeight: requestSize,
+              cacheWidth: _requestSize,
+              cacheHeight: _requestSize,
             );
 
             return widget.borderRadius != null

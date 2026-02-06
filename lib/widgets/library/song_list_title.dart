@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:sono/utils/artist_string_utils.dart';
-import 'dart:typed_data';
 import 'package:sono/widgets/global/add_to_playlist_dialog.dart';
 import 'package:sono/widgets/player/sono_player.dart';
 import 'package:sono/styles/text.dart';
 import 'package:sono/styles/app_theme.dart';
-import 'package:sono/services/utils/artwork_cache_service.dart';
+import 'package:sono/widgets/global/cached_artwork_image.dart';
 
 class SongListTile extends StatelessWidget {
   final SongModel song;
@@ -22,18 +21,6 @@ class SongListTile extends StatelessWidget {
     this.onArtistTap,
     this.trailing,
   });
-
-  Widget _buildArtworkPlaceholder(BuildContext context) {
-    return Container(
-      width: AppTheme.responsiveDimension(context, 50),
-      height: AppTheme.responsiveDimension(context, 50),
-      decoration: BoxDecoration(
-        color: Colors.grey.withAlpha((255 * 0.2).round()),
-        borderRadius: BorderRadius.circular(12.0.r),
-      ),
-      child: Icon(Icons.music_note_rounded, color: Colors.white70, size: 30.w),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,36 +48,11 @@ class SongListTile extends StatelessWidget {
             horizontal: AppTheme.responsiveSpacing(context, AppTheme.spacing),
             vertical: 0,
           ),
-          leading: ClipRRect(
+          leading: CachedArtworkImage(
+            id: song.id,
+            size: AppTheme.responsiveDimension(context, 50),
+            type: ArtworkType.AUDIO,
             borderRadius: BorderRadius.circular(12.0.r),
-            child: SizedBox(
-              width: AppTheme.responsiveDimension(context, 50),
-              height: AppTheme.responsiveDimension(context, 50),
-              child: FutureBuilder<Uint8List?>(
-                future: ArtworkCacheService.instance.getArtwork(
-                  song.id,
-                  size: 150,
-                ),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.done &&
-                      snapshot.hasData &&
-                      snapshot.data != null) {
-                    return Image.memory(
-                      snapshot.data!,
-                      fit: BoxFit.cover,
-                      gaplessPlayback: true,
-                      //limit decoded image size to reduce native memory
-                      cacheWidth: 150,
-                      cacheHeight: 150,
-                    );
-                  } else if (snapshot.hasError) {
-                    return _buildArtworkPlaceholder(context);
-                  } else {
-                    return _buildArtworkPlaceholder(context);
-                  }
-                },
-              ),
-            ),
           ),
           title: Text(
             song.title,
@@ -171,42 +133,11 @@ void _showSongOptionsBottomSheet(BuildContext context, SongModel song) {
               ),
             ),
             ListTile(
-              leading: ClipRRect(
+              leading: CachedArtworkImage(
+                id: song.id,
+                size: 50.w,
+                type: ArtworkType.AUDIO,
                 borderRadius: BorderRadius.circular(8.0.r),
-                child: SizedBox(
-                  width: 50.w,
-                  height: 50.w,
-                  child: FutureBuilder<Uint8List?>(
-                    future: ArtworkCacheService.instance.getArtwork(
-                      song.id,
-                      size: 150,
-                    ),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.done &&
-                          snapshot.hasData &&
-                          snapshot.data != null) {
-                        return Image.memory(
-                          snapshot.data!,
-                          fit: BoxFit.cover,
-                          gaplessPlayback: true,
-                          //limit decoded image size to reduce native memory
-                          cacheWidth: 150,
-                          cacheHeight: 150,
-                        );
-                      }
-                      return Container(
-                        width: 50.w,
-                        height: 50.w,
-                        color: Colors.grey.shade800,
-                        child: Icon(
-                          Icons.music_note_rounded,
-                          color: Colors.white70,
-                          size: 24.w,
-                        ),
-                      );
-                    },
-                  ),
-                ),
               ),
               title: Text(
                 song.title,
