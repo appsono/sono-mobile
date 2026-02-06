@@ -27,6 +27,7 @@ import 'package:sono/services/api/lastfm_service.dart';
 import 'package:sono/services/api/lyrics_service.dart';
 import 'package:sono/services/utils/preferences_service.dart';
 import 'package:sono/services/settings/library_settings_service.dart';
+import 'package:sono/services/settings/playback_settings_service.dart';
 import 'package:sono/services/utils/recents_service.dart';
 import 'package:sono/services/sas/sas_manager.dart';
 import 'package:sono/services/settings/audio_effects_service.dart';
@@ -630,6 +631,8 @@ class SonoPlayer extends BaseAudioHandler {
   final AudioEffectsService _audioEffectsService = AudioEffectsService.instance;
   final LibrarySettingsService _librarySettings =
       LibrarySettingsService.instance;
+  final PlaybackSettingsService _playbackSettings =
+      PlaybackSettingsService.instance;
 
   //state managers
   final _QueueManager _queueManager = _QueueManager();
@@ -905,12 +908,12 @@ class SonoPlayer extends BaseAudioHandler {
   Future<void> loadSettings() async {
     try {
       final results = await Future.wait([
-        _prefsService.isCrossfadeEnabled().timeout(const Duration(seconds: 2)),
-        _prefsService.getCrossfadeDurationSeconds().timeout(
+        _playbackSettings.getCrossfadeEnabled().timeout(const Duration(seconds: 2)),
+        _playbackSettings.getCrossfadeDuration().timeout(
           const Duration(seconds: 2),
         ),
-        _prefsService.getPlaybackSpeed().timeout(const Duration(seconds: 2)),
-        _prefsService.getPlaybackPitch().timeout(const Duration(seconds: 2)),
+        _playbackSettings.getSpeed().timeout(const Duration(seconds: 2)),
+        _playbackSettings.getPitch().timeout(const Duration(seconds: 2)),
         _librarySettings.getCoverRotationEnabled().timeout(
           const Duration(seconds: 2),
         ),
@@ -1047,7 +1050,7 @@ class SonoPlayer extends BaseAudioHandler {
   Future<void> restorePlaybackSnapshot() async {
     try {
       //check if resume after reboot is enabled
-      final resumeEnabled = await _prefsService.isResumeAfterRebootEnabled();
+      final resumeEnabled = await _playbackSettings.getResumeAfterRebootEnabled();
       if (!resumeEnabled) {
         if (kDebugMode) {
           debugPrint(
@@ -1664,7 +1667,7 @@ class SonoPlayer extends BaseAudioHandler {
     await _primaryPlayer.setSpeed(clampedSpeed);
     await _secondaryPlayer?.setSpeed(clampedSpeed);
     _currentSpeed.value = clampedSpeed;
-    await _prefsService.setPlaybackSpeed(clampedSpeed);
+    await _playbackSettings.setSpeed(clampedSpeed);
     _broadcastState();
   }
 
@@ -1673,7 +1676,7 @@ class SonoPlayer extends BaseAudioHandler {
     await _primaryPlayer.setPitch(clampedPitch);
     await _secondaryPlayer?.setPitch(clampedPitch);
     _currentPitch.value = clampedPitch;
-    await _prefsService.setPlaybackPitch(clampedPitch);
+    await _playbackSettings.setPitch(clampedPitch);
     _broadcastState();
   }
 
@@ -2997,7 +3000,7 @@ class SonoPlayer extends BaseAudioHandler {
 
       case 'loadAlbumCoverRotationPreference':
         albumCoverRotationEnabled.value =
-            await _prefsService.isAlbumCoverRotationEnabled();
+            await _librarySettings.getCoverRotationEnabled();
         break;
 
       case 'setPersistentSessionMode':
@@ -3015,7 +3018,7 @@ class SonoPlayer extends BaseAudioHandler {
     //called when app is swiped away from recents
     //check background playback setting
     final backgroundPlaybackEnabled =
-        await _prefsService.isBackgroundPlaybackEnabled();
+        await _playbackSettings.getBackgroundPlaybackEnabled();
 
     if (kDebugMode) {
       debugPrint(
