@@ -436,6 +436,8 @@ class HomePageState extends State<HomePage>
                       ),
                       itemType: ListItemType.song,
                       audioQuery: _audioQuery,
+                      songSortType: SongSortType.DATE_ADDED,
+                      orderType: OrderType.DESC_OR_GREATER,
                     ),
               ),
             );
@@ -478,6 +480,8 @@ class HomePageState extends State<HomePage>
                       ),
                       itemType: ListItemType.album,
                       audioQuery: _audioQuery,
+                      albumSortType: AlbumSortType.ALBUM,
+                      orderType: OrderType.ASC_OR_SMALLER,
                     ),
               ),
             );
@@ -514,6 +518,8 @@ class HomePageState extends State<HomePage>
                       ),
                       itemType: ListItemType.artist,
                       audioQuery: _audioQuery,
+                      artistSortType: ArtistSortType.ARTIST,
+                      orderType: OrderType.ASC_OR_SMALLER,
                     ),
               ),
             );

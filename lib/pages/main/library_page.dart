@@ -85,14 +85,24 @@ class _LibraryPageState extends State<LibraryPage>
         color: Theme.of(context).primaryColor,
         onTap: () {
           final favoritesService = context.read<FavoritesService>();
-          _navigateTo(context, "Liked Songs", ListItemType.song, () async {
-            final favIds = await favoritesService.getFavoriteSongIds();
-            if (favIds.isEmpty) return [];
-            final allSongs = await AudioFilterUtils.getFilteredSongs(
-              _audioQuery,
-            );
-            return allSongs.where((song) => favIds.contains(song.id)).toList();
-          }());
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => AllItemsPage(
+                pageTitle: "Liked Songs",
+                itemsFuture: () async {
+                  final favIds = await favoritesService.getFavoriteSongIds();
+                  if (favIds.isEmpty) return [];
+                  final allSongs = await AudioFilterUtils.getFilteredSongs(
+                    _audioQuery,
+                  );
+                  return allSongs.where((song) => favIds.contains(song.id)).toList();
+                }(),
+                itemType: ListItemType.song,
+                audioQuery: _audioQuery,
+              ),
+            ),
+          );
         },
       ),
       _LibraryCategory(
@@ -101,20 +111,25 @@ class _LibraryPageState extends State<LibraryPage>
         color: Colors.amber.shade400,
         onTap: () {
           final favoritesService = context.read<FavoritesService>();
-          _navigateTo(
+          Navigator.push(
             context,
-            "Favorite Artists",
-            ListItemType.artist,
-            () async {
-              final favIds = await favoritesService.getFavoriteArtistIds();
-              if (favIds.isEmpty) return [];
-              final allArtists = await AudioFilterUtils.getFilteredArtists(
-                _audioQuery,
-              );
-              return allArtists
-                  .where((artist) => favIds.contains(artist.id))
-                  .toList();
-            }(),
+            MaterialPageRoute(
+              builder: (context) => AllItemsPage(
+                pageTitle: "Favorite Artists",
+                itemsFuture: () async {
+                  final favIds = await favoritesService.getFavoriteArtistIds();
+                  if (favIds.isEmpty) return [];
+                  final allArtists = await AudioFilterUtils.getFilteredArtists(
+                    _audioQuery,
+                  );
+                  return allArtists
+                      .where((artist) => favIds.contains(artist.id))
+                      .toList();
+                }(),
+                itemType: ListItemType.artist,
+                audioQuery: _audioQuery,
+              ),
+            ),
           );
         },
       ),
@@ -124,16 +139,26 @@ class _LibraryPageState extends State<LibraryPage>
         color: Colors.green.shade400,
         onTap: () {
           final favoritesService = context.read<FavoritesService>();
-          _navigateTo(context, "Favorite Albums", ListItemType.album, () async {
-            final favIds = await favoritesService.getFavoriteAlbumIds();
-            if (favIds.isEmpty) return [];
-            final allAlbums = await AudioFilterUtils.getFilteredAlbums(
-              _audioQuery,
-            );
-            return allAlbums
-                .where((album) => favIds.contains(album.id))
-                .toList();
-          }());
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => AllItemsPage(
+                pageTitle: "Favorite Albums",
+                itemsFuture: () async {
+                  final favIds = await favoritesService.getFavoriteAlbumIds();
+                  if (favIds.isEmpty) return [];
+                  final allAlbums = await AudioFilterUtils.getFilteredAlbums(
+                    _audioQuery,
+                  );
+                  return allAlbums
+                      .where((album) => favIds.contains(album.id))
+                      .toList();
+                }(),
+                itemType: ListItemType.album,
+                audioQuery: _audioQuery,
+              ),
+            ),
+          );
         },
       ),
       _LibraryCategory(
@@ -141,13 +166,19 @@ class _LibraryPageState extends State<LibraryPage>
         icon: Icons.music_note_rounded,
         color: Colors.purple.shade300,
         onTap: () {
-          _navigateTo(
+          Navigator.push(
             context,
-            "All Songs",
-            ListItemType.song,
-            AudioFilterUtils.getFilteredSongs(
-              _audioQuery,
-              sortType: SongSortType.TITLE,
+            MaterialPageRoute(
+              builder: (context) => AllItemsPage(
+                pageTitle: "All Songs",
+                itemsFuture: AudioFilterUtils.getFilteredSongs(
+                  _audioQuery,
+                  sortType: SongSortType.TITLE,
+                ),
+                itemType: ListItemType.song,
+                audioQuery: _audioQuery,
+                songSortType: SongSortType.TITLE,
+              ),
             ),
           );
         },
@@ -157,13 +188,19 @@ class _LibraryPageState extends State<LibraryPage>
         icon: Icons.album_rounded,
         color: Colors.orange.shade400,
         onTap: () {
-          _navigateTo(
+          Navigator.push(
             context,
-            "All Albums",
-            ListItemType.album,
-            AudioFilterUtils.getFilteredAlbums(
-              _audioQuery,
-              sortType: AlbumSortType.ALBUM,
+            MaterialPageRoute(
+              builder: (context) => AllItemsPage(
+                pageTitle: "All Albums",
+                itemsFuture: AudioFilterUtils.getFilteredAlbums(
+                  _audioQuery,
+                  sortType: AlbumSortType.ALBUM,
+                ),
+                itemType: ListItemType.album,
+                audioQuery: _audioQuery,
+                albumSortType: AlbumSortType.ALBUM,
+              ),
             ),
           );
         },
@@ -173,13 +210,19 @@ class _LibraryPageState extends State<LibraryPage>
         icon: Icons.person_rounded,
         color: Colors.teal.shade300,
         onTap: () {
-          _navigateTo(
+          Navigator.push(
             context,
-            "All Artists",
-            ListItemType.artist,
-            AudioFilterUtils.getFilteredArtists(
-              _audioQuery,
-              sortType: ArtistSortType.ARTIST,
+            MaterialPageRoute(
+              builder: (context) => AllItemsPage(
+                pageTitle: "All Artists",
+                itemsFuture: AudioFilterUtils.getFilteredArtists(
+                  _audioQuery,
+                  sortType: ArtistSortType.ARTIST,
+                ),
+                itemType: ListItemType.artist,
+                audioQuery: _audioQuery,
+                artistSortType: ArtistSortType.ARTIST,
+              ),
             ),
           );
         },
@@ -189,14 +232,21 @@ class _LibraryPageState extends State<LibraryPage>
         icon: Icons.history_rounded,
         color: Colors.lightBlue.shade300,
         onTap: () {
-          _navigateTo(
+          Navigator.push(
             context,
-            "Recently Added",
-            ListItemType.song,
-            AudioFilterUtils.getFilteredSongs(
-              _audioQuery,
-              sortType: SongSortType.DATE_ADDED,
-              orderType: OrderType.DESC_OR_GREATER,
+            MaterialPageRoute(
+              builder: (context) => AllItemsPage(
+                pageTitle: "Recently Added",
+                itemsFuture: AudioFilterUtils.getFilteredSongs(
+                  _audioQuery,
+                  sortType: SongSortType.DATE_ADDED,
+                  orderType: OrderType.DESC_OR_GREATER,
+                ),
+                itemType: ListItemType.song,
+                audioQuery: _audioQuery,
+                songSortType: SongSortType.DATE_ADDED,
+                orderType: OrderType.DESC_OR_GREATER,
+              ),
             ),
           );
         },
@@ -206,11 +256,17 @@ class _LibraryPageState extends State<LibraryPage>
         icon: Icons.category_rounded,
         color: Colors.red.shade300,
         onTap: () {
-          _navigateTo(
+          Navigator.push(
             context,
-            "Genres",
-            ListItemType.genre,
-            _audioQuery.queryGenres(sortType: GenreSortType.GENRE),
+            MaterialPageRoute(
+              builder: (context) => AllItemsPage(
+                pageTitle: "Genres",
+                itemsFuture: _audioQuery.queryGenres(sortType: GenreSortType.GENRE),
+                itemType: ListItemType.genre,
+                audioQuery: _audioQuery,
+                genreSortType: GenreSortType.GENRE,
+              ),
+            ),
           );
         },
       ),

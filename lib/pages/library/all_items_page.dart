@@ -35,6 +35,12 @@ class AllItemsPage extends StatefulWidget {
   final Future<List<dynamic>> itemsFuture;
   final ListItemType itemType;
   final OnAudioQuery audioQuery;
+  final SongSortType? songSortType;
+  final AlbumSortType? albumSortType;
+  final ArtistSortType? artistSortType;
+  final GenreSortType? genreSortType;
+  final OrderType? orderType;
+  final String? path;
 
   const AllItemsPage({
     super.key,
@@ -42,6 +48,12 @@ class AllItemsPage extends StatefulWidget {
     required this.itemsFuture,
     required this.itemType,
     required this.audioQuery,
+    this.songSortType,
+    this.albumSortType,
+    this.artistSortType,
+    this.genreSortType,
+    this.orderType,
+    this.path,
   });
 
   @override
@@ -74,16 +86,32 @@ class _AllItemsPageState extends State<AllItemsPage> {
           _itemsFuture = PlaylistService().getAllPlaylists();
           break;
         case ListItemType.song:
-          _itemsFuture = AudioFilterUtils.getFilteredSongs(widget.audioQuery);
+          _itemsFuture = AudioFilterUtils.getFilteredSongs(
+            widget.audioQuery,
+            sortType: widget.songSortType,
+            orderType: widget.orderType,
+            path: widget.path,
+          );
           break;
         case ListItemType.album:
-          _itemsFuture = widget.audioQuery.queryAlbums();
+          _itemsFuture = AudioFilterUtils.getFilteredAlbums(
+            widget.audioQuery,
+            sortType: widget.albumSortType,
+            orderType: widget.orderType,
+          );
           break;
         case ListItemType.artist:
-          _itemsFuture = widget.audioQuery.queryArtists();
+          _itemsFuture = AudioFilterUtils.getFilteredArtists(
+            widget.audioQuery,
+            sortType: widget.artistSortType,
+            orderType: widget.orderType,
+          );
           break;
         case ListItemType.genre:
-          _itemsFuture = widget.audioQuery.queryGenres();
+          _itemsFuture = widget.audioQuery.queryGenres(
+            sortType: widget.genreSortType,
+            orderType: widget.orderType,
+          );
           break;
         case ListItemType.folder:
           _itemsFuture = widget.audioQuery.queryAllPath();
@@ -522,6 +550,7 @@ class _AllItemsPageState extends State<AllItemsPage> {
                         ),
                         itemType: ListItemType.song,
                         audioQuery: widget.audioQuery,
+                        songSortType: SongSortType.TITLE,
                       ),
                 ),
               ),
@@ -547,6 +576,8 @@ class _AllItemsPageState extends State<AllItemsPage> {
                         ),
                         itemType: ListItemType.song,
                         audioQuery: widget.audioQuery,
+                        songSortType: SongSortType.TITLE,
+                        path: folderPath,
                       ),
                 ),
               ),
