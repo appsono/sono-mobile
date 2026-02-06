@@ -90,6 +90,45 @@ class _ArtistPageState extends State<ArtistPage> {
     super.dispose();
   }
 
+  /// Gets the artist name to use for API calls
+  /// Checks if the artist name is an incomplete version of an exception artist
+  /// (e.g. "Tyler" should become "Tyler, The Creator")
+  String _getArtistNameForAPI(String artistName) {
+    final lowerArtist = artistName.toLowerCase().trim();
+
+    //first check if artist IS an exception (exact match) => return as-is
+    const exceptions = {
+      'tyler, the creator': 'Tyler, The Creator',
+      'panic! at the disco': 'Panic! at the Disco',
+      'florence + the machine': 'Florence + The Machine',
+      'florence and the machine': 'Florence and the Machine',
+      'simon & garfunkel': 'Simon & Garfunkel',
+      'hall & oates': 'Hall & Oates',
+      'earth, wind & fire': 'Earth, Wind & Fire',
+    };
+
+    if (exceptions.containsKey(lowerArtist)) {
+      return exceptions[lowerArtist]!;
+    }
+
+    //check if this artist name is the START of any exception artist
+    //e.g. "tyler" -> "Tyler, The Creator"
+    for (final entry in exceptions.entries) {
+      final exception = entry.key;
+      final properName = entry.value;
+
+      if (exception.startsWith('$lowerArtist,') ||
+          exception.startsWith('$lowerArtist &') ||
+          exception.startsWith('$lowerArtist +') ||
+          exception.startsWith('$lowerArtist and ')) {
+        return properName;
+      }
+    }
+
+    //fallback: return artist name as-is (dont split exception artists)
+    return artistName;
+  }
+
   Widget _buildSkeletonLoader({
     required double width,
     required double height,
@@ -558,7 +597,7 @@ class _ArtistPageState extends State<ArtistPage> {
     if (!mounted) return;
     setState(() => _isLoadingArtistInfo = true);
     try {
-      final primaryArtist = getPrimaryArtist(widget.artistName);
+      final primaryArtist = _getArtistNameForAPI(widget.artistName);
       final info = await _lastfmService.getArtistInfo(primaryArtist);
       if (mounted) {
         setState(() => _artistInfo = info);
@@ -587,7 +626,7 @@ class _ArtistPageState extends State<ArtistPage> {
     });
 
     try {
-      final primaryArtist = getPrimaryArtist(widget.artistName);
+      final primaryArtist = _getArtistNameForAPI(widget.artistName);
       debugPrint('ArtistPage: Fetching popular songs for: $primaryArtist (forceRefresh: $forceRefresh)');
 
       final artistData = await _artistDataRepository.getArtistData(
@@ -1199,6 +1238,57 @@ class _ArtistPageState extends State<ArtistPage> {
     );
   }
 
+  Future<void> _refreshAllArtistData() async {
+    if (!mounted) return;
+
+    //show loading indicator
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Refreshing artist data...'),
+        duration: Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+
+    try {
+      //clear Last.fm cache for artist
+      await _lastfmService.clearCache();
+
+      //reload all artist data
+      await _loadArtistData();
+
+      if (mounted) {
+        //fetch fresh artist info from Last.fm
+        await _fetchArtistInfo();
+
+        //fetch fresh popular songs data
+        await _fetchPopularSongs(forceRefresh: true);
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Artist data refreshed successfully'),
+            backgroundColor: AppTheme.success,
+            behavior: SnackBarBehavior.floating,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to refresh artist data: $e'),
+            backgroundColor: AppTheme.error,
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
   void _showArtistOptionsBottomSheet() {
     showModalBottomSheet(
       context: context,
@@ -1220,6 +1310,21 @@ class _ArtistPageState extends State<ArtistPage> {
                   color: AppTheme.textTertiaryDark,
                   borderRadius: BorderRadius.circular(2.5),
                 ),
+              ),
+              //refresh artist data
+              ListTile(
+                leading: const Icon(
+                  Icons.refresh_rounded,
+                  color: AppTheme.textPrimaryDark,
+                ),
+                title: const Text(
+                  'Refresh artist data',
+                  style: TextStyle(color: AppTheme.textPrimaryDark),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _refreshAllArtistData();
+                },
               ),
               //add all to queue
               ListTile(

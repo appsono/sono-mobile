@@ -50,9 +50,9 @@ dependencies:
     git:
       url: https://github.com/appsono/on_audio_query.git
       path: packages/on_audio_query
-      ref: v2.9.5
+      ref: v2.9.6
   audio_service: ^0.18.18
-  
+
   # Device & storage
   permission_handler: ^12.0.1
   path_provider: ^2.1.5

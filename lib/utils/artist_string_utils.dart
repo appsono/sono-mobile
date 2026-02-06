@@ -6,27 +6,98 @@ library;
 class ArtistStringUtils {
   /// Common separators used between multiple artists
   static const List<String> _artistSeparators = [
+    ' feat. ',
+    ' ft. ',
+    ' featuring ',
+    ' / ',
+    '/',
     ', ',
     ' & ',
     ' and ',
-    ' feat. ',
-    ' ft. ',
-    ' / ',
-    '/',
-    ' featuring ',
     ' x ',
     ' X ',
   ];
+
+  /// Exact-match exceptions for well-known artists/bands that contain separators
+  /// but should NOT be split
+  static const Set<String> _exactExceptions = {
+    'simon & garfunkel',
+    'hall & oates',
+    'earth, wind & fire',
+    'emerson, lake & palmer',
+    'crosby, stills, nash & young',
+    'peter, paul and mary',
+    'blood, sweat & tears',
+    'up, bustle and out',
+    'me first and the gimme gimmes',
+    'hootie & the blowfish',
+    'katrina and the waves',
+    'kc and the sunshine band',
+    'martha and the vandellas',
+    'gladys knight & the pips',
+    'bob seger & the silver bullet band',
+    'huey lewis and the news',
+    'echo & the bunnymen',
+    'tom petty and the heartbreakers',
+    'bob marley & the wailers',
+    'sly & the family stone',
+    'bruce springsteen & the e street band',
+    'diana ross & the supremes',
+    'smokey robinson & the miracles',
+    'joan jett & the blackhearts',
+    'prince & the revolution',
+    'derek & the dominos',
+    'sergio mendes & brasil \'66',
+    'tyler, the creator',
+    'panic! at the disco',
+    'florence + the machine',
+    'florence and the machine',
+  };
+
+  /// Checks if an artist name should be treated as an exception and NOT split
+  static bool _isExceptionArtist(String artistString) {
+    final lower = artistString.toLowerCase();
+    return _exactExceptions.contains(lower);
+  }
 
   /// Splits a combined artist string into individual artists
   ///
   /// Example:
   /// "Kanye West, Ty Dolla $ign" -> ["Kanye West", "Ty Dolla $ign"]
   /// "Drake feat. Lil Wayne" -> ["Drake", "Lil Wayne"]
+  /// "Tyler, The Creator" -> ["Tyler, The Creator"] (exception)
+  /// "Tyler, The Creator, Frank Ocean" -> ["Tyler, The Creator", "Frank Ocean"]
   static List<String> splitArtists(String artistString) {
     if (artistString.isEmpty) return [];
 
+    //check if entire string is an exception and should not be split
+    if (_isExceptionArtist(artistString)) {
+      return [artistString.trim()];
+    }
+
+    //smart splitting: protect exception artists within combined strings
+    //replace exception artists with placeholders before splitting
     String workingString = artistString;
+    final Map<String, String> placeholders = {};
+    int placeholderIndex = 0;
+
+    //sort exceptions by length (longest first) to avoid partial matches
+    final sortedExceptions = _exactExceptions.toList()
+      ..sort((a, b) => b.length.compareTo(a.length));
+
+    for (final exception in sortedExceptions) {
+      //case-insensitive search for exception within the string
+      //escape special regex characters in the exception string
+      final escapedPattern = RegExp.escape(exception);
+      final regex = RegExp(escapedPattern, caseSensitive: false);
+      if (regex.hasMatch(workingString)) {
+        final placeholder = '___ARTIST_PLACEHOLDER_${placeholderIndex++}___';
+        final match = regex.firstMatch(workingString)!;
+        placeholders[placeholder] = match.group(0)!;
+        workingString = workingString.replaceFirst(regex, placeholder);
+      }
+    }
+
     List<String> artists = [];
 
     //try each separator
@@ -46,6 +117,15 @@ class ArtistStringUtils {
     if (artists.isEmpty) {
       artists = [workingString.trim()];
     }
+
+    //restore placeholders with original exception artist names
+    artists = artists.map((artist) {
+      String result = artist;
+      placeholders.forEach((placeholder, original) {
+        result = result.replaceAll(placeholder, original);
+      });
+      return result.trim();
+    }).toList();
 
     return artists;
   }
