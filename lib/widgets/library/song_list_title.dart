@@ -59,7 +59,7 @@ class SongListTile extends StatelessWidget {
         return ListTile(
           contentPadding: EdgeInsets.symmetric(
             horizontal: AppTheme.responsiveSpacing(context, AppTheme.spacing),
-            vertical: 0,
+            vertical: AppTheme.responsiveSpacing(context, AppTheme.spacingSm),
           ),
           leading: ClipRRect(
             borderRadius: BorderRadius.circular(12.0.r),
@@ -127,10 +127,7 @@ class SongListTile extends StatelessWidget {
                             );
                           },
                         )
-                        : const Icon(
-                          Icons.more_vert_rounded,
-                          color: Colors.white70,
-                        ),
+                        : const Icon(Icons.more_vert_rounded, color: Colors.white70),
                 onPressed: () {
                   _showSongOptionsBottomSheet(context, song);
                 },

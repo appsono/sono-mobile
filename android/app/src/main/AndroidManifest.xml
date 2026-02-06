@@ -73,8 +73,8 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data 
-                    android:scheme="sono" 
-                    android:host="sas" />
+                    android:scheme="sonoapp" 
+                    android:host="jam" />
             </intent-filter>
         </activity>
 
@@ -141,16 +141,6 @@
             android:name="flutterEmbedding"
             android:value="2"/>
 
-        <provider
-            android:name="androidx.core.content.FileProvider"
-            android:authorities="${applicationId}.fileprovider"
-            android:exported="false"
-            android:grantUriPermissions="true">
-            <meta-data
-                android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/file_paths" />
-        </provider>
-
     </application>
 
     <uses-feature
@@ -190,11 +180,6 @@
             <action android:name="android.intent.action.GET_CONTENT"/>
         </intent>
         <package android:name="com.android.documentsui" />
-
-        <intent>
-            <action android:name="android.intent.action.VIEW" />
-            <data android:mimeType="application/vnd.android.package-archive" />
-        </intent>
     </queries>
 
 </manifest>

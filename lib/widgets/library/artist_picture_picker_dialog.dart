@@ -1,20 +1,15 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:sono/styles/app_theme.dart';
-import 'package:sono/services/artists/artist_profile_image_service.dart';
+import '../../styles/app_theme.dart';
+import '../../services/artists/artist_profile_image_service.dart';
 
 /// Result of artist picture picker selection
 class ArtistPictureResult {
   final bool remove;
-  final bool refetch;
   final String? imagePath;
 
-  const ArtistPictureResult({
-    required this.remove,
-    this.refetch = false,
-    this.imagePath,
-  });
+  const ArtistPictureResult({required this.remove, this.imagePath});
 
   /// Create result for removing picture
   factory ArtistPictureResult.remove() =>
@@ -23,16 +18,15 @@ class ArtistPictureResult {
   /// Create result for setting custom picture
   factory ArtistPictureResult.customImage(String path) =>
       ArtistPictureResult(remove: false, imagePath: path);
-
-  /// Create result for refetching picture from internet
-  factory ArtistPictureResult.refetchFromInternet() =>
-      const ArtistPictureResult(remove: false, refetch: true);
 }
 
 class ArtistPicturePickerDialog extends StatefulWidget {
   final String artistName;
 
-  const ArtistPicturePickerDialog({super.key, required this.artistName});
+  const ArtistPicturePickerDialog({
+    super.key,
+    required this.artistName,
+  });
 
   @override
   State<ArtistPicturePickerDialog> createState() =>
@@ -103,10 +97,6 @@ class _ArtistPicturePickerDialogState extends State<ArtistPicturePickerDialog> {
     Navigator.pop(context, ArtistPictureResult.remove());
   }
 
-  void _onRefetchPressed() {
-    Navigator.pop(context, ArtistPictureResult.refetchFromInternet());
-  }
-
   @override
   Widget build(BuildContext context) {
     return Dialog(
@@ -115,7 +105,9 @@ class _ArtistPicturePickerDialogState extends State<ArtistPicturePickerDialog> {
         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
       ),
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 400),
+        constraints: const BoxConstraints(
+          maxWidth: 400,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -147,10 +139,7 @@ class _ArtistPicturePickerDialogState extends State<ArtistPicturePickerDialog> {
           ),
           const Spacer(),
           IconButton(
-            icon: const Icon(
-              Icons.close_rounded,
-              color: AppTheme.textSecondaryDark,
-            ),
+            icon: const Icon(Icons.close_rounded, color: AppTheme.textSecondaryDark),
             onPressed: () => Navigator.pop(context),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
@@ -164,7 +153,9 @@ class _ArtistPicturePickerDialogState extends State<ArtistPicturePickerDialog> {
     if (_isLoading) {
       return const Padding(
         padding: EdgeInsets.all(AppTheme.spacing),
-        child: Center(child: CircularProgressIndicator()),
+        child: Center(
+          child: CircularProgressIndicator(),
+        ),
       );
     }
 
@@ -174,16 +165,13 @@ class _ArtistPicturePickerDialogState extends State<ArtistPicturePickerDialog> {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (_selectedImagePath != null) _buildPreview(),
-          if (_selectedImagePath != null)
-            const SizedBox(height: AppTheme.spacing),
+          if (_selectedImagePath != null) const SizedBox(height: AppTheme.spacing),
 
           ElevatedButton.icon(
             onPressed: _pickImage,
             icon: const Icon(Icons.photo_library_rounded),
             label: Text(
-              _selectedImagePath == null
-                  ? 'Choose from Gallery'
-                  : 'Choose Different Image',
+              _selectedImagePath == null ? 'Choose from Gallery' : 'Choose Different Image',
             ),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.brandPink,
@@ -195,29 +183,12 @@ class _ArtistPicturePickerDialogState extends State<ArtistPicturePickerDialog> {
             ),
           ),
 
-          if (_selectedImagePath == null) ...[
-            const SizedBox(height: AppTheme.spacingSm),
-            OutlinedButton.icon(
-              onPressed: _onRefetchPressed,
-              icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Refetch from Internet'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppTheme.textPrimaryDark,
-                side: const BorderSide(color: AppTheme.textSecondaryDark),
-                minimumSize: const Size(double.infinity, 48),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                ),
-              ),
-            ),
-          ],
-
           if (_hasExistingImage && _selectedImagePath == null) ...[
             const SizedBox(height: AppTheme.spacingSm),
             OutlinedButton.icon(
               onPressed: _onRemovePressed,
               icon: const Icon(Icons.delete_rounded),
-              label: const Text('Remove Custom Picture'),
+              label: const Text('Remove Current Picture'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppTheme.error,
                 side: const BorderSide(color: AppTheme.error),
@@ -243,7 +214,10 @@ class _ArtistPicturePickerDialogState extends State<ArtistPicturePickerDialog> {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        child: Image.file(File(_selectedImagePath!), fit: BoxFit.cover),
+        child: Image.file(
+          File(_selectedImagePath!),
+          fit: BoxFit.cover,
+        ),
       ),
     );
   }

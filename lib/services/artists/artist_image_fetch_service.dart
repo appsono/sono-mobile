@@ -15,11 +15,10 @@ class ArtistImageFetchService {
   final ArtistFetchProgressService? _progressService;
 
   static String get _artistImageServiceURL => EnvConfig.artistProfileApiUrl;
-  static const String _fetchCompleteKey =
-      'artist_images_initial_fetch_complete_v1';
+  static const String _fetchCompleteKey = 'artist_images_initial_fetch_complete_v1';
 
   ArtistImageFetchService({ArtistFetchProgressService? progressService})
-    : _progressService = progressService;
+      : _progressService = progressService;
 
   /// Check if initial fetch should run
   /// Returns true if not yet completed
@@ -56,9 +55,7 @@ class ArtistImageFetchService {
     try {
       if (skipIfDone && !await shouldRunInitialFetch()) {
         if (kDebugMode) {
-          print(
-            'ArtistImageFetchService: Initial fetch already completed, skipping',
-          );
+          print('ArtistImageFetchService: Initial fetch already completed, skipping');
         }
         return;
       }
@@ -77,9 +74,7 @@ class ArtistImageFetchService {
       }
 
       if (kDebugMode) {
-        print(
-          'ArtistImageFetchService: Starting fetch for ${artists.length} artists',
-        );
+        print('ArtistImageFetchService: Starting fetch for ${artists.length} artists');
       }
 
       _progressService?.startFetch(artists.length);
@@ -103,11 +98,7 @@ class ArtistImageFetchService {
           }
 
           //update current artist
-          _progressService?.updateProgress(
-            processed,
-            artists.length,
-            artist.artist,
-          );
+          _progressService?.updateProgress(processed, artists.length, artist.artist);
 
           //check if it should fetch this artist
           if (await _repository.shouldFetchImage(artist.artist)) {
@@ -116,10 +107,7 @@ class ArtistImageFetchService {
               successful++;
               _progressService?.incrementSuccess(artist.artist);
             } else {
-              _progressService?.incrementFailure(
-                artist.artist,
-                'No image found',
-              );
+              _progressService?.incrementFailure(artist.artist, 'No image found');
             }
           }
 
@@ -137,9 +125,7 @@ class ArtistImageFetchService {
       _progressService?.completeFetch();
 
       if (kDebugMode) {
-        print(
-          'ArtistImageFetchService: Completed. Processed: $processed, Successful: $successful',
-        );
+        print('ArtistImageFetchService: Completed. Processed: $processed, Successful: $successful');
       }
     } catch (e) {
       if (kDebugMode) {
@@ -161,7 +147,9 @@ class ArtistImageFetchService {
         '$_artistImageServiceURL/api/artist-image?name=${Uri.encodeComponent(artistName)}',
       );
 
-      final response = await http.get(url).timeout(const Duration(seconds: 10));
+      final response = await http.get(url).timeout(
+        const Duration(seconds: 10),
+      );
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body) as Map<String, dynamic>;
@@ -185,9 +173,7 @@ class ArtistImageFetchService {
       return null;
     } catch (e) {
       if (kDebugMode) {
-        print(
-          'ArtistImageFetchService: Error fetching image for "$artistName": $e',
-        );
+        print('ArtistImageFetchService: Error fetching image for "$artistName": $e');
       }
       //mark as attempted even on failure to avoid retry loops
       await _repository.markFetchAttempted(artistName);
@@ -201,7 +187,9 @@ class ArtistImageFetchService {
       final prefs = await SharedPreferences.getInstance();
       final fetchComplete = prefs.getBool(_fetchCompleteKey) ?? false;
 
-      return {'fetchComplete': fetchComplete};
+      return {
+        'fetchComplete': fetchComplete,
+      };
     } catch (e) {
       if (kDebugMode) {
         print('ArtistImageFetchService: Error getting fetch stats: $e');

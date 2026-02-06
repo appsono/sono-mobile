@@ -10,7 +10,8 @@ import 'package:sono/widgets/home/page_items.dart';
 import 'package:sono/widgets/home/app_bar_content.dart';
 import 'package:sono/widgets/home/page_header_elements.dart';
 import 'package:sono/pages/library/all_items_page.dart';
-import 'package:sono/pages/info/announcements_changelog_page.dart';
+import 'package:sono/pages/info/changelog_page.dart';
+import 'package:sono/services/utils/preferences_service.dart';
 import 'package:sono/utils/audio_filter_utils.dart';
 import 'package:sono/widgets/global/refresh_indicator.dart';
 
@@ -46,6 +47,7 @@ class HomePageState extends State<HomePage>
     with AutomaticKeepAliveClientMixin<HomePage> {
   final OnAudioQuery _audioQuery = OnAudioQuery();
   final SonoPlayer _sonoPlayer = SonoPlayer();
+  final PreferencesService _prefsService = PreferencesService();
 
   Future<List<SongModel>> _recentlyAddedSongsPreviewFuture = Future.value([]);
   Future<List<AlbumModel>> _albumsPreviewFuture = Future.value([]);
@@ -53,7 +55,9 @@ class HomePageState extends State<HomePage>
 
   List<SongModel> _allSongs = [];
   List<SongModel> _paginatedSongs = [];
+  //final int _songsPerPage = 30;
   bool _isLoadingAllSongs = true;
+  //bool get _hasMoreSongs => _paginatedSongs.length < _allSongs.length;
 
   @override
   bool get wantKeepAlive => true;
@@ -96,15 +100,22 @@ class HomePageState extends State<HomePage>
     setState(() {
       _recentlyAddedSongsPreviewFuture = AudioFilterUtils.getFilteredSongs(
         _audioQuery,
+        _prefsService,
         sortType: SongSortType.DATE_ADDED,
         orderType: OrderType.DESC_OR_GREATER,
       ).then((s) => s.take(15).toList());
 
-      _albumsPreviewFuture = AudioFilterUtils.getFilteredAlbums(_audioQuery)
+      _albumsPreviewFuture = AudioFilterUtils.getFilteredAlbums(
+            _audioQuery,
+            _prefsService,
+          )
           .then((a) => a..sort((x, y) => (x.album).compareTo(y.album)))
           .then((a) => a.take(15).toList());
 
-      _artistsPreviewFuture = AudioFilterUtils.getFilteredArtists(_audioQuery)
+      _artistsPreviewFuture = AudioFilterUtils.getFilteredArtists(
+            _audioQuery,
+            _prefsService,
+          )
           .then((a) => a..sort((x, y) => (x.artist).compareTo(y.artist)))
           .then((a) => a.take(15).toList());
 
@@ -113,18 +124,31 @@ class HomePageState extends State<HomePage>
 
     AudioFilterUtils.getFilteredSongs(
       _audioQuery,
+      _prefsService,
       sortType: SongSortType.TITLE,
       orderType: OrderType.ASC_OR_SMALLER,
     ).then((songs) {
       if (mounted) {
         setState(() {
           _allSongs = songs;
+          //_paginatedSongs = songs.take(_songsPerPage).toList();
           _paginatedSongs = songs.toList();
           _isLoadingAllSongs = false;
         });
       }
     });
   }
+
+  //void _loadMoreSongs() {
+  //  if (!_hasMoreSongs || !mounted) return;
+  //
+  //  setState(() {
+  //    final currentLength = _paginatedSongs.length;
+  //    //final moreSongs = _allSongs.skip(currentLength).take(_songsPerPage);
+  //    final moreSongs = _allSongs.skip(currentLength);
+  //    _paginatedSongs.addAll(moreSongs);
+  //  });
+  //}
 
   /// Refreshes the home page data
   Future<void> refreshData() async {
@@ -137,11 +161,14 @@ class HomePageState extends State<HomePage>
     final songs =
         _allSongs.isNotEmpty
             ? List<SongModel>.from(_allSongs)
-            : await AudioFilterUtils.getFilteredSongs(_audioQuery);
+            : await AudioFilterUtils.getFilteredSongs(
+              _audioQuery,
+              _prefsService,
+            );
 
     if (songs.isNotEmpty) {
       songs.shuffle();
-      _sonoPlayer.playNewPlaylist(songs, 0, context: ": All Songs");
+      _sonoPlayer.playNewPlaylist(songs, 0, context: "All Songs");
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -195,7 +222,7 @@ class HomePageState extends State<HomePage>
             colors: [AppTheme.backgroundDark, AppTheme.surfaceDark],
           ),
         ),
-        child: _buildHomepage(context),
+        child: _buildScrollableHomepage(context),
       ),
     );
   }
@@ -374,7 +401,7 @@ class HomePageState extends State<HomePage>
     );
   }
 
-  Widget _buildHomepage(BuildContext context) {
+  Widget _buildScrollableHomepage(BuildContext context) {
     const double appBarContentHeight = 70.0;
 
     return CustomScrollView(
@@ -391,6 +418,9 @@ class HomePageState extends State<HomePage>
           titleSpacing: 0,
           title: Builder(
             builder: (context) {
+              //debugPrint(
+              //  '[HomePage] Building HomeAppBarContent with isLoggedIn: ${widget.isLoggedIn}, user: ${widget.currentUser?['username']}',
+              //);
               return HomeAppBarContent(
                 key: ValueKey(
                   'HomeAppBarContent_${widget.isLoggedIn}_${widget.currentUser?['username']}',
@@ -399,9 +429,7 @@ class HomePageState extends State<HomePage>
                 onNewsTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (_) => const AnnouncementsChangelogPage(),
-                    ),
+                    MaterialPageRoute(builder: (_) => const ChangelogPage()),
                   );
                 },
                 onSearchTap: widget.onSearchTap,
@@ -431,11 +459,13 @@ class HomePageState extends State<HomePage>
                       pageTitle: "All Recently Added",
                       itemsFuture: AudioFilterUtils.getFilteredSongs(
                         _audioQuery,
+                        _prefsService,
                         sortType: SongSortType.DATE_ADDED,
                         orderType: OrderType.DESC_OR_GREATER,
                       ),
                       itemType: ListItemType.song,
                       audioQuery: _audioQuery,
+                      prefsService: _prefsService,
                     ),
               ),
             );
@@ -450,7 +480,7 @@ class HomePageState extends State<HomePage>
                       s,
                       listCtx,
                       idx,
-                      playbackContext: ": Recently Added",
+                      playbackContext: "Recently Added",
                     ),
               ),
           itemWidth: 70,
@@ -473,11 +503,13 @@ class HomePageState extends State<HomePage>
                       pageTitle: "All Albums",
                       itemsFuture: AudioFilterUtils.getFilteredAlbums(
                         _audioQuery,
+                        _prefsService,
                         sortType: AlbumSortType.ALBUM,
                         orderType: OrderType.ASC_OR_SMALLER,
                       ),
                       itemType: ListItemType.album,
                       audioQuery: _audioQuery,
+                      prefsService: _prefsService,
                     ),
               ),
             );
@@ -499,7 +531,7 @@ class HomePageState extends State<HomePage>
         ),
         _buildSection<ArtistModel>(
           context: context,
-          title: "Artists",
+          title: "Artists in your Library",
           onSeeAllTap: () {
             Navigator.push(
               context,
@@ -509,11 +541,13 @@ class HomePageState extends State<HomePage>
                       pageTitle: "All Artists",
                       itemsFuture: AudioFilterUtils.getFilteredArtists(
                         _audioQuery,
+                        _prefsService,
                         sortType: ArtistSortType.ARTIST,
                         orderType: OrderType.ASC_OR_SMALLER,
                       ),
                       itemType: ListItemType.artist,
                       audioQuery: _audioQuery,
+                      prefsService: _prefsService,
                     ),
               ),
             );
@@ -597,12 +631,34 @@ class HomePageState extends State<HomePage>
                 selectedSong,
                 _allSongs,
                 originalIndex,
-                playbackContext: ": All Songs",
+                playbackContext: "All Songs",
               ),
         );
       }, childCount: _paginatedSongs.length),
     );
   }
+
+  //Widget _buildLoadMoreButton() {
+  //  return SliverToBoxAdapter(
+  //    child: Padding(
+  //      padding: EdgeInsets.symmetric(
+  //        vertical: AppTheme.spacing,
+  //        horizontal: 80.0,
+  //      ),
+  //      child: TextButton(
+  //        onPressed: _loadMoreSongs,
+  //        style: TextButton.styleFrom(
+  //          foregroundColor: AppTheme.textPrimaryDark,
+  //          backgroundColor: AppTheme.textPrimaryDark.opacity10,
+  //          shape: RoundedRectangleBorder(
+  //            borderRadius: BorderRadius.circular(AppTheme.spacingLg),
+  //          ),
+  //        ),
+  //        child: const Text("Load More"),
+  //      ),
+  //    ),
+  //  );
+  //}
 
   Widget _buildSection<T>({
     required BuildContext context,
@@ -637,33 +693,12 @@ class HomePageState extends State<HomePage>
                       fontSize: AppTheme.fontSubtitle,
                     ),
                   ),
-                  InkWell(
-                    onTap: onSeeAllTap,
-                    borderRadius: BorderRadius.circular(AppTheme.radius),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppTheme.spacingSm,
-                        vertical: 4,
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'See All',
-                            style: TextStyle(
-                              fontSize: AppTheme.fontSm,
-                              fontWeight: FontWeight.w600,
-                              color: AppTheme.textSecondaryDark,
-                              fontFamily: 'VarelaRound',
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          Icon(
-                            Icons.arrow_forward_rounded,
-                            size: 16,
-                            color: AppTheme.textSecondaryDark,
-                          ),
-                        ],
+                  TextButton(
+                    onPressed: onSeeAllTap,
+                    child: Text(
+                      "See All",
+                      style: AppStyles.sonoPlayerArtist.copyWith(
+                        fontSize: AppTheme.fontSm,
                       ),
                     ),
                   ),

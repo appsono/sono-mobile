@@ -297,7 +297,10 @@ class _SonoSliverRefreshControlState extends State<SonoSliverRefreshControl>
                 angle: rotation,
                 child: Transform.scale(
                   scale: scale,
-                  child: Opacity(opacity: percentageComplete, child: child),
+                  child: Opacity(
+                    opacity: percentageComplete,
+                    child: child,
+                  ),
                 ),
               );
             },

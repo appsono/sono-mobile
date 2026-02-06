@@ -1,10 +1,8 @@
-// ignore_for_file: undefined_hidden_name
-
 import 'dart:ui';
 import 'dart:ui' as ui;
 
-import 'package:flutter/material.dart'
-    hide RepeatMode; //required for build use in gitub workflow
+//ignore: undefined_hidden_name
+import 'package:flutter/material.dart' hide RepeatMode; //required for build use in gitub workflow
 import 'package:flutter/services.dart';
 import 'package:marquee/marquee.dart';
 import 'package:on_audio_query/on_audio_query.dart';
@@ -19,7 +17,7 @@ import 'package:sono/styles/app_theme.dart';
 import 'package:sono/styles/text.dart';
 import 'package:sono/widgets/player/sono_player.dart';
 import 'package:sono/widgets/player/parts/queue_view.dart';
-import 'package:sono/widgets/player/parts/lyrics_view.dart';
+import 'package:sono/widgets/player/parts/synced_lyrics_viewer.dart';
 import 'package:sono/services/sas/sas_manager.dart';
 import 'package:provider/provider.dart';
 import 'package:sono/utils/artist_navigation.dart';
@@ -100,9 +98,7 @@ class _FavoriteIconButtonState extends State<FavoriteIconButton>
       scale: _scaleAnimation,
       child: IconButton(
         icon: Icon(
-          widget.isLiked
-              ? Icons.favorite_rounded
-              : Icons.favorite_border_rounded,
+          widget.isLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
           color:
               widget.onPressed == null
                   ? AppTheme.textSecondaryDark.withValues(alpha: 0.3)
@@ -125,8 +121,7 @@ class SonoFullscreenPlayer extends StatefulWidget {
   State<SonoFullscreenPlayer> createState() => _SonoFullscreenPlayerState();
 }
 
-class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
-    with SingleTickerProviderStateMixin {
+class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer> {
   final OnAudioQuery _audioQuery = OnAudioQuery();
   final SonoPlayer _sonoPlayer = SonoPlayer();
   bool _isCurrentSongFavorite = false;
@@ -144,19 +139,9 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
   late SliderThemeData _sliderTheme;
 
   bool _ignoreSwipe = false;
-  bool _isUserSwiping = false; //track if actively swiping
 
   bool _isDraggingSeekBar = false;
   double? _draggedPosition;
-
-  //track info animation controller
-  late AnimationController _trackInfoSwitchController;
-  late Animation<double> _trackInfoFadeAnimation;
-  late Animation<Offset> _trackInfoSlideAnimation;
-
-  //debounce for skip buttons
-  DateTime? _lastSkipTime;
-  static const Duration _skipDebounceMs = Duration(milliseconds: 300);
 
   void _onPageScroll() {
     if (_pageController.hasClients) {
@@ -176,30 +161,6 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
     );
 
     _pageNotifier = ValueNotifier(initialPage.toDouble());
-
-    //initialize track info animation controller
-    _trackInfoSwitchController = AnimationController(
-      duration: const Duration(milliseconds: 400),
-      vsync: this,
-      value: 1.0,
-    );
-
-    _trackInfoFadeAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
-      CurvedAnimation(
-        parent: _trackInfoSwitchController,
-        curve: const Interval(0.0, 0.5, curve: Curves.easeOut),
-      ),
-    );
-
-    _trackInfoSlideAnimation = Tween<Offset>(
-      begin: const Offset(0.3, 0),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _trackInfoSwitchController,
-        curve: const Interval(0.5, 1.0, curve: Curves.easeOutCubic),
-      ),
-    );
 
     _sonoPlayer.currentSong.addListener(_onSongChanged);
 
@@ -242,7 +203,6 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
       _pageController.removeListener(_onPageScroll);
     }
     _pageNotifier.dispose();
-    _trackInfoSwitchController.dispose();
     _sonoPlayer.currentSong.removeListener(_onSongChanged);
     _pageController.dispose();
     _artworkFutures.clear();
@@ -253,59 +213,23 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
   void _onSongChanged() {
     if (!mounted) return;
 
-    //trigger track info animation
-    _trackInfoSwitchController.reset();
-    _trackInfoSwitchController.forward();
-
-    final currentSong = _sonoPlayer.currentSong.value;
-
-    //smart cache: only clear blur if artwork ID actually changed
-    if (currentSong != null && _currentArtworkId != currentSong.id) {
-      _cachedBlurredBackground = null;
-      _currentArtworkId = currentSong.id;
-    }
+    //immediately update blur and artwork cache to sync with new song
+    _cachedBlurredBackground = null;
+    _currentArtworkId = null;
 
     final playerIndex = _sonoPlayer.currentIndex ?? 0;
 
-    //sync PageView to new song position
     if (_pageController.hasClients) {
       final currentPage = _pageController.page?.round() ?? 0;
 
       if (currentPage != playerIndex) {
-        //check if PageView is currently animating/being dragged
-        if (_pageController.position.isScrollingNotifier.value) {
-          // PageView is being swiped, wait for scroll to settle then sync
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted && _pageController.hasClients) {
-              _pageController.jumpToPage(playerIndex);
-              _pageNotifier.value = playerIndex.toDouble();
-            }
-          });
-        } else {
-          //not scrolling (skip button pressed) => animate the cover change
-          _pageController.animateToPage(
-            playerIndex,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOutCubic,
-          );
-        }
+        //jump immediately to prevent visible desync
+        _pageController.jumpToPage(playerIndex);
+        _pageNotifier.value = playerIndex.toDouble();
       }
     }
 
     _loadFavoriteStatus();
-
-    //preload adjacent artworks for smooth transitions
-    Future.microtask(() {
-      final playlist = _sonoPlayer.playlist;
-      final currentIdx = _sonoPlayer.currentIndex ?? 0;
-
-      if (currentIdx + 1 < playlist.length) {
-        _getOrCacheArtworkFuture(playlist[currentIdx + 1].id);
-      }
-      if (currentIdx > 0) {
-        _getOrCacheArtworkFuture(playlist[currentIdx - 1].id);
-      }
-    });
 
     //force rebuild to show new blur immediately
     if (mounted) {
@@ -779,9 +703,6 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
         width: AppTheme.responsiveArtworkSize(context, AppTheme.artworkHero),
         height: AppTheme.responsiveArtworkSize(context, AppTheme.artworkHero),
         child: Listener(
-          onPointerDown: (_) {
-            _isUserSwiping = true;
-          },
           onPointerUp: (_) {
             _handleSwipeRelease();
           },
@@ -794,15 +715,8 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
             clipBehavior: Clip.none,
 
             onPageChanged: (index) {
-              //only trigger song change if user was swiping
-              //(not from programmatic changes like skip buttons)
-              if (_isUserSwiping) {
-                final currentPlayerIndex = _sonoPlayer.currentIndex ?? 0;
-                if (index != currentPlayerIndex) {
-                  _sonoPlayer.skipToQueueItem(index);
-                }
-                _isUserSwiping = false;
-              }
+              //preview mode: dont trigger playback during swipe
+              //playback only happens on pointer release in _handleSwipeRelease
             },
 
             itemBuilder: (context, index) {
@@ -837,16 +751,19 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
   }
 
   void _handleSwipeRelease() {
-    if (_pageController.hasClients) {
-      Future.delayed(const Duration(milliseconds: 100), () {
-        _isUserSwiping = false;
-      });
+    if (!_pageController.hasClients) return;
+
+    final currentPage = _pageController.page?.round() ?? 0;
+    final currentPlayerIndex = _sonoPlayer.currentIndex ?? 0;
+
+    //only change song if user swiped to a different page and settled on it
+    if (currentPage != currentPlayerIndex) {
+      _sonoPlayer.skipToQueueItem(currentPage);
     }
   }
 
   void _handleSwipeCancel() {
     //if swipe was cancelled => snap back to current song
-    _isUserSwiping = false;
     final currentPlayerIndex = _sonoPlayer.currentIndex ?? 0;
     if (_pageController.hasClients) {
       _pageController.animateToPage(
@@ -976,67 +893,25 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
     required double textMaxWidth,
   }) {
     return RepaintBoundary(
-      child: AnimatedBuilder(
-        animation: _trackInfoSwitchController,
-        builder: (context, child) {
-          return Transform.translate(
-            offset: _trackInfoSlideAnimation.value * 50,
-            child: Opacity(
-              opacity:
-                  _trackInfoSwitchController.isAnimating
-                      ? (_trackInfoSwitchController.value < 0.5
-                          ? _trackInfoFadeAnimation.value
-                          : 1.0 - _trackInfoFadeAnimation.value)
-                      : 1.0,
-              child: child,
-            ),
-          );
-        },
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _needsScrolling(
-                        displayTitle,
-                        AppStyles.sonoPlayerTitle.copyWith(
-                          fontSize: AppTheme.fontHeading - 2,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        textMaxWidth,
-                      )
-                      ? SizedBox(
-                        height: 28,
-                        child: Marquee(
-                          text: displayTitle,
-                          style: AppStyles.sonoPlayerTitle.copyWith(
-                            fontSize: AppTheme.responsiveFontSize(
-                              context,
-                              AppTheme.fontHeading - 2,
-                              min: 18,
-                            ),
-                            fontWeight: FontWeight.bold,
-                          ),
-                          scrollAxis: Axis.horizontal,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          blankSpace: 60.0,
-                          velocity: 35.0,
-                          pauseAfterRound: const Duration(seconds: 4),
-                          startPadding: 0.0,
-                          accelerationDuration: const Duration(
-                            milliseconds: 1000,
-                          ),
-                          accelerationCurve: Curves.ease,
-                          decelerationDuration: const Duration(
-                            milliseconds: 1000,
-                          ),
-                          decelerationCurve: Curves.ease,
-                        ),
-                      )
-                      : Text(
-                        displayTitle,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _needsScrolling(
+                      displayTitle,
+                      AppStyles.sonoPlayerTitle.copyWith(
+                        fontSize: AppTheme.fontHeading - 2,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textMaxWidth,
+                    )
+                    ? SizedBox(
+                      height: 28,
+                      child: Marquee(
+                        text: displayTitle,
                         style: AppStyles.sonoPlayerTitle.copyWith(
                           fontSize: AppTheme.responsiveFontSize(
                             context,
@@ -1045,48 +920,73 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
                           ),
                           fontWeight: FontWeight.bold,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                  if (displayArtist.isNotEmpty) ...[
-                    SizedBox(
-                      height: AppTheme.responsiveSpacing(
-                        context,
-                        AppTheme.spacingXs + 2,
-                      ),
-                    ),
-                    InkWell(
-                      onTap:
-                          canNavigateToArtist && currentSong != null
-                              ? () => _navigateToArtistPage(currentSong)
-                              : null,
-                      child: Text(
-                        displayArtist,
-                        style: AppStyles.sonoPlayerArtist.copyWith(
-                          fontSize: AppTheme.responsiveFontSize(
-                            context,
-                            15,
-                            min: 13,
-                          ),
-                          color: AppTheme.textSecondaryDark,
+                        scrollAxis: Axis.horizontal,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        blankSpace: 60.0,
+                        velocity: 35.0,
+                        pauseAfterRound: const Duration(seconds: 4),
+                        startPadding: 0.0,
+                        accelerationDuration: const Duration(
+                          milliseconds: 1000,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                        accelerationCurve: Curves.ease,
+                        decelerationDuration: const Duration(
+                          milliseconds: 1000,
+                        ),
+                        decelerationCurve: Curves.ease,
                       ),
+                    )
+                    : Text(
+                      displayTitle,
+                      style: AppStyles.sonoPlayerTitle.copyWith(
+                        fontSize: AppTheme.responsiveFontSize(
+                          context,
+                          AppTheme.fontHeading - 2,
+                          min: 18,
+                        ),
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ],
+                if (displayArtist.isNotEmpty) ...[
+                  SizedBox(
+                    height: AppTheme.responsiveSpacing(
+                      context,
+                      AppTheme.spacingXs + 2,
+                    ),
+                  ),
+                  InkWell(
+                    onTap:
+                        canNavigateToArtist && currentSong != null
+                            ? () => _navigateToArtistPage(currentSong)
+                            : null,
+                    child: Text(
+                      displayArtist,
+                      style: AppStyles.sonoPlayerArtist.copyWith(
+                        fontSize: AppTheme.responsiveFontSize(
+                          context,
+                          15,
+                          min: 13,
+                        ),
+                        color: AppTheme.textSecondaryDark,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
                 ],
-              ),
+              ],
             ),
-            SizedBox(
-              width: AppTheme.responsiveSpacing(context, AppTheme.spacingSm),
-            ),
-            FavoriteIconButton(
-              isLiked: _isCurrentSongFavorite,
-              onPressed: SASManager().isInClientMode ? null : _toggleFavorite,
-            ),
-          ],
-        ),
+          ),
+          SizedBox(
+            width: AppTheme.responsiveSpacing(context, AppTheme.spacingSm),
+          ),
+          FavoriteIconButton(
+            isLiked: _isCurrentSongFavorite,
+            onPressed: SASManager().isInClientMode ? null : _toggleFavorite,
+          ),
+        ],
       ),
     );
   }
@@ -1273,13 +1173,6 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
                         isClient
                             ? null
                             : () {
-                              final now = DateTime.now();
-                              if (_lastSkipTime != null &&
-                                  now.difference(_lastSkipTime!) <
-                                      _skipDebounceMs) {
-                                return; //debounce => ignore rapid presses
-                              }
-                              _lastSkipTime = now;
                               HapticFeedback.lightImpact();
                               _sonoPlayer.skipToPrevious();
                             },
@@ -1293,13 +1186,6 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
                         isClient
                             ? null
                             : () {
-                              final now = DateTime.now();
-                              if (_lastSkipTime != null &&
-                                  now.difference(_lastSkipTime!) <
-                                      _skipDebounceMs) {
-                                return; //debounce => ignore rapid presses
-                              }
-                              _lastSkipTime = now;
                               HapticFeedback.lightImpact();
                               _sonoPlayer.skipToNext();
                             },
@@ -1535,20 +1421,11 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
               label: 'Queue',
               onPressed: _showQueueSheet,
             ),
+            //lyrics and add to playlist disabled in SAS mode
             _buildBottomBarButton(
               icon: Icons.lyrics_rounded,
               label: 'Lyrics',
-              onPressed: () {
-                final metadata = _sonoPlayer.sasMetadata;
-                if (metadata != null) {
-                  _showLyricsSheet(SongModel({
-                    '_id': metadata['songId'] ?? 0,
-                    'title': metadata['title'] ?? 'Unknown',
-                    'artist': metadata['artist'],
-                    'album': metadata['album'],
-                  }));
-                }
-              },
+              onPressed: null, //disabled in SAS mode
             ),
             _buildBottomBarButton(
               icon: Icons.add_circle_outline_rounded,
@@ -1814,15 +1691,10 @@ class _SongCreditsViewState extends State<SongCreditsView> {
                   ),
                 _buildCreditTile(
                   label: "Artist",
-                  value: ArtistStringUtils.getPrimaryArtist(
-                    widget.song.artist ?? '',
-                  ),
+                  value: ArtistStringUtils.getPrimaryArtist(widget.song.artist ?? ''),
                   artworkType: ArtworkType.ARTIST,
                   id: widget.song.artistId,
                   isArtist: true,
-                  artistName: ArtistStringUtils.getPrimaryArtist(
-                    widget.song.artist ?? '',
-                  ),
                   onTap: () {
                     Navigator.pop(context);
                     _navigateToArtistPage(widget.song);
@@ -1867,103 +1739,103 @@ class _SongCreditsViewState extends State<SongCreditsView> {
       _audioQuery,
     );
   }
-}
+  }
 
-Widget _buildInfoTile({required String label, required String value}) {
-  return ListTile(
-    title: Text(label, style: TextStyle(color: AppTheme.textSecondaryDark)),
-    subtitle: Text(
-      value,
-      style: TextStyle(
-        color: AppTheme.textPrimaryDark,
-        fontSize: AppTheme.font,
-      ),
-    ),
-  );
-}
-
-Widget _buildCreditTile({
-  required String label,
-  required String value,
-  required ArtworkType artworkType,
-  required int? id,
-  VoidCallback? onTap,
-  bool isArtist = false,
-  String? artistName,
-}) {
-  Widget leadingWidget;
-
-  if (isArtist && artistName != null) {
-    leadingWidget = ClipRRect(
-      borderRadius: BorderRadius.circular(25),
-      child: SizedBox(
-        width: 50,
-        height: 50,
-        child: ArtistArtworkWidget(
-          artistName: artistName,
-          artistId: id ?? 0,
-          fit: BoxFit.cover,
-          borderRadius: BorderRadius.circular(25),
-          placeholderWidget: Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              color: AppTheme.elevatedSurfaceDark,
-              borderRadius: BorderRadius.circular(25),
-            ),
-            child: Icon(Icons.person_rounded, color: AppTheme.textTertiaryDark),
-          ),
+  Widget _buildInfoTile({required String label, required String value}) {
+    return ListTile(
+      title: Text(label, style: TextStyle(color: AppTheme.textSecondaryDark)),
+      subtitle: Text(
+        value,
+        style: TextStyle(
+          color: AppTheme.textPrimaryDark,
+          fontSize: AppTheme.font,
         ),
-      ),
-    );
-  } else {
-    leadingWidget = QueryArtworkWidget(
-      id: id ?? 0,
-      type: artworkType,
-      artworkWidth: 50,
-      artworkHeight: 50,
-      artworkBorder: BorderRadius.circular(isArtist ? 25 : AppTheme.radiusMd),
-      nullArtworkWidget: Container(
-        width: 50,
-        height: 50,
-        decoration: BoxDecoration(
-          color: AppTheme.elevatedSurfaceDark,
-          borderRadius: BorderRadius.circular(
-            isArtist ? 25 : AppTheme.radiusMd,
-          ),
-        ),
-        child: Icon(Icons.music_note_rounded, color: AppTheme.textTertiaryDark),
       ),
     );
   }
 
-  return ListTile(
-    onTap: onTap,
-    leading: leadingWidget,
-    title: Text(
-      label,
-      style: TextStyle(
-        color: AppTheme.textSecondaryDark,
-        fontSize: AppTheme.fontSm,
+  Widget _buildCreditTile({
+    required String label,
+    required String value,
+    required ArtworkType artworkType,
+    required int? id,
+    VoidCallback? onTap,
+    bool isArtist = false,
+    String? artistName,
+  }) {
+    Widget leadingWidget;
+
+    if (isArtist && artistName != null) {
+      leadingWidget = ClipRRect(
+        borderRadius: BorderRadius.circular(25),
+        child: SizedBox(
+          width: 50,
+          height: 50,
+          child: ArtistArtworkWidget(
+            artistName: artistName,
+            artistId: id ?? 0,
+            fit: BoxFit.cover,
+            borderRadius: BorderRadius.circular(25),
+            placeholderWidget: Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: AppTheme.elevatedSurfaceDark,
+                borderRadius: BorderRadius.circular(25),
+              ),
+              child: Icon(Icons.person_rounded, color: AppTheme.textTertiaryDark),
+            ),
+          ),
+        ),
+      );
+    } else {
+      leadingWidget = QueryArtworkWidget(
+        id: id ?? 0,
+        type: artworkType,
+        artworkWidth: 50,
+        artworkHeight: 50,
+        artworkBorder: BorderRadius.circular(isArtist ? 25 : AppTheme.radiusMd),
+        nullArtworkWidget: Container(
+          width: 50,
+          height: 50,
+          decoration: BoxDecoration(
+            color: AppTheme.elevatedSurfaceDark,
+            borderRadius: BorderRadius.circular(
+              isArtist ? 25 : AppTheme.radiusMd,
+            ),
+          ),
+          child: Icon(Icons.music_note_rounded, color: AppTheme.textTertiaryDark),
+        ),
+      );
+    }
+
+    return ListTile(
+      onTap: onTap,
+      leading: leadingWidget,
+      title: Text(
+        label,
+        style: TextStyle(
+          color: AppTheme.textSecondaryDark,
+          fontSize: AppTheme.fontSm,
+        ),
       ),
-    ),
-    subtitle: Text(
-      value,
-      style: TextStyle(
-        color: AppTheme.textPrimaryDark,
-        fontSize: AppTheme.font,
+      subtitle: Text(
+        value,
+        style: TextStyle(
+          color: AppTheme.textPrimaryDark,
+          fontSize: AppTheme.font,
+        ),
       ),
-    ),
-    trailing:
-        onTap != null
-            ? Icon(
-              Icons.arrow_forward_ios_rounded,
-              color: AppTheme.textTertiaryDark,
-              size: AppTheme.iconSm,
-            )
-            : null,
-  );
-}
+      trailing:
+          onTap != null
+              ? Icon(
+                Icons.arrow_forward_ios_rounded,
+                color: AppTheme.textTertiaryDark,
+                size: AppTheme.iconSm,
+              )
+              : null,
+    );
+  }
 
 class LyricsDisplayer extends StatefulWidget {
   final SongModel song;

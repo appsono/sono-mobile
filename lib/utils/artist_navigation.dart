@@ -13,7 +13,10 @@ class ArtistNavigation {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => ArtistPage(artist: artist, audioQuery: audioQuery),
+        builder: (_) => ArtistPage(
+          artist: artist,
+          audioQuery: audioQuery,
+        ),
       ),
     );
   }
@@ -70,7 +73,10 @@ class ArtistNavigation {
 
   static void _showError(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), duration: const Duration(seconds: 2)),
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(seconds: 2),
+      ),
     );
   }
 }

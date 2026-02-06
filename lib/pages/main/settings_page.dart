@@ -4,7 +4,6 @@ import 'package:sono/styles/app_theme.dart';
 import 'package:sono/pages/main/settings/general_settings_page.dart';
 import 'package:sono/pages/main/settings/playback_audio_settings_page.dart';
 import 'package:sono/pages/main/settings/library_scrobbling_settings_page.dart';
-import 'package:sono/pages/main/settings/account_settings_page.dart';
 import 'package:sono/pages/main/settings/developer_settings_page.dart';
 import 'package:sono/pages/main/settings/about_settings_page.dart';
 
@@ -88,24 +87,6 @@ class SettingsPage extends StatelessWidget {
                       ),
                 ),
                 const SizedBox(height: 5),
-                if (isLoggedIn)
-                  _buildSettingsCard(
-                    context,
-                    icon: Icons.person_rounded,
-                    title: 'Account',
-                    subtitle: 'Password, privacy, Export Data',
-                    onTap:
-                        () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder:
-                                (context) => AccountSettingsPage(
-                                  currentUser: currentUser,
-                                ),
-                          ),
-                        ),
-                  ),
-                if (isLoggedIn) const SizedBox(height: 5),
                 _buildSettingsCard(
                   context,
                   icon: Icons.code_rounded,

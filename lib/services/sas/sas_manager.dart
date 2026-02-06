@@ -8,9 +8,123 @@ import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:network_info_plus/network_info_plus.dart';
 import 'package:on_audio_query/on_audio_query.dart';
-import 'package:audio_service/audio_service.dart';
 import 'package:sono/widgets/player/sono_player.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+
+/// Connection quality levels for stream health
+enum ConnectionQuality { excellent, good, fair, poor, critical }
+
+/// Stream health status data class
+class StreamHealthStatus {
+  final ConnectionQuality quality;
+  final int rebufferCount;
+  final Duration averageLatency;
+  final DateTime lastUpdate;
+  final double bufferHealth;
+
+  StreamHealthStatus({
+    required this.quality,
+    this.rebufferCount = 0,
+    this.averageLatency = Duration.zero,
+    DateTime? lastUpdate,
+    this.bufferHealth = 1.0,
+  }) : lastUpdate = lastUpdate ?? DateTime.now();
+
+  StreamHealthStatus copyWith({
+    ConnectionQuality? quality,
+    int? rebufferCount,
+    Duration? averageLatency,
+    DateTime? lastUpdate,
+    double? bufferHealth,
+  }) {
+    return StreamHealthStatus(
+      quality: quality ?? this.quality,
+      rebufferCount: rebufferCount ?? this.rebufferCount,
+      averageLatency: averageLatency ?? this.averageLatency,
+      lastUpdate: lastUpdate ?? this.lastUpdate,
+      bufferHealth: bufferHealth ?? this.bufferHealth,
+    );
+  }
+}
+
+/// Stream health monitor class
+class _StreamHealthMonitor {
+  final List<int> _latencySamples = [];
+  int _rebufferEvents = 0;
+  DateTime _sessionStart = DateTime.now();
+  static const int _maxSamples = 20;
+
+  final ValueNotifier<StreamHealthStatus> healthStatus = ValueNotifier(
+    StreamHealthStatus(quality: ConnectionQuality.excellent),
+  );
+
+  void recordLatency(int milliseconds) {
+    _latencySamples.add(milliseconds);
+    if (_latencySamples.length > _maxSamples) {
+      _latencySamples.removeAt(0);
+    }
+    _updateHealth();
+  }
+
+  void recordRebuffer() {
+    _rebufferEvents++;
+    _updateHealth();
+  }
+
+  void recordBufferHealth(double health) {
+    final current = healthStatus.value;
+    healthStatus.value = current.copyWith(bufferHealth: health);
+    _updateHealth();
+  }
+
+  void _updateHealth() {
+    if (_latencySamples.isEmpty) return;
+
+    final avgLatency = Duration(
+      milliseconds:
+          _latencySamples.reduce((a, b) => a + b) ~/ _latencySamples.length,
+    );
+
+    final sessionDuration = DateTime.now().difference(_sessionStart);
+    final rebufferRate =
+        sessionDuration.inMinutes > 0
+            ? _rebufferEvents / sessionDuration.inMinutes
+            : 0.0;
+
+    ConnectionQuality quality;
+    if (avgLatency.inMilliseconds < 50 && rebufferRate < 0.5) {
+      quality = ConnectionQuality.excellent;
+    } else if (avgLatency.inMilliseconds < 100 && rebufferRate < 1.0) {
+      quality = ConnectionQuality.good;
+    } else if (avgLatency.inMilliseconds < 200 && rebufferRate < 2.0) {
+      quality = ConnectionQuality.fair;
+    } else if (avgLatency.inMilliseconds < 500 && rebufferRate < 5.0) {
+      quality = ConnectionQuality.poor;
+    } else {
+      quality = ConnectionQuality.critical;
+    }
+
+    healthStatus.value = StreamHealthStatus(
+      quality: quality,
+      rebufferCount: _rebufferEvents,
+      averageLatency: avgLatency,
+      bufferHealth: healthStatus.value.bufferHealth,
+    );
+  }
+
+  void reset() {
+    _latencySamples.clear();
+    _rebufferEvents = 0;
+    _sessionStart = DateTime.now();
+    healthStatus.value = StreamHealthStatus(
+      quality: ConnectionQuality.excellent,
+    );
+  }
+
+  void dispose() {
+    healthStatus.dispose();
+  }
+}
 
 /// Data class for session info
 class SASInfo {
@@ -20,73 +134,54 @@ class SASInfo {
 
   SASInfo({required this.host, required this.port, required this.sessionId});
 
-  String get deepLink => 'sono://sas?host=$host&port=$port&session=$sessionId';
+  String get deepLink =>
+      'sonoapp://jam?host=$host&port=$port&session=$sessionId';
   String get webUrl => 'http://$host:$port';
 }
 
-/// Host: SonoPlayer plays local files
-/// Client: SonoPlayer loads and plays stream URL from host
+//host: SonoPlayer plays local files
+//client: SonoPlayer loads and plays stream URL from host
 class SASManager {
   static final SASManager _instance = SASManager._internal();
   factory SASManager() => _instance;
   SASManager._internal();
 
-  /// Host Server State
   HttpServer? _server;
   int? _port;
   String? _sessionId;
   final List<WebSocket> _clients = [];
   Timer? _clientCleanupTimer; //periodic cleanup of dead clients
 
-  /// Client Connection State
   StreamSubscription? _clientSubscription;
   WebSocket? _clientSocket;
   StreamSubscription<ProcessingState>? _streamCompletionSubscription;
   Timer? _clientPingTimer; //keep client connection alive
 
-  /// Mode Flags
   bool _isHost = false;
   bool _isConnected = false;
   SASInfo? _sessionInfo;
 
-  /// Device Info
+  bool _isTransitioning = false;
+  Timer? _bufferHealthTimer;
+  int _lastPositionBroadcast = 0;
   Map<String, dynamic>? _deviceInfo;
+  int _streamDelayMs = 0; //fault 0ms for minimal latency
 
-  /// Player Reference
   final SonoPlayer _sonoPlayer = SonoPlayer();
 
-  /// Host Listener References
   VoidCallback? _hostPlayingListener;
   VoidCallback? _hostSongListener;
+  VoidCallback? _hostPositionListener;
   VoidCallback? _hostQueueListener;
 
-  /// Clock Sync State (client only)
-  int _clockOffset = 0; //ms: localTime + _clockOffset ~= hostTime
-  Completer<void>? _clockSyncComplete;
-  Completer<Map<String, dynamic>>? _pendingClockPong;
-
-  /// Scheduled Playback
-  /// Shared: Host uses for seek, client for all commands
-  Timer? _scheduledTimer;
-
-  /// Song-change race guard (client only)
-  /// True while loadNetworkStream is in progress for a new song
-  /// Play/seek commands that arrive during this window are absorbed,
-  /// the song_changed handlers scheduled play handles timing instead
-  bool _songChangeInProgress = false;
-
-  /// Tracks the most recent play/pause intent from the host so the
-  /// song_changed scheduled play can respect a pause that arrived during loading.
-  bool _hostWantsPlaying = false;
-
-  /// Public Getters
   bool get isHost => _isHost;
   bool get isConnected => _isConnected;
   SASInfo? get sessionInfo => _sessionInfo;
   int get connectedClientsCount => _clients.length;
+  bool get isTransitioning => _isTransitioning;
 
   //==========================================================================
-  // PLAYBACK PERMISSION HELPERS
+  // FILE-BASED PERMISSION HELPERS
   //==========================================================================
 
   /// Returns true if current device can control playback
@@ -108,22 +203,51 @@ class SASManager {
     return true;
   }
 
-  /// Error Tracking and Retry State
+  //==========================================================================
+  // STREAM DELAY CONTROL
+  //==========================================================================
+
+  /// Gets the current stream delay in milliseconds
+  int get streamDelayMs => _streamDelayMs;
+
+  /// Gets the stream delay (clamped between 0-5000ms)
+  void setStreamDelay(int delayMs) {
+    _streamDelayMs = delayMs.clamp(0, 5000);
+    if (kDebugMode) {
+      debugPrint('[SAS] Stream delay set to ${_streamDelayMs}ms');
+    }
+  }
+
+  //error tracking and retry state
   final ValueNotifier<String?> connectionError = ValueNotifier(null);
   final ValueNotifier<bool> isRetrying = ValueNotifier(false);
 
-  /// Client-side queue state
+  //client-side queue state
   final ValueNotifier<List<Map<String, dynamic>>> clientQueue = ValueNotifier(
     [],
   );
   final ValueNotifier<int> clientCurrentIndex = ValueNotifier(0);
 
-  /// Client-side current song metadata
+  //client-side current song metadata
   final ValueNotifier<String?> clientSongTitle = ValueNotifier(null);
   final ValueNotifier<String?> clientSongArtist = ValueNotifier(null);
   final ValueNotifier<String?> clientSongAlbum = ValueNotifier(null);
   final ValueNotifier<String?> clientArtworkUrl = ValueNotifier(null);
   final ValueNotifier<int?> clientSongDuration = ValueNotifier(null);
+
+  //message queue for handling messages during transitions
+  final List<Map<String, dynamic>> _messageQueue = [];
+  static const int _maxQueueSize = 50;
+
+  //drift correction thresholds (tightened for 250ms position updates)
+  static const Duration _driftThreshold = Duration(milliseconds: 150);
+  static const Duration _majorDriftThreshold = Duration(milliseconds: 500);
+  static const Duration _codecDelayEstimate = Duration(milliseconds: 50);
+
+  //stream health monitoring
+  final _StreamHealthMonitor _healthMonitor = _StreamHealthMonitor();
+  ValueNotifier<StreamHealthStatus> get streamHealth =>
+      _healthMonitor.healthStatus;
 
   //=============== HOST METHODS =================
 
@@ -154,7 +278,7 @@ class SASManager {
       _isHost = true;
       _sessionInfo = SASInfo(host: ip, port: _port!, sessionId: _sessionId!);
 
-      //setup listeners to broadcast SonoPlayer changes to clients
+      //setup listeners to broadcast SonopPlayer changes to clients
       _setupHostListeners();
 
       //start periodic cleanup of dead clients (every 30 seconds)
@@ -190,7 +314,7 @@ class SASManager {
     if (!_isHost) return;
 
     try {
-      _broadcastToClients({'type': 'session_ended'});
+      _broadcastToClients({'type': 'session_ended', 'data': {}});
 
       for (var client in _clients) {
         await client.close();
@@ -206,17 +330,13 @@ class SASManager {
       _clientCleanupTimer?.cancel();
       _clientCleanupTimer = null;
 
-      //cancel any pending scheduled action
-      _scheduledTimer?.cancel();
-      _scheduledTimer = null;
-
       _isHost = false;
       _port = null;
       _sessionId = null;
       _sessionInfo = null;
 
       if (kDebugMode) {
-        debugPrint('SAS Session stopped');
+        debugPrint('Jam Session stopped');
       }
     } catch (e) {
       if (kDebugMode) {
@@ -507,7 +627,6 @@ class SASManager {
       debugPrint('Client connected. Total: ${_clients.length}');
     }
 
-    //send current state immediately => client will hold it until clock sync completes
     _sendCurrentState(socket);
 
     socket.listen(
@@ -516,22 +635,11 @@ class SASManager {
           final data = jsonDecode(message);
           final type = data['type'] as String?;
 
-          //handle ping keepalive
+          //handle ping messages silently
           if (type == 'ping') {
+            //send pong back
             try {
-              socket.add(jsonEncode({'type': 'pong'}));
-            } catch (_) {}
-            return;
-          }
-
-          //handle clock sync ping: echo t1 back => add hosts t2
-          if (type == 'clock_ping') {
-            final t1 = data['t1'] as int;
-            final t2 = DateTime.now().millisecondsSinceEpoch;
-            try {
-              socket.add(
-                jsonEncode({'type': 'clock_pong', 't1': t1, 't2': t2}),
-              );
+              socket.add(jsonEncode({'type': 'pong', 'data': {}}));
             } catch (_) {}
             return;
           }
@@ -558,45 +666,49 @@ class SASManager {
     );
   }
 
-  /// Setup listeners to broadcast SonoPlayer changes to clients
-  /// host does NOT delay its own action => ValueNotifiers fire after the action
-  /// already happened. execute_at is purely for the client to schedule
+  //setup listeners to broadcast SonoPlayer changes
   void _setupHostListeners() {
     _hostPlayingListener = () {
-      final isPlaying = _sonoPlayer.isPlaying.value;
-
       _broadcastToClients({
-        'type': isPlaying ? 'play' : 'pause',
-        //client uses recorded_at + clockOffset to compute the hosts position
-        //at the moment it executes => eliminating any fixed scheduling delay
-        'recorded_at': DateTime.now().millisecondsSinceEpoch,
-        if (isPlaying) 'position_ms': _sonoPlayer.position.value.inMilliseconds,
+        'type': _sonoPlayer.isPlaying.value ? 'play' : 'pause',
+        'data': {'timestamp': DateTime.now().millisecondsSinceEpoch},
       });
     };
 
     _hostSongListener = () {
       final song = _sonoPlayer.currentSong.value;
-      if (song == null) return;
+      if (song != null) {
+        final host = _sessionInfo!.host;
+        final port = _sessionInfo!.port;
 
-      final host = _sessionInfo!.host;
-      final port = _sessionInfo!.port;
-      final broadcastAt = DateTime.now().millisecondsSinceEpoch;
-      final executeAt = broadcastAt;
+        _broadcastToClients({
+          'type': 'song_changed',
+          'data': {
+            'songId': song.id,
+            'title': song.title,
+            'artist': song.artist ?? 'Unknown Artist',
+            'album': song.album ?? 'Unknown Album',
+            'duration': song.duration ?? 0,
+            'streamUrl': 'http://$host:$port/stream',
+            'artworkUrl': 'http://$host:$port/artwork',
+            'timestamp': DateTime.now().millisecondsSinceEpoch,
+          },
+        });
+      }
+    };
 
-      _broadcastToClients({
-        'type': 'song_changed',
-        'song_url': 'http://$host:$port/stream',
-        'artwork_url': 'http://$host:$port/artwork?t=$broadcastAt',
-        'title': song.title,
-        'artist': song.artist ?? 'Unknown Artist',
-        'album': song.album ?? 'Unknown Album',
-        'duration_ms': song.duration ?? 0,
-        'song_id': song.id,
-        'execute_at': executeAt,
-        //client uses this to dynamically seek to the hosts actual position
-        //at execute time, rather than assuming a fixed offset
-        'broadcast_at': broadcastAt,
-      });
+    _hostPositionListener = () {
+      final position = _sonoPlayer.position.value;
+      final now = DateTime.now().millisecondsSinceEpoch;
+
+      //send position updates every 250ms using timestamp comparison (more reliable)
+      if (now - _lastPositionBroadcast >= 250) {
+        _lastPositionBroadcast = now;
+        _broadcastToClients({
+          'type': 'position_update',
+          'data': {'position': position.inMilliseconds, 'timestamp': now},
+        });
+      }
     };
 
     _hostQueueListener = () {
@@ -605,27 +717,27 @@ class SASManager {
 
     _sonoPlayer.isPlaying.addListener(_hostPlayingListener!);
     _sonoPlayer.currentSong.addListener(_hostSongListener!);
+    _sonoPlayer.position.addListener(_hostPositionListener!);
     _sonoPlayer.queueNotifier.addListener(_hostQueueListener!);
   }
 
-  /// Called by SonoPlayer after user seeks
-  /// The host has already seeked by this point. Broadcasts a seek command
-  /// with execute_at so the client schedules its seek to match
+  /// Immediately broadcast position (for seek events)
   void broadcastPosition(Duration position) {
     if (!_isHost) return;
 
+    final now = DateTime.now().millisecondsSinceEpoch;
     _broadcastToClients({
-      'type': 'seek',
-      'position_ms': position.inMilliseconds,
-      'recorded_at': DateTime.now().millisecondsSinceEpoch,
+      'type': 'position_update',
+      'data': {'position': position.inMilliseconds, 'timestamp': now},
     });
+    _lastPositionBroadcast = now;
 
     if (kDebugMode) {
-      debugPrint('[SAS Host] Broadcast seek: ${position.inMilliseconds}ms');
+      debugPrint('[SAS Host] Broadcasting seek position: ${position.inMilliseconds}ms');
     }
   }
 
-  /// Start periodic cleanup of dead clients
+  /// Start periodic cleanup of dead clients to prevent memory leaks
   void _startClientCleanup() {
     _clientCleanupTimer?.cancel();
     _clientCleanupTimer = Timer.periodic(Duration(seconds: 30), (_) {
@@ -635,7 +747,7 @@ class SASManager {
       for (var client in _clients) {
         //try to send a ping message
         try {
-          client.add(jsonEncode({'type': 'ping'}));
+          client.add(jsonEncode({'type': 'ping', 'data': {}}));
         } catch (e) {
           deadClients.add(client);
           if (kDebugMode) {
@@ -669,40 +781,44 @@ class SASManager {
       _sonoPlayer.currentSong.removeListener(_hostSongListener!);
       _hostSongListener = null;
     }
+    if (_hostPositionListener != null) {
+      _sonoPlayer.position.removeListener(_hostPositionListener!);
+      _hostPositionListener = null;
+    }
     if (_hostQueueListener != null) {
       _sonoPlayer.queueNotifier.removeListener(_hostQueueListener!);
       _hostQueueListener = null;
     }
   }
 
-  /// Send current state to a newly connected client
-  /// no execute_at => client calculates expected position from recorded_at + elapsed
+  //send current state to specific client
   void _sendCurrentState(WebSocket client) {
     final song = _sonoPlayer.currentSong.value;
     if (song == null) return;
 
     final host = _sessionInfo!.host;
     final port = _sessionInfo!.port;
-    final recordedAt = DateTime.now().millisecondsSinceEpoch;
 
     try {
       client.add(
         jsonEncode({
           'type': 'state_sync',
-          'song_url': 'http://$host:$port/stream',
-          'artwork_url': 'http://$host:$port/artwork?t=$recordedAt',
-          'title': song.title,
-          'artist': song.artist ?? 'Unknown Artist',
-          'album': song.album ?? 'Unknown Album',
-          'duration_ms': song.duration ?? 0,
-          'song_id': song.id,
-          'position_ms': _sonoPlayer.position.value.inMilliseconds,
-          'is_playing': _sonoPlayer.isPlaying.value,
-          'recorded_at': recordedAt,
+          'data': {
+            'songId': song.id,
+            'title': song.title,
+            'artist': song.artist ?? 'Unknown Artist',
+            'album': song.album ?? 'Unknown Album',
+            'duration': song.duration ?? 0,
+            'isPlaying': _sonoPlayer.isPlaying.value,
+            'position': _sonoPlayer.position.value.inMilliseconds,
+            'streamUrl': 'http://$host:$port/stream',
+            'artworkUrl': 'http://$host:$port/artwork',
+            'timestamp': DateTime.now().millisecondsSinceEpoch,
+          },
         }),
       );
 
-      //send the queue to the newly connected client
+      //to send the queue to the newly connected client
       _sendQueueToClient(client);
     } catch (e) {
       if (kDebugMode) {
@@ -719,7 +835,7 @@ class SASManager {
     int currentIndex = 0;
     if (currentSong != null) {
       currentIndex = queue.indexWhere(
-        (item) => item.extras?['songId'] == currentSong.id,
+        (item) => item.id == currentSong.id.toString(),
       );
       if (currentIndex == -1) currentIndex = 0;
     }
@@ -730,7 +846,7 @@ class SASManager {
     final queueData =
         queue.map((item) {
           return {
-            'songId': item.extras?['songId'],
+            'songId': item.id,
             'title': item.title,
             'artist': item.artist ?? 'Unknown Artist',
             'album': item.album ?? 'Unknown Album',
@@ -743,8 +859,11 @@ class SASManager {
       client.add(
         jsonEncode({
           'type': 'queue_update',
-          'queue': queueData,
-          'current_index': currentIndex,
+          'data': {
+            'queue': queueData,
+            'currentIndex': currentIndex,
+            'timestamp': DateTime.now().millisecondsSinceEpoch,
+          },
         }),
       );
     } catch (e) {
@@ -761,10 +880,11 @@ class SASManager {
     final queue = _sonoPlayer.queueNotifier.value;
     final currentSong = _sonoPlayer.currentSong.value;
 
+    //send current song index in queue
     int currentIndex = 0;
     if (currentSong != null) {
       currentIndex = queue.indexWhere(
-        (item) => item.extras?['songId'] == currentSong.id,
+        (item) => item.id == currentSong.id.toString(),
       );
       if (currentIndex == -1) currentIndex = 0;
     }
@@ -772,10 +892,11 @@ class SASManager {
     final host = _sessionInfo!.host;
     final port = _sessionInfo!.port;
 
+    //convert queue to simplified data structure
     final queueData =
         queue.map((item) {
           return {
-            'songId': item.extras?['songId'],
+            'songId': item.id,
             'title': item.title,
             'artist': item.artist ?? 'Unknown Artist',
             'album': item.album ?? 'Unknown Album',
@@ -786,8 +907,11 @@ class SASManager {
 
     _broadcastToClients({
       'type': 'queue_update',
-      'queue': queueData,
-      'current_index': currentIndex,
+      'data': {
+        'queue': queueData,
+        'currentIndex': currentIndex,
+        'timestamp': DateTime.now().millisecondsSinceEpoch,
+      },
     });
 
     if (kDebugMode) {
@@ -817,8 +941,7 @@ class SASManager {
 
   //=============== CLIENT METHODS =================
 
-  /// Join a SAS session hosted by another device
-  /// Performs clock sync before processing any messages
+  //CLIENT uses SonoPlayer to play the stream url
   Future<void> joinSession(String host, int port) async {
     if (_isConnected) {
       await leaveSession();
@@ -841,22 +964,22 @@ class SASManager {
         debugPrint(
           '[SAS Client] Device: ${_deviceInfo?['manufacturer']} ${_deviceInfo?['model']}',
         );
+        debugPrint(
+          '[SAS Client] Android SDK: ${_deviceInfo?['sdkInt']} (${_deviceInfo?['release']})',
+        );
         debugPrint('[SAS Client] Connecting to: $host:$port');
       }
 
       _clientSocket = await WebSocket.connect(wsUri.toString());
-
-      /// Create clock sync completer BEFORE attaching listener
-      /// => host sends state_sync immediately on connect and must not
-      /// process it until clock sync is done
-      _clockSyncComplete = Completer<void>();
-      _clockOffset = 0;
 
       _clientSubscription = _clientSocket!.listen(
         (message) => _handleHostMessage(message),
         onError: (error) {
           if (kDebugMode) {
             debugPrint('[SAS Client] WebSocket error: $error');
+            if (_deviceInfo != null) {
+              debugPrint('[SAS Client] Device info: $_deviceInfo');
+            }
           }
           leaveSession();
         },
@@ -871,19 +994,22 @@ class SASManager {
       _isConnected = true;
 
       //ensure SonoPlayer is initialized for SAS mode
+      //safe to call multiple times => has internal guard
+      if (kDebugMode) {
+        debugPrint(
+          '[SAS Client] Ensuring SonoPlayer is initialized for SAS mode',
+        );
+      }
       _sonoPlayer.initialize();
+
+      //set and start health monitoring
+      _healthMonitor.reset();
+      _startBufferHealthMonitoring();
 
       //start ping timer to keep connection alive
       _startClientPingTimer();
 
-      /// Run clock sync protocol (5 rounds). state_sync and other messages
-      /// received in the meantime are held by _handleHostMessage until this completes
-      await _performClockSync();
-
       if (kDebugMode) {
-        debugPrint(
-          '[SAS Client] Clock sync complete, offset: ${_clockOffset}ms',
-        );
         debugPrint(
           '[SAS Client] Successfully connected to session at $host:$port',
         );
@@ -891,67 +1017,28 @@ class SASManager {
     } catch (e) {
       if (kDebugMode) {
         debugPrint('[SAS Client] Failed to join session: $e');
+        if (_deviceInfo != null) {
+          debugPrint('[SAS Client] Device info: $_deviceInfo');
+        }
       }
       rethrow;
     }
   }
 
-  /// Performs 5-round NTP-style clock sync with the host
-  /// Each round: send clock_ping with t1, receive clock_pong with t1+t2,
-  /// capture t3 on receipt. offset = t2 - (t1 + RTT/2)
-  /// Take median of 5
-  Future<void> _performClockSync() async {
-    final List<int> offsets = [];
-    const int rounds = 5;
-    const Duration roundTimeout = Duration(seconds: 2);
+  /// Start periodic buffer health monitoring
+  void _startBufferHealthMonitoring() {
+    _bufferHealthTimer?.cancel();
+    _bufferHealthTimer = Timer.periodic(Duration(seconds: 2), (_) {
+      //monitor player processing state for rebuffer events
+      final processingState = _sonoPlayer.player.processingState;
 
-    for (int i = 0; i < rounds; i++) {
-      final t1 = DateTime.now().millisecondsSinceEpoch;
-
-      final pongCompleter = Completer<Map<String, dynamic>>();
-      _pendingClockPong = pongCompleter;
-
-      try {
-        _clientSocket!.add(jsonEncode({'type': 'clock_ping', 't1': t1}));
-
-        final pong = await pongCompleter.future.timeout(roundTimeout);
-
-        final t3 = DateTime.now().millisecondsSinceEpoch;
-        final t2 = pong['t2'] as int;
-        final rtt = t3 - t1;
-        final offset = t2 - (t1 + rtt ~/ 2);
-        offsets.add(offset);
-
-        if (kDebugMode) {
-          debugPrint(
-            '[SAS Clock] Round ${i + 1}: t1=$t1, t2=$t2, t3=$t3, RTT=${rtt}ms, offset=${offset}ms',
-          );
-        }
-      } catch (e) {
-        if (kDebugMode) {
-          debugPrint('[SAS Clock] Round ${i + 1} failed: $e');
-        }
-      } finally {
-        _pendingClockPong = null;
+      if (processingState == ProcessingState.buffering) {
+        _healthMonitor.recordRebuffer();
+        _healthMonitor.recordBufferHealth(0.0);
+      } else if (processingState == ProcessingState.ready) {
+        _healthMonitor.recordBufferHealth(1.0);
       }
-
-    }
-
-    //compute median offset
-    if (offsets.isNotEmpty) {
-      offsets.sort();
-      _clockOffset = offsets[offsets.length ~/ 2];
-    } else {
-      _clockOffset = 0;
-      if (kDebugMode) {
-        debugPrint('[SAS Clock] WARNING: No successful clock sync rounds');
-      }
-    }
-
-    //unblock any messages waiting on clock sync
-    if (_clockSyncComplete != null && !_clockSyncComplete!.isCompleted) {
-      _clockSyncComplete!.complete();
-    }
+    });
   }
 
   /// Start periodic ping to keep client connection alive
@@ -960,7 +1047,7 @@ class SASManager {
     _clientPingTimer = Timer.periodic(Duration(seconds: 15), (_) {
       if (_clientSocket != null) {
         try {
-          _clientSocket!.add(jsonEncode({'type': 'ping'}));
+          _clientSocket!.add(jsonEncode({'type': 'ping', 'data': {}}));
         } catch (e) {
           if (kDebugMode) {
             debugPrint('[SAS Client] Ping failed: $e');
@@ -992,20 +1079,16 @@ class SASManager {
       await _streamCompletionSubscription?.cancel();
       _streamCompletionSubscription = null;
 
+      //stop health monitoring
+      _bufferHealthTimer?.cancel();
+      _bufferHealthTimer = null;
+      _healthMonitor.reset();
+
       //stop ping timer
       _clientPingTimer?.cancel();
       _clientPingTimer = null;
 
-      //cancel any pending scheduled action
-      _scheduledTimer?.cancel();
-      _scheduledTimer = null;
-
-      //reset clock sync state
-      _clockOffset = 0;
-      _clockSyncComplete = null;
-      _pendingClockPong = null;
-
-      //clear client metadata
+      //clear client metadata (keep for reference/debugging if needed)
       clientSongTitle.value = null;
       clientSongArtist.value = null;
       clientSongAlbum.value = null;
@@ -1013,6 +1096,10 @@ class SASManager {
       clientArtworkUrl.value = null;
       clientQueue.value = [];
       clientCurrentIndex.value = 0;
+
+      //clear message queue
+      _messageQueue.clear();
+      _isTransitioning = false;
 
       _isConnected = false;
 
@@ -1031,49 +1118,27 @@ class SASManager {
     try {
       final data = jsonDecode(message);
       final type = data['type'] as String;
+      final payload = data['data'] as Map<String, dynamic>;
 
-      /// clock_pong must be handled immediately => its part of the sync
-      /// protocol that runs before we unblock other messages
-      if (type == 'clock_pong') {
-        if (_pendingClockPong != null && !_pendingClockPong!.isCompleted) {
-          _pendingClockPong!.complete(data);
+      //queue all messages except position updates
+      if (_isTransitioning) {
+        if (type != 'position_update') {
+          if (_messageQueue.length < _maxQueueSize) {
+            _messageQueue.add({'type': type, 'data': payload});
+            if (kDebugMode) {
+              debugPrint('Queued $type (queue size: ${_messageQueue.length})');
+            }
+          } else {
+            if (kDebugMode) {
+              debugPrint('Queue full, dropping $type message');
+            }
+          }
         }
         return;
       }
 
-      //ping/pong keepalive => ignore
-      if (type == 'ping' || type == 'pong') return;
-
-      /// All other message types require clock sync to be complete
-      /// state_sync arrives before clock sync finishes (host sends it immediately
-      /// on connect) => await holds it here until the offset is known
-      if (_clockSyncComplete != null && !_clockSyncComplete!.isCompleted) {
-        await _clockSyncComplete!.future;
-      }
-
-      switch (type) {
-        case 'state_sync':
-          await _handleStateSync(data);
-          break;
-        case 'song_changed':
-          await _handleSongChanged(data);
-          break;
-        case 'play':
-          _handlePlayCommand(data);
-          break;
-        case 'pause':
-          _handlePauseCommand(data);
-          break;
-        case 'seek':
-          _handleSeekCommand(data);
-          break;
-        case 'queue_update':
-          _handleQueueUpdate(data);
-          break;
-        case 'session_ended':
-          await leaveSession();
-          break;
-      }
+      //process message immediately
+      await _processMessage(type, payload);
     } catch (e) {
       if (kDebugMode) {
         debugPrint('Error handling message: $e');
@@ -1081,224 +1146,314 @@ class SASManager {
     }
   }
 
-  /// Schedules action to execute at hostTimeMs (absolute host clock)
-  /// Converts to local time using _clockOffset => cancels any previously
-  /// pending scheduled action so that rapid-fire commands only execute the last one
-  void _executeAt(int hostTimeMs, Future<void> Function() action) {
-    _scheduledTimer?.cancel();
-    _scheduledTimer = null;
-
-    final localNow = DateTime.now().millisecondsSinceEpoch;
-    final localExecuteAt = hostTimeMs - _clockOffset;
-    final delayMs = localExecuteAt - localNow;
-
-    if (kDebugMode) {
-      debugPrint(
-        '[SAS Schedule] hostTime=$hostTimeMs, localExecuteAt=$localExecuteAt, delayMs=$delayMs',
-      );
-    }
-
-    if (delayMs <= 0) {
-      //target time already passed => execute immediately
-      action();
-    } else {
-      _scheduledTimer = Timer(Duration(milliseconds: delayMs), () {
-        action();
-        _scheduledTimer = null;
-      });
+  /// Process a single message by type
+  Future<void> _processMessage(
+    String type,
+    Map<String, dynamic> payload,
+  ) async {
+    switch (type) {
+      case 'ping':
+        //host sent ping => ignore (already send own pings)
+        break;
+      case 'pong':
+        //host acknowledged ping => connection is alive
+        break;
+      case 'state_sync':
+        await _handleStateSync(payload);
+        break;
+      case 'song_changed':
+        await _handleSongChanged(payload);
+        break;
+      case 'play':
+        await _handlePlayCommand();
+        break;
+      case 'pause':
+        await _handlePauseCommand();
+        break;
+      case 'position_update':
+        await _handlePositionUpdate(payload);
+        break;
+      case 'queue_update':
+        await _handleQueueUpdate(payload);
+        break;
+      case 'session_ended':
+        await leaveSession();
+        break;
     }
   }
 
+  /// Process all queued messages after transition completes
+  Future<void> _processQueuedMessages() async {
+    if (_messageQueue.isEmpty) return;
+
+    if (kDebugMode) {
+      debugPrint('Processing ${_messageQueue.length} queued messages');
+    }
+
+    final messages = List<Map<String, dynamic>>.from(_messageQueue);
+    _messageQueue.clear();
+
+    for (final msg in messages) {
+      try {
+        await _processMessage(
+          msg['type'] as String,
+          msg['data'] as Map<String, dynamic>,
+        );
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('Error processing queued message: $e');
+        }
+      }
+    }
+  }
+
+  /// Loads a network stream with exponential backoff retry logic
+  Future<bool> _loadStreamWithRetry(
+    String streamUrl, {
+    Duration? initialPosition,
+    bool autoPlay = false,
+    int maxAttempts = 5,
+  }) async {
+    isRetrying.value = true;
+
+    for (int attempt = 0; attempt < maxAttempts; attempt++) {
+      try {
+        final timeout = Duration(seconds: attempt == 0 ? 10 : 15);
+
+        await _sonoPlayer
+            .loadNetworkStream(
+              streamUrl,
+              initialPosition: initialPosition,
+              autoPlay: false,
+            )
+            .timeout(timeout);
+
+        connectionError.value = null;
+        isRetrying.value = false;
+
+        if (autoPlay) {
+          await _sonoPlayer.play();
+        }
+
+        return true;
+      } catch (e) {
+        connectionError.value = 'Connection error: ${e.toString()}';
+
+        if (kDebugMode) {
+          debugPrint('Load attempt ${attempt + 1}/$maxAttempts failed: $e');
+        }
+
+        if (attempt < maxAttempts - 1) {
+          //500ms, 1s, 2s, 4s, 8s
+          final delay = Duration(milliseconds: 500 * (1 << attempt));
+          if (kDebugMode) {
+            debugPrint('Retrying in ${delay.inMilliseconds}ms...');
+          }
+          await Future.delayed(delay);
+        }
+      }
+    }
+
+    isRetrying.value = false;
+    connectionError.value = 'Failed to load stream after $maxAttempts attempts';
+    return false;
+  }
+
   /// Handle initial state sync from host
-  /// Calculates expected position using recorded_at + clock offset => no execute_at needed
   Future<void> _handleStateSync(Map<String, dynamic> data) async {
+    _isTransitioning = true;
+
     try {
-      final streamUrl = data['song_url'] as String;
-      final isPlaying = data['is_playing'] as bool;
-      final positionMs = data['position_ms'] as int;
-      final recordedAt = data['recorded_at'] as int;
+      final streamUrl = data['streamUrl'] as String;
+      final isPlaying = data['isPlaying'] as bool;
+      final position = data['position'] as int;
       final title = data['title'] as String?;
       final artist = data['artist'] as String?;
       final album = data['album'] as String?;
-      final durationMs = data['duration_ms'] as int?;
-      final artworkUrl = data['artwork_url'] as String?;
-      final songId = data['song_id'] as int?;
+      final duration = data['duration'] as int?;
+      final artworkUrl = data['artworkUrl'] as String?;
+      final timestamp = data['timestamp'] as int;
 
       if (kDebugMode) {
-        debugPrint('[SAS Client] State sync - Song: $title by $artist');
+        debugPrint('[SAS Client] State sync - URL: $streamUrl');
+        debugPrint('[SAS Client] Song: $title by $artist');
+        debugPrint(
+          '[SAS Client] Position: ${Duration(milliseconds: position)}, Playing: $isPlaying',
+        );
       }
 
-      //update metadata immediately so UI shows correct info
+      //update SonoPlayer with SAS metadata FIRST so UI shows correct info immediately
       _sonoPlayer.setSASMetadata(
         title: title ?? 'Unknown',
         artist: artist ?? 'Unknown Artist',
         album: album ?? 'Unknown Album',
-        durationMs: durationMs ?? 0,
+        durationMs: duration ?? 0,
         artworkUrl: artworkUrl,
-        songId: songId,
+        songId: data['songId'] as int?,
       );
 
+      //update local SASManager state for queue management
       clientSongTitle.value = title;
       clientSongArtist.value = artist;
       clientSongAlbum.value = album;
-      clientSongDuration.value = durationMs;
+      clientSongDuration.value = duration;
       clientArtworkUrl.value = artworkUrl;
 
-      /// Calculate expected position NOW
-      /// hostNow = localNow + clockOffset (convert local time to host time)
-      final hostNow = DateTime.now().millisecondsSinceEpoch + _clockOffset;
-      final elapsedMs = hostNow - recordedAt;
-      final expectedPositionMs =
-          isPlaying
-              ? (positionMs + elapsedMs).clamp(0, durationMs ?? 999999999)
-              : positionMs;
+      //timestamp to URL to prevent caching
+      final freshUrl = '$streamUrl?t=$timestamp';
 
-      if (kDebugMode) {
-        debugPrint(
-          '[SAS Client] Calculated position: ${expectedPositionMs}ms '
-          '(recorded=${positionMs}ms, elapsed=${elapsedMs}ms)',
-        );
-      }
+      //stream url into SonoPlayer with retry logic
+      //streamDelayMs is handled separately for song changes, not initial sync
+      final success = await _loadStreamWithRetry(
+        freshUrl,
+        initialPosition: Duration(milliseconds: position),
+        autoPlay: false,
+      );
 
-      //load stream with cache-busting timestamp
-      final freshUrl = '$streamUrl?t=$recordedAt';
-
-      try {
-        await _sonoPlayer.loadNetworkStream(
-          freshUrl,
-          initialPosition: Duration(milliseconds: expectedPositionMs),
-          autoPlay: false,
-        );
-        connectionError.value = null;
-      } catch (e) {
-        connectionError.value = 'Failed to load stream: ${e.toString()}';
-        if (kDebugMode) {
-          debugPrint('[SAS Client] Stream load failed: $e');
-        }
-        return;
+      if (!success) {
+        throw Exception('Failed to load stream after retries');
       }
 
       //setup completion listener for auto-advance detection
       _setupStreamCompletionListener();
 
-      //start playback if host was playing
+      if (kDebugMode) {
+        debugPrint('[SAS Client] Stream loaded into sono_player');
+      }
+
       if (isPlaying) {
-        await _waitForPlayerReady();
-        await _sonoPlayer.playStream();
-        if (kDebugMode) {
-          debugPrint(
-            '[SAS Client] Playback started at ${expectedPositionMs}ms',
-          );
+        //wait for player to be ready before starting playback
+        await Future.delayed(Duration(milliseconds: 300));
+
+        //ensure player is in ready state before playing
+        final processingState = _sonoPlayer.player.processingState;
+        if (processingState == ProcessingState.ready ||
+            processingState == ProcessingState.buffering) {
+          await _sonoPlayer.play();
+          if (kDebugMode) {
+            debugPrint('[SAS Client] Started playback');
+          }
+        } else {
+          if (kDebugMode) {
+            debugPrint('[SAS Client] Player not ready, waiting for ready state');
+          }
+          //wait for player to become ready
+          try {
+            await _sonoPlayer.player.processingStateStream
+                .firstWhere((state) =>
+                    state == ProcessingState.ready ||
+                    state == ProcessingState.buffering)
+                .timeout(Duration(seconds: 8));
+            await _sonoPlayer.play();
+            if (kDebugMode) {
+              debugPrint('[SAS Client] Started playback after ready');
+            }
+          } catch (timeoutError) {
+            if (kDebugMode) {
+              debugPrint('[SAS Client] Timeout waiting for ready state: $timeoutError');
+            }
+            //try to play anyway
+            try {
+              await _sonoPlayer.play();
+            } catch (_) {}
+          }
         }
+      }
+
+      if (kDebugMode) {
+        debugPrint('[SAS Client] State synced successfully: $title');
       }
     } catch (e) {
       if (kDebugMode) {
         debugPrint('[SAS Client] State sync error: $e');
       }
       connectionError.value = 'State sync failed: ${e.toString()}';
+    } finally {
+      _isTransitioning = false;
+      await _processQueuedMessages();
     }
   }
 
-  //handle song change from host (scheduled)
+  //handle song change from host
   Future<void> _handleSongChanged(Map<String, dynamic> data) async {
+    _isTransitioning = true;
+
     try {
-      final streamUrl = data['song_url'] as String;
-      final executeAt = data['execute_at'] as int;
+      final streamUrl = data['streamUrl'] as String;
       final title = data['title'] as String?;
       final artist = data['artist'] as String?;
       final album = data['album'] as String?;
-      final durationMs = data['duration_ms'] as int?;
-      final artworkUrl = data['artwork_url'] as String?;
-      final songId = data['song_id'] as int?;
+      final duration = data['duration'] as int?;
+      final artworkUrl = data['artworkUrl'] as String?;
+      final timestamp = data['timestamp'] as int;
 
       if (kDebugMode) {
-        debugPrint(
-          '[SAS Client] Song change incoming: $title by $artist, executeAt=$executeAt',
-        );
+        debugPrint('[SAS Client] Song changing to: $title by $artist');
       }
 
-      //update metadata immediately so UI shows new song info
+      //update SonoPlayer with SAS metadata FIRST so UI shows correct info immediately
       _sonoPlayer.setSASMetadata(
         title: title ?? 'Unknown',
         artist: artist ?? 'Unknown Artist',
         album: album ?? 'Unknown Album',
-        durationMs: durationMs ?? 0,
+        durationMs: duration ?? 0,
         artworkUrl: artworkUrl,
-        songId: songId,
+        songId: data['songId'] as int?,
       );
 
+      //update local SASManager state for queue management
       clientSongTitle.value = title;
       clientSongArtist.value = artist;
       clientSongAlbum.value = album;
-      clientSongDuration.value = durationMs;
+      clientSongDuration.value = duration;
       clientArtworkUrl.value = artworkUrl;
 
+      //stop current playback completely to release the stream
       await _sonoPlayer.player.stop();
 
-      final freshUrl = '$streamUrl?t=${DateTime.now().millisecondsSinceEpoch}';
-
-      final broadcastAt = data['broadcast_at'] as int? ?? executeAt;
-
-      //compute approximate position NOW so the load issues a range request
-      //at the right offset => avoids a post-load seek and its rebuffer penalty
-      final hostNowAtLoad = DateTime.now().millisecondsSinceEpoch + _clockOffset;
-      final approxPosition = (hostNowAtLoad - broadcastAt).clamp(
-        0,
-        durationMs ?? 999999999,
-      );
-
-      //guard: play/seek commands arriving while load, will be absorbed
-      _songChangeInProgress = true;
-      _hostWantsPlaying = true; //song_changed implies the host is playing
-      try {
-        await _sonoPlayer.loadNetworkStream(
-          freshUrl,
-          initialPosition: Duration(milliseconds: approxPosition),
-          autoPlay: false,
-        );
-        connectionError.value = null;
-      } catch (e) {
-        connectionError.value = 'Song change load failed: ${e.toString()}';
-        if (kDebugMode) {
-          debugPrint('[SAS Client] Song change stream load failed: $e');
-        }
-        return;
-      } finally {
-        _songChangeInProgress = false;
-      }
-
-      _setupStreamCompletionListener();
-
-      //schedule play at executeAt, seeking to where the host actually is.
-      //respect _hostWantsPlaying: a pause that arrived during loading should
-      //prevent us from auto-playing here.
-      _executeAt(executeAt, () async {
-        if (!_hostWantsPlaying) return;
-
-        final hostNow = DateTime.now().millisecondsSinceEpoch + _clockOffset;
-        final elapsedMs = (hostNow - broadcastAt).clamp(
-          0,
-          durationMs ?? 999999999,
-        );
-
-        await _sonoPlayer.seekStream(Duration(milliseconds: elapsedMs));
-        await _waitForPlayerReady();
-        await _sonoPlayer.playStream();
+      //apply configured stream delay (if set) to allow host buffering
+      //only delay if explicitly configured by user (default should be 0)
+      if (_streamDelayMs > 0) {
         if (kDebugMode) {
           debugPrint(
-            '[SAS Client] Song change: playback started at ${elapsedMs}ms',
+            '[SAS Client] Applying ${_streamDelayMs}ms sync delay for new song',
           );
         }
-      });
+        await Future.delayed(Duration(milliseconds: _streamDelayMs));
+      }
+
+      //add timestamp to URL to force fresh connection and prevent caching
+      final freshUrl = '$streamUrl?t=$timestamp';
+
+      //add new song with retry logic
+      final success = await _loadStreamWithRetry(
+        freshUrl,
+        initialPosition: Duration.zero,
+        autoPlay: true,
+      );
+
+      if (!success) {
+        throw Exception('Failed to load stream after retries');
+      }
+
+      //setup completion listener for auto-advance detection
+      _setupStreamCompletionListener();
+
+      if (kDebugMode) {
+        debugPrint('[SAS Client] Now playing: $title');
+      }
     } catch (e) {
       if (kDebugMode) {
         debugPrint('[SAS Client] Song change error: $e');
       }
       connectionError.value = 'Song change failed: ${e.toString()}';
+    } finally {
+      _isTransitioning = false;
+      await _processQueuedMessages();
     }
   }
 
-  /// Starts up listener to detect when the clients network stream completes
+  /// Starts up listener to detect when the client's network stream completes
   /// and prepares client to receive the next song from host
   void _setupStreamCompletionListener() {
     //cancel any existing listener
@@ -1316,7 +1471,7 @@ class SASManager {
           );
         }
 
-        //check if theres a next song expected in queue
+        //check if there's a next song expected in queue
         final currentIdx = clientCurrentIndex.value;
         final queueLength = clientQueue.value.length;
 
@@ -1331,137 +1486,111 @@ class SASManager {
           if (kDebugMode) {
             debugPrint('[SAS Client] End of queue reached');
           }
-          _sonoPlayer.pauseStream();
+          _sonoPlayer.pause();
         }
       }
     });
   }
 
-  //handle play command from host => execute immediately with dynamic sync
-  //double-seek: first seek starts buffering the right region, second seek
-  //right before play corrects for the buffer-fill time so it doesnt contribute to desync
-  Future<void> _handlePlayCommand(Map<String, dynamic> data) async {
-    _hostWantsPlaying = true;
-
-    //a song_changed is currently loading the new stream; it will handle play
-    //at its scheduled executeAt with the correct position => dont race it
-    if (_songChangeInProgress) return;
-
-    final positionMs = data['position_ms'] as int?;
-    final recordedAt = data['recorded_at'] as int?;
-
-    _scheduledTimer?.cancel();
-    _scheduledTimer = null;
-
+  //handle play command from host
+  Future<void> _handlePlayCommand() async {
     try {
-      if (positionMs != null && recordedAt != null) {
-        //first seek: approximate position to start buffering the right region
-        final hostNow = DateTime.now().millisecondsSinceEpoch + _clockOffset;
-        final approxPosition = (positionMs + (hostNow - recordedAt)).clamp(
-          0,
-          999999999,
-        );
-        await _sonoPlayer.seekStream(Duration(milliseconds: approxPosition));
-
-        await _waitForPlayerReady();
-
-        //second seek: re-compute exact position now that buffer is warm;
-        //this position is within the already-buffered region so the seek is instant
-        final hostNow2 = DateTime.now().millisecondsSinceEpoch + _clockOffset;
-        final exactPosition = (positionMs + (hostNow2 - recordedAt)).clamp(
-          0,
-          999999999,
-        );
-        await _sonoPlayer.seekStream(Duration(milliseconds: exactPosition));
-      } else if (positionMs != null) {
-        await _sonoPlayer.seekStream(Duration(milliseconds: positionMs));
-      }
-
       if (!_sonoPlayer.isPlaying.value) {
-        await _sonoPlayer.playStream();
-      }
-      if (kDebugMode) {
-        debugPrint('[SAS Client] Play command executed');
+        await _sonoPlayer.play();
+        if (kDebugMode) {
+          debugPrint('Play command executed');
+        }
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('[SAS Client] Play command error: $e');
+        debugPrint('Play command error: $e');
       }
     }
   }
 
-  //handle pause command from host => execute immediately
-  Future<void> _handlePauseCommand(Map<String, dynamic> data) async {
-    _hostWantsPlaying = false;
-    _scheduledTimer?.cancel();
-    _scheduledTimer = null;
-
+  //handle pause command from host
+  Future<void> _handlePauseCommand() async {
     try {
       if (_sonoPlayer.isPlaying.value) {
-        await _sonoPlayer.pauseStream();
-      }
-      if (kDebugMode) {
-        debugPrint('[SAS Client] Pause command executed');
+        _sonoPlayer.pause();
+        if (kDebugMode) {
+          debugPrint('Pause command executed');
+        }
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('[SAS Client] Pause command error: $e');
+        debugPrint('Pause command error: $e');
       }
     }
   }
 
-  //handle seek command from host => execute immediately with dynamic position
-  Future<void> _handleSeekCommand(Map<String, dynamic> data) async {
-    //same guard as play: song_changed will seek to the right spot at executeAt
-    if (_songChangeInProgress) return;
-
-    final positionMs = data['position_ms'] as int;
-    final recordedAt = data['recorded_at'] as int?;
-
-    _scheduledTimer?.cancel();
-    _scheduledTimer = null;
+  //handle position updates from host for drift correction
+  Future<void> _handlePositionUpdate(Map<String, dynamic> data) async {
+    if (!_sonoPlayer.isPlaying.value) return;
 
     try {
-      int adjustedPosition = positionMs;
-      if (recordedAt != null) {
-        final hostNow = DateTime.now().millisecondsSinceEpoch + _clockOffset;
-        adjustedPosition = (positionMs + (hostNow - recordedAt)).clamp(
-          0,
-          999999999,
-        );
-      }
-      await _sonoPlayer.seekStream(Duration(milliseconds: adjustedPosition));
-      if (kDebugMode) {
-        debugPrint('[SAS Client] Seek to ${adjustedPosition}ms executed');
+      final hostPosition = Duration(milliseconds: data['position'] as int);
+      final timestamp = data['timestamp'] as int;
+      final networkDelay = DateTime.now().millisecondsSinceEpoch - timestamp;
+
+      //record latency for health monitoring
+      _healthMonitor.recordLatency(networkDelay);
+
+      //compensate for network delay and codec processing
+      final compensatedPosition =
+          hostPosition +
+          Duration(milliseconds: networkDelay) +
+          _codecDelayEstimate;
+
+      final clientPosition = _sonoPlayer.position.value;
+      final drift = (compensatedPosition - clientPosition).abs();
+
+      if (drift >= _majorDriftThreshold) {
+        //major drift: immediate seek (bypass client check for automatic drift correction)
+        if (kDebugMode) {
+          debugPrint(
+            'Major drift detected: ${drift.inMilliseconds}ms - seeking',
+          );
+        }
+        await _sonoPlayer.player.seek(compensatedPosition);
+        _sonoPlayer.position.value = compensatedPosition;
+      } else if (drift >= _driftThreshold) {
+        //minor drift: gradual speed adjustment
+        final driftMs = (compensatedPosition - clientPosition).inMilliseconds;
+        final speedAdjustment = 1.0 + (driftMs / 10000.0); //btle adjustment
+        final targetSpeed = speedAdjustment.clamp(0.95, 1.05);
+
+        if (kDebugMode) {
+          debugPrint(
+            'Minor drift: ${drift.inMilliseconds}ms - adjusting speed to ${targetSpeed.toStringAsFixed(3)}',
+          );
+        }
+
+        await _sonoPlayer.setSpeed(targetSpeed);
+
+        //store normal speed after 2 seconds
+        Future.delayed(Duration(seconds: 2), () {
+          if (_sonoPlayer.isPlaying.value) {
+            _sonoPlayer.setSpeed(1.0);
+          }
+        });
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('[SAS Client] Seek command error: $e');
+        debugPrint('Position update error: $e');
       }
     }
   }
 
   //handle queue update from host
-  void _handleQueueUpdate(Map<String, dynamic> data) {
+  Future<void> _handleQueueUpdate(Map<String, dynamic> data) async {
     try {
       final queueData = data['queue'] as List;
-      final currentIndex = data['current_index'] as int;
+      final currentIndex = data['currentIndex'] as int;
 
+      //update client queue state
       clientQueue.value = queueData.cast<Map<String, dynamic>>();
       clientCurrentIndex.value = currentIndex;
-
-      //sync queue to player so QueueView displays it
-      _sonoPlayer.sasCurrentIndex = currentIndex;
-      _sonoPlayer.queueNotifier.value = clientQueue.value.map((item) {
-        return MediaItem(
-          id: item['songId'].toString(),
-          title: item['title'] ?? 'Unknown',
-          artist: item['artist'],
-          album: item['album'],
-          duration: Duration(milliseconds: item['duration'] ?? 0),
-          extras: {'songId': item['songId']},
-        );
-      }).toList();
 
       if (kDebugMode) {
         debugPrint(
@@ -1472,23 +1601,6 @@ class SASManager {
       if (kDebugMode) {
         debugPrint('Queue update error: $e');
       }
-    }
-  }
-
-  /// Waits up to 8 seconds for the player to reach ready or buffering state
-  Future<void> _waitForPlayerReady() async {
-    final state = _sonoPlayer.player.processingState;
-    if (state == ProcessingState.ready || state == ProcessingState.buffering) {
-      return;
-    }
-    try {
-      await _sonoPlayer.player.processingStateStream
-          .firstWhere(
-            (s) => s == ProcessingState.ready || s == ProcessingState.buffering,
-          )
-          .timeout(Duration(seconds: 8));
-    } catch (_) {
-      //timeout => proceed anyway
     }
   }
 

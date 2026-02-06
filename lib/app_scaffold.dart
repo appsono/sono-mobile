@@ -9,12 +9,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 
 //pages
-import 'package:sono/pages/info/announcements_changelog_page.dart';
+import 'package:sono/pages/info/changelog_page.dart';
 import 'package:sono/pages/main/home_page.dart';
 import 'package:sono/pages/main/library_page.dart';
 import 'package:sono/pages/auth/login_page.dart';
 import 'package:sono/pages/api/profile_page.dart';
 import 'package:sono/pages/info/recents_page.dart';
+/*import 'package:sono/pages/api/collections_page.dart';*/
 import 'package:sono/pages/auth/registration_page.dart';
 import 'package:sono/pages/main/search_page.dart';
 import 'package:sono/pages/main/settings_page.dart';
@@ -23,6 +24,7 @@ import 'package:sono/services/api/api_service.dart';
 import 'package:sono/services/settings/library_settings_service.dart';
 import 'package:sono/services/utils/favorites_service.dart';
 import 'package:sono/services/utils/update_service.dart';
+import 'package:sono/services/utils/analytics_service.dart';
 import 'package:sono/services/utils/artwork_cache_service.dart';
 import 'package:sono/services/playlist/playlist_initialization_service.dart';
 import 'package:sono/services/playlist/playlist_service.dart';
@@ -36,9 +38,6 @@ import 'package:sono/widgets/player/parts/mini_player.dart';
 import 'package:sono/widgets/global/sidebar_menu.dart';
 import 'package:sono/widgets/global/bottom_sheet.dart';
 import 'package:sono/widgets/artists/artist_fetch_progress_button.dart';
-import 'package:sono/widgets/global/consent_dialog.dart';
-import 'package:sono/pages/info/privacy_page.dart';
-import 'package:sono/pages/info/terms_page.dart';
 
 class AppScaffold extends StatefulWidget {
   const AppScaffold({super.key});
@@ -81,6 +80,13 @@ class _AppScaffoldState extends State<AppScaffold>
 
   final PageStorageBucket _pageStorageBucket = PageStorageBucket();
 
+  final List<String> _screenNames = [
+    'HomePage',
+    'SearchPage',
+    'LibraryPage',
+    'SettingsPage',
+  ];
+
   AppLifecycleState? _lastLifecycleState;
   DateTime? _backgroundTime;
   bool _isInitializing = true;
@@ -117,6 +123,7 @@ class _AppScaffoldState extends State<AppScaffold>
       _loadAppVersion();
       _checkCurrentPermissionStatus();
       _initializeAuth();
+      AnalyticsService.logScreenView(_screenNames[0]);
       _startPeriodicChecks();
       _startCacheCleanup();
       _updateService.cleanupOldApks();
@@ -192,9 +199,7 @@ class _AppScaffoldState extends State<AppScaffold>
           _hasPermission = status.isGranted;
           _isLoadingPermission = false;
         });
-        _initializeScreens(
-          preserveCurrentScreen: _screens.any((s) => s is! SizedBox),
-        );
+        _initializeScreens();
       }
     } catch (e) {
       if (mounted) {
@@ -202,28 +207,15 @@ class _AppScaffoldState extends State<AppScaffold>
           _hasPermission = true;
           _isLoadingPermission = false;
         });
-        _initializeScreens(
-          preserveCurrentScreen: _screens.any((s) => s is! SizedBox),
-        );
+        _initializeScreens();
       }
     }
   }
 
   /// Refreshes all screens when user state changes
-  void _initializeScreens({bool preserveCurrentScreen = false}) {
+  void _initializeScreens() {
     setState(() {
-      if (preserveCurrentScreen && _screens.isNotEmpty) {
-        //preserve all already-initialized screens => prevents them from going blank
-        final oldScreens = List<Widget>.from(_screens);
-        _screens = _createAllScreens();
-        for (int i = 0; i < oldScreens.length && i < _screens.length; i++) {
-          if (oldScreens[i] is! SizedBox) {
-            _screens[i] = _createScreen(i);
-          }
-        }
-      } else {
-        _screens = _createAllScreens();
-      }
+      _screens = _createAllScreens();
     });
   }
 
@@ -373,9 +365,9 @@ class _AppScaffoldState extends State<AppScaffold>
             _sidebarUserName = 'Guest';
             _profilePictureUrl = null;
             _currentUser = null;
+            //recreate all screens with logged-out state
+            _screens = _createAllScreens();
           });
-          //recreate all screens with logged-out state
-          _initializeScreens(preserveCurrentScreen: true);
         }
       }
     }
@@ -398,46 +390,30 @@ class _AppScaffoldState extends State<AppScaffold>
       debugPrint('[AppScaffold] User data fetched: ${userData['username']}');
       if (mounted) {
         final newUsername = userData['username'];
-        final newDisplayName = userData['display_name'];
-        final newBio = userData['bio'];
+        final currentUsername = _currentUser?['username'];
         final newProfilePicture = userData['profile_picture_url'];
 
-        final currentUsername = _currentUser?['username'];
-        final currentDisplayName = _currentUser?['display_name'];
-        final currentBio = _currentUser?['bio'];
-
-        //check if ANY user data has changed
-        final hasChanges =
-            newUsername != currentUsername ||
-            newDisplayName != currentDisplayName ||
-            newBio != currentBio ||
-            newProfilePicture != _profilePictureUrl ||
-            !_isLoggedIn;
-
-        if (hasChanges) {
-          debugPrint('[AppScaffold] User data changed, updating state');
+        if (newUsername != currentUsername ||
+            !_isLoggedIn ||
+            _profilePictureUrl != newProfilePicture) {
+          debugPrint('[AppScaffold] Updating user state: $_isLoggedIn -> true');
+          setState(() {
+            _currentUser = userData;
+            _isLoggedIn = true;
+            _sidebarUserName =
+                _currentUser?['display_name'] ??
+                _currentUser?['username'] ??
+                'User';
+            _profilePictureUrl = newProfilePicture;
+            debugPrint(
+              '[AppScaffold] User state updated. Username: ${_currentUser?['username']}, isLoggedIn: $_isLoggedIn',
+            );
+            //recreate all screens with new auth state
+            _screens = _createAllScreens();
+          });
+        } else {
+          debugPrint('[AppScaffold] User state unchanged');
         }
-
-        //always update user data
-        setState(() {
-          _currentUser = userData;
-          _isLoggedIn = true;
-          _sidebarUserName =
-              _currentUser?['display_name'] ??
-              _currentUser?['username'] ??
-              'User';
-          _profilePictureUrl = newProfilePicture;
-          debugPrint(
-            '[AppScaffold] User state updated. Username: ${_currentUser?['username']}, DisplayName: ${_currentUser?['display_name']}, isLoggedIn: $_isLoggedIn',
-          );
-        });
-
-        //recreate screens if data changed
-        if (hasChanges) {
-          _initializeScreens(preserveCurrentScreen: true);
-        }
-
-        _checkConsent();
       }
     } catch (e, s) {
       debugPrint('[AppScaffold] Failed to fetch user: $e');
@@ -483,105 +459,6 @@ class _AppScaffoldState extends State<AppScaffold>
           }
         }
       }
-    }
-  }
-
-  Future<void> _checkConsent() async {
-    const consentVersion = '2.0';
-
-    //check privacy policy consent
-    final privacyAccepted = await ConsentDialog.showIfNeeded(
-      context: context,
-      consentType: 'privacy_policy',
-      consentVersion: consentVersion,
-      title: 'Privacy Policy',
-      content: '''
-By using Sono, you agree to our Privacy Policy.
-
-Key points:
-• App can be used locally without any account - no data collection for local use
-• Creating a Sono Account is OPTIONAL and enables uploading to CDN and cloud playlists
-• Crash logs are optional and can be disabled in Settings
-• Your data is never sold to third parties
-• You have full GDPR rights (access, deletion, portability)
-
-Age requirement for accounts: 13+ years old
-
-Tap "Read Full Policy" below to view the complete Privacy Policy.
-      ''',
-      onViewFullDocument: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const PrivacyPage()),
-        );
-      },
-      onDeclined: () async {
-        //logout if declined
-        await _apiService.logout();
-      },
-    );
-
-    if (privacyAccepted == null || !privacyAccepted) {
-      //user declined, logout
-      await _handleLogout(showSnackbar: false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('You must accept the Privacy Policy to use Sono'),
-            backgroundColor: Colors.orange,
-          ),
-        );
-      }
-      return;
-    }
-
-    //check terms of service consent
-    if (!mounted) return;
-    final termsAccepted = await ConsentDialog.showIfNeeded(
-      context: context,
-      consentType: 'terms_of_service',
-      consentVersion: consentVersion,
-      title: 'Terms of Service',
-      content: '''
-By using Sono, you agree to our Terms of Service.
-
-Key terms:
-• App can be used locally without any account for all basic features
-• Creating a Sono Account is OPTIONAL and requires being 13+ years old
-• Sono Accounts enable uploading songs to CDN and cloud playlists
-• You must have legal rights to upload any content
-• Do not violate copyright laws or abuse the service
-• SAS sessions are peer-to-peer, no audio data stored on our servers
-
-Operated by: Mathis Laarmanns, Germany
-Contact: business@mail.sono.wtf
-
-Tap "Read Full Terms" below to view the complete Terms of Service.
-      ''',
-      onViewFullDocument: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const TermsPage()),
-        );
-      },
-      onDeclined: () async {
-        //logout if declined
-        await _apiService.logout();
-      },
-    );
-
-    if (termsAccepted == null || !termsAccepted) {
-      //user declined, logout
-      await _handleLogout(showSnackbar: false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('You must accept the Terms of Service to use Sono'),
-            backgroundColor: Colors.orange,
-          ),
-        );
-      }
-      return;
     }
   }
 
@@ -772,7 +649,8 @@ Tap "Read Full Terms" below to view the complete Terms of Service.
                 if (Navigator.canPop(context)) Navigator.pop(context);
                 await _initializeAuth();
                 if (mounted) {
-                  ScaffoldMessenger.of(this.context).showSnackBar(
+                  //ignore: use_build_context_synchronously
+                  ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text("You are now logged in."),
                       backgroundColor: Colors.green,
@@ -804,7 +682,8 @@ Tap "Read Full Terms" below to view the complete Terms of Service.
                 if (Navigator.canPop(context)) Navigator.pop(context);
                 await _initializeAuth();
                 if (mounted) {
-                  ScaffoldMessenger.of(this.context).showSnackBar(
+                  //ignore: use_build_context_synchronously
+                  ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text(
                         "Registration successful! You are now logged in.",
@@ -867,9 +746,7 @@ Tap "Read Full Terms" below to view the complete Terms of Service.
     if (mounted) {
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (context) => const AnnouncementsChangelogPage(),
-        ),
+        MaterialPageRoute(builder: (context) => const ChangelogPage()),
       ).then((_) {
         if (mounted && _activeNonTabRoute == "Changelog") {
           setState(() {
@@ -1198,49 +1075,48 @@ Tap "Read Full Terms" below to view the complete Terms of Service.
 
       final shouldRequest = await showDialog<bool>(
         context: context,
-        builder:
-            (dialogContext) => AlertDialog(
-              backgroundColor: AppTheme.surfaceDark,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              title: Row(
-                children: [
-                  Icon(Icons.security_rounded, color: AppTheme.brandPink),
-                  const SizedBox(width: 12),
-                  Text(
-                    'Permission Required',
-                    style: AppStyles.sonoListItemTitle.copyWith(
-                      color: AppTheme.textPrimaryDark,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              content: Text(
-                'To install updates, Sono needs permission to install apps from unknown sources.\n\nThis is a one-time setup required by Android.',
-                style: AppStyles.sonoListItemSubtitle.copyWith(
-                  color: AppTheme.textSecondaryDark,
+        builder: (dialogContext) => AlertDialog(
+          backgroundColor: AppTheme.surfaceDark,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              Icon(Icons.security_rounded, color: AppTheme.brandPink),
+              const SizedBox(width: 12),
+              Text(
+                'Permission Required',
+                style: AppStyles.sonoListItemTitle.copyWith(
+                  color: AppTheme.textPrimaryDark,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(false),
-                  child: Text(
-                    'Cancel',
-                    style: TextStyle(color: AppTheme.textSecondaryDark),
-                  ),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.brandPink,
-                    foregroundColor: Colors.white,
-                  ),
-                  onPressed: () => Navigator.of(dialogContext).pop(true),
-                  child: const Text('Grant Permission'),
-                ),
-              ],
+            ],
+          ),
+          content: Text(
+            'To install updates, Sono needs permission to install apps from unknown sources.\n\nThis is a one-time setup required by Android.',
+            style: AppStyles.sonoListItemSubtitle.copyWith(
+              color: AppTheme.textSecondaryDark,
             ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(
+                'Cancel',
+                style: TextStyle(color: AppTheme.textSecondaryDark),
+              ),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.brandPink,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Grant Permission'),
+            ),
+          ],
+        ),
       );
 
       if (shouldRequest != true || !mounted) return;
@@ -1253,9 +1129,7 @@ Tap "Read Full Terms" below to view the complete Terms of Service.
             content: const Text('Permission denied. Cannot install updates.'),
             backgroundColor: Colors.redAccent.shade400,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             margin: const EdgeInsets.fromLTRB(10, 5, 10, 10),
           ),
         );
@@ -1309,9 +1183,7 @@ Tap "Read Full Terms" below to view the complete Terms of Service.
                               borderRadius: BorderRadius.circular(8),
                               child: LinearProgressIndicator(
                                 value: progress > 0 ? progress : null,
-                                backgroundColor: Colors.white.withValues(
-                                  alpha: 0.1,
-                                ),
+                                backgroundColor: Colors.white.withValues(alpha: 0.1),
                                 valueColor: const AlwaysStoppedAnimation<Color>(
                                   AppTheme.brandPink,
                                 ),
@@ -1356,16 +1228,10 @@ Tap "Read Full Terms" below to view the complete Terms of Service.
           Navigator.of(context).pop();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(
-                errorMessage,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-              ),
+              content: Text(errorMessage, maxLines: 3, overflow: TextOverflow.ellipsis),
               backgroundColor: Colors.redAccent.shade400,
               behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               margin: const EdgeInsets.fromLTRB(10, 5, 10, 10),
               duration: const Duration(seconds: 6),
             ),
@@ -1407,6 +1273,8 @@ Tap "Read Full Terms" below to view the complete Terms of Service.
       _currentIndex = index;
       _activeNonTabRoute = null;
     });
+
+    AnalyticsService.logScreenView(_screenNames[index]);
 
     _pageController.jumpToPage(index);
   }

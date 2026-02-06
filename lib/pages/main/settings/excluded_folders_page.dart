@@ -162,7 +162,7 @@ class _ExcludedFoldersPageState extends State<ExcludedFoldersPage> {
         backgroundColor: AppTheme.backgroundDark,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios_rounded, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: const Text(
@@ -175,164 +175,152 @@ class _ExcludedFoldersPageState extends State<ExcludedFoldersPage> {
           ),
         ),
       ),
-      body:
-          _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : _excludedFolders.isEmpty
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _excludedFolders.isEmpty
               ? Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.folder_open_rounded,
-                        size: 64,
-                        color: Colors.white.withAlpha((0.3 * 255).round()),
-                      ),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'No Excluded Folders',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          fontFamily: 'VarelaRound',
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.folder_open_rounded,
+                          size: 64,
+                          color: Colors.white.withAlpha((0.3 * 255).round()),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Add folders to exclude them from your music library',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white.withAlpha((0.7 * 255).round()),
-                          fontFamily: 'VarelaRound',
+                        const SizedBox(height: 16),
+                        const Text(
+                          'No Excluded Folders',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            fontFamily: 'VarelaRound',
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 24),
-                      ElevatedButton.icon(
-                        onPressed: _addFolder,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.brandPink,
-                          foregroundColor: Colors.white,
+                        const SizedBox(height: 8),
+                        Text(
+                          'Add folders to exclude them from your music library',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white.withAlpha((0.7 * 255).round()),
+                            fontFamily: 'VarelaRound',
+                          ),
                         ),
-                        icon: const Icon(Icons.add_rounded),
-                        label: const Text(
-                          'Add Folder',
-                          style: TextStyle(fontFamily: 'VarelaRound'),
+                        const SizedBox(height: 24),
+                        ElevatedButton.icon(
+                          onPressed: _addFolder,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.brandPink,
+                            foregroundColor: Colors.white,
+                          ),
+                          icon: const Icon(Icons.add_rounded),
+                          label: const Text(
+                            'Add Folder',
+                            style: TextStyle(fontFamily: 'VarelaRound'),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              )
+                )
               : ListView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.all(16),
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      color: AppTheme.info.withAlpha((0.1 * 255).round()),
-                      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                      border: Border.all(
-                        color: AppTheme.info.withAlpha((0.3 * 255).round()),
-                        width: 0.5,
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.all(16),
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppTheme.info.withAlpha((0.1 * 255).round()),
+                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                        border: Border.all(
+                          color: AppTheme.info.withAlpha((0.3 * 255).round()),
+                          width: 0.5,
+                        ),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.info_rounded,
+                              size: 20,
+                              color: AppTheme.info,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'Songs in these folders will not appear in your library',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.white.withAlpha((0.7 * 255).round()),
+                                  fontFamily: 'VarelaRound',
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.info_rounded,
-                            size: 20,
-                            color: AppTheme.info,
+                    const SizedBox(height: 16),
+
+                    ..._excludedFolders.map((folder) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white.withAlpha((0.05 * 255).round()),
+                            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                            border: Border.all(
+                              color: Colors.white.withAlpha((0.1 * 255).round()),
+                              width: 0.5,
+                            ),
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              'Songs in these folders will not appear in your library',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Colors.white.withAlpha(
-                                  (0.7 * 255).round(),
-                                ),
+                          child: ListTile(
+                            leading: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: AppTheme.brandPink.withAlpha((0.15 * 255).round()),
+                                borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                              ),
+                              child: Icon(
+                                Icons.folder_off_rounded,
+                                color: AppTheme.brandPink,
+                                size: 20,
+                              ),
+                            ),
+                            title: Text(
+                              folder,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.white,
                                 fontFamily: 'VarelaRound',
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  ..._excludedFolders.map((folder) {
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white.withAlpha((0.05 * 255).round()),
-                          borderRadius: BorderRadius.circular(
-                            AppTheme.radiusMd,
-                          ),
-                          border: Border.all(
-                            color: Colors.white.withAlpha((0.1 * 255).round()),
-                            width: 0.5,
+                            trailing: IconButton(
+                              icon: Icon(
+                                Icons.delete_rounded,
+                                color: Colors.white.withAlpha((0.5 * 255).round()),
+                              ),
+                              tooltip: 'Remove',
+                              onPressed: () => _removeFolder(folder),
+                            ),
                           ),
                         ),
-                        child: ListTile(
-                          leading: Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: AppTheme.brandPink.withAlpha(
-                                (0.15 * 255).round(),
-                              ),
-                              borderRadius: BorderRadius.circular(
-                                AppTheme.radiusSm,
-                              ),
-                            ),
-                            child: Icon(
-                              Icons.folder_off_rounded,
-                              color: AppTheme.brandPink,
-                              size: 20,
-                            ),
-                          ),
-                          title: Text(
-                            folder,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.white,
-                              fontFamily: 'VarelaRound',
-                            ),
-                          ),
-                          trailing: IconButton(
-                            icon: Icon(
-                              Icons.delete_rounded,
-                              color: Colors.white.withAlpha(
-                                (0.5 * 255).round(),
-                              ),
-                            ),
-                            tooltip: 'Remove',
-                            onPressed: () => _removeFolder(folder),
-                          ),
-                        ),
-                      ),
-                    );
-                  }),
-                ],
-              ),
-      floatingActionButton:
-          _excludedFolders.isNotEmpty
-              ? FloatingActionButton(
-                onPressed: _addFolder,
-                tooltip: 'Add Folder',
-                backgroundColor: AppTheme.brandPink,
-                foregroundColor: Colors.white,
-                child: const Icon(Icons.add_rounded),
-              )
-              : null,
+                      );
+                    }),
+                  ],
+                ),
+      floatingActionButton: _excludedFolders.isNotEmpty
+          ? FloatingActionButton(
+              onPressed: _addFolder,
+              tooltip: 'Add Folder',
+              backgroundColor: AppTheme.brandPink,
+              foregroundColor: Colors.white,
+              child: const Icon(Icons.add_rounded),
+            )
+          : null,
     );
   }
 }

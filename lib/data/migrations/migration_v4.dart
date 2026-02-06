@@ -17,7 +17,9 @@ class MigrationV4 {
 
       //add context column to track listening context
       if (!existingColumns.contains('context')) {
-        await db.execute('ALTER TABLE recent_plays ADD COLUMN context TEXT');
+        await db.execute(
+          'ALTER TABLE recent_plays ADD COLUMN context TEXT',
+        );
       }
 
       debugPrint('SonoDatabase: Migration v4 completed successfully');
