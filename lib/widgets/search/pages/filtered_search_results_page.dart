@@ -9,6 +9,7 @@ import 'package:sono/widgets/global/cached_artwork_image.dart';
 import 'package:sono/widgets/library/artist_artwork_widget.dart';
 import 'package:sono/widgets/player/sono_player.dart';
 import 'package:sono/styles/app_theme.dart';
+import 'package:sono/widgets/library/album_artist_text.dart';
 
 class FilteredSearchResultsPage extends StatefulWidget {
   /// Type of results to display
@@ -204,19 +205,18 @@ class _FilteredSearchResultsPageState extends State<FilteredSearchResultsPage> {
                       color: Colors.white,
                     ),
                   ),
-                  if (album.artist != null) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      album.artist!,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: AppTheme.fontBody,
-                        fontFamily: 'VarelaRound',
-                        color: Colors.white.withValues(alpha: 0.7),
-                      ),
+                  const SizedBox(height: 2),
+                  AlbumArtistText(
+                    albumId: album.id,
+                    fallbackArtist: album.artist,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: AppTheme.fontBody,
+                      fontFamily: 'VarelaRound',
+                      color: Colors.white.withValues(alpha: 0.7),
                     ),
-                  ],
+                  ),
                 ],
               ),
             ),

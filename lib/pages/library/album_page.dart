@@ -33,6 +33,7 @@ class _AlbumPageState extends State<AlbumPage> {
   final Map<String, ArtistModel> _artistLookup =
       {}; //artist name (lowercase) -> ArtistModel
   bool _isAlbumFavorite = false;
+  String? _albumArtist; //true album artist from song metadata
 
   @override
   void initState() {
@@ -113,6 +114,29 @@ class _AlbumPageState extends State<AlbumPage> {
     );
   }
 
+  //extract album artist from song metadata
+  String? _extractAlbumArtist(List<SongModel> songs) {
+    if (songs.isEmpty) return null;
+
+    //try to get album_artist from first songs metadata
+    try {
+      final albumArtistFromMetadata = songs.first.getMap["album_artist"];
+      if (albumArtistFromMetadata != null &&
+          albumArtistFromMetadata.toString().isNotEmpty &&
+          albumArtistFromMetadata.toString().toLowerCase() != 'unknown' &&
+          albumArtistFromMetadata.toString() != '<unknown>') {
+        return albumArtistFromMetadata.toString();
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('Error extracting album_artist: $e');
+      }
+    }
+
+    //fallback to albums artist field
+    return widget.album.artist;
+  }
+
   void _loadArtists() async {
     try {
       //query all artists
@@ -121,6 +145,11 @@ class _AlbumPageState extends State<AlbumPage> {
       //build lookup map: artist name (lowercase) => ArtistModel
       for (final artist in allArtists) {
         _artistLookup[artist.artist.toLowerCase()] = artist;
+      }
+
+      //trigger rebuild to show artist avatars with correct IDs
+      if (mounted) {
+        setState(() {});
       }
     } catch (e) {
       if (kDebugMode) {
@@ -174,6 +203,7 @@ class _AlbumPageState extends State<AlbumPage> {
 
             setState(() {
               _loadedSongs = songs;
+              _albumArtist = _extractAlbumArtist(songs);
             });
 
             //preload artwork => better scrolling
@@ -262,7 +292,7 @@ class _AlbumPageState extends State<AlbumPage> {
 
   void _showArtistsModal() {
     final artists = ArtistStringUtils.splitArtists(
-      widget.album.artist ?? 'Unknown',
+      _albumArtist ?? widget.album.artist ?? 'Unknown',
     );
 
     if (artists.length == 1) {
@@ -530,7 +560,7 @@ class _AlbumPageState extends State<AlbumPage> {
   }
 
   void _openLastFmLink() async {
-    final artist = widget.album.artist ?? '';
+    final artist = _albumArtist ?? widget.album.artist ?? '';
     final album = widget.album.album;
 
     if (artist.isEmpty) {
@@ -786,7 +816,7 @@ class _AlbumPageState extends State<AlbumPage> {
 
   Widget _buildArtistAvatars() {
     final artists = ArtistStringUtils.splitArtists(
-      widget.album.artist ?? 'Unknown',
+      _albumArtist ?? widget.album.artist ?? 'Unknown',
     );
     final displayArtists = artists.take(2).toList();
 
@@ -1014,7 +1044,7 @@ class _AlbumPageState extends State<AlbumPage> {
                       Expanded(
                         child: Text(
                           ArtistStringUtils.getShortDisplay(
-                            widget.album.artist ?? 'Unknown Artist',
+                            _albumArtist ?? widget.album.artist ?? 'Unknown Artist',
                           ),
                           style: AppStyles.sonoPlayerArtist.copyWith(
                             fontSize: 16,

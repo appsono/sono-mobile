@@ -13,7 +13,6 @@ import 'package:flutter/material.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:sono/utils/audio_filter_utils.dart';
-import 'package:sono/utils/artist_string_utils.dart';
 import 'package:sono/widgets/global/bottom_sheet.dart';
 import 'package:sono/data/models/playlist_model.dart' as db;
 import 'package:sono/services/playlist/playlist_service.dart';
@@ -27,6 +26,7 @@ import 'package:sono/styles/app_theme.dart';
 import 'package:sono/widgets/global/cached_artwork_image.dart';
 import 'package:sono_refresh/sono_refresh.dart';
 import 'package:sono/widgets/library/artist_artwork_widget.dart';
+import 'package:sono/widgets/library/album_artist_text.dart';
 
 enum ListItemType { song, album, artist, playlist, genre, folder }
 
@@ -632,14 +632,13 @@ class _AlbumListTile extends StatelessWidget {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
-      subtitle: Text(
-        ArtistStringUtils.getShortDisplay(
-          album.artist ?? 'Unknown Artist',
-          maxArtists: 2,
-        ),
+      subtitle: AlbumArtistText(
+        albumId: album.id,
+        fallbackArtist: album.artist,
         style: AppStyles.sonoListItemSubtitle,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
+        maxArtists: 2,
       ),
       onTap: onTap,
       contentPadding: const EdgeInsets.symmetric(

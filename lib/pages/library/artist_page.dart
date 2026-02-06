@@ -4,6 +4,7 @@ import 'package:on_audio_query/on_audio_query.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:sono/services/utils/favorites_service.dart';
 import 'package:sono/services/utils/artwork_cache_service.dart';
+import 'package:sono/services/utils/album_artist_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:sono/utils/error_handler.dart';
@@ -499,10 +500,16 @@ class _ArtistPageState extends State<ArtistPage> {
       final singles = <AlbumModel>[];
       final appearsOn = <AlbumModel>[];
 
+      final albumArtistService = AlbumArtistService();
+
       for (final album in artistAlbums) {
-        if (album.artist != null &&
-            getPrimaryArtist(album.artist) !=
-                getPrimaryArtist(widget.artistName)) {
+        final properAlbumArtist = await albumArtistService.getAlbumArtist(
+          album.id,
+          album.artist,
+        );
+
+        if (getPrimaryArtist(properAlbumArtist) !=
+            getPrimaryArtist(widget.artistName)) {
           appearsOn.add(album);
         } else {
           //albums & EPs: 4+ songs ONLY, Singles: 1-3 songs

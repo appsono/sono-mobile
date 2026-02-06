@@ -7,6 +7,7 @@ import 'package:sono/styles/app_theme.dart';
 import 'package:sono/pages/library/album_page.dart';
 import 'package:sono/pages/library/artist_page.dart';
 import 'package:sono/widgets/library/artist_artwork_widget.dart';
+import 'package:sono/widgets/library/album_artist_text.dart';
 
 class HomePageSongItem extends StatelessWidget {
   final SongModel song;
@@ -141,8 +142,9 @@ class HomePageAlbumItem extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-          Text(
-            album.artist ?? "Unknown Artist",
+          AlbumArtistText(
+            albumId: album.id,
+            fallbackArtist: album.artist,
             style: AppStyles.sonoPlayerArtist.copyWith(
               fontSize: AppTheme.responsiveFontSize(context, 10, min: 9),
             ),
