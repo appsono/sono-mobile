@@ -1044,7 +1044,9 @@ class _AlbumPageState extends State<AlbumPage> {
                       Expanded(
                         child: Text(
                           ArtistStringUtils.getShortDisplay(
-                            _albumArtist ?? widget.album.artist ?? 'Unknown Artist',
+                            _albumArtist ??
+                                widget.album.artist ??
+                                'Unknown Artist',
                           ),
                           style: AppStyles.sonoPlayerArtist.copyWith(
                             fontSize: 16,

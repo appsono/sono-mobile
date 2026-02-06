@@ -70,7 +70,8 @@ class AlbumArtistService {
   /// Preload album artists for a list of albums
   /// Useful: list views => to load album artists in background
   Future<void> preloadAlbumArtists(List<int> albumIds) async {
-    final uncachedIds = albumIds.where((id) => !_cache.containsKey(id)).toList();
+    final uncachedIds =
+        albumIds.where((id) => !_cache.containsKey(id)).toList();
 
     if (uncachedIds.isEmpty) return;
 
@@ -78,13 +79,11 @@ class AlbumArtistService {
     const batchSize = 10;
     for (var i = 0; i < uncachedIds.length; i += batchSize) {
       final batch = uncachedIds.skip(i).take(batchSize);
-      await Future.wait(
-        batch.map((id) => getAlbumArtist(id, null)),
-      );
+      await Future.wait(batch.map((id) => getAlbumArtist(id, null)));
     }
   }
 
-  /// Clear the cache 
+  /// Clear the cache
   /// (useful for refresh)
   void clearCache() {
     _cache.clear();

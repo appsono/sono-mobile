@@ -70,7 +70,6 @@ class _ArtistPageState extends State<ArtistPage> {
   String? _popularSongsError;
   int? _sonoMonthlyListeners;
 
-
   @override
   void initState() {
     super.initState();
@@ -627,7 +626,9 @@ class _ArtistPageState extends State<ArtistPage> {
 
     try {
       final primaryArtist = _getArtistNameForAPI(widget.artistName);
-      debugPrint('ArtistPage: Fetching popular songs for: $primaryArtist (forceRefresh: $forceRefresh)');
+      debugPrint(
+        'ArtistPage: Fetching popular songs for: $primaryArtist (forceRefresh: $forceRefresh)',
+      );
 
       final artistData = await _artistDataRepository.getArtistData(
         primaryArtist,
@@ -635,15 +636,23 @@ class _ArtistPageState extends State<ArtistPage> {
       );
 
       if (artistData != null && mounted) {
-        debugPrint('ArtistPage: Got ${artistData.topSongs.length} songs from API');
-        debugPrint('ArtistPage: Monthly listeners: ${artistData.monthlyListeners}');
+        debugPrint(
+          'ArtistPage: Got ${artistData.topSongs.length} songs from API',
+        );
+        debugPrint(
+          'ArtistPage: Monthly listeners: ${artistData.monthlyListeners}',
+        );
 
         //check if cache is corrupted (empty songs or empty titles)
-        final hasValidSongs = artistData.topSongs.any((song) => song.title.isNotEmpty);
+        final hasValidSongs = artistData.topSongs.any(
+          (song) => song.title.isNotEmpty,
+        );
 
         //if cache returned 0 songs or corrupted data => force refresh
         if (!forceRefresh && (artistData.topSongs.isEmpty || !hasValidSongs)) {
-          debugPrint('ArtistPage: Cache has invalid data (${artistData.topSongs.length} songs, valid: $hasValidSongs), forcing fresh fetch');
+          debugPrint(
+            'ArtistPage: Cache has invalid data (${artistData.topSongs.length} songs, valid: $hasValidSongs), forcing fresh fetch',
+          );
           return _fetchPopularSongs(forceRefresh: true);
         }
 
@@ -653,20 +662,29 @@ class _ArtistPageState extends State<ArtistPage> {
           _allArtistSongs,
         );
 
-        debugPrint('ArtistPage: Matched ${matchedSongs.length} songs with library');
-        debugPrint('ArtistPage: Songs in library: ${matchedSongs.where((s) => s.isInLibrary).length}');
+        debugPrint(
+          'ArtistPage: Matched ${matchedSongs.length} songs with library',
+        );
+        debugPrint(
+          'ArtistPage: Songs in library: ${matchedSongs.where((s) => s.isInLibrary).length}',
+        );
 
         //validate matched songs have proper data
-        final validSongs = matchedSongs.where((song) {
-          if (song.title.isEmpty) {
-            debugPrint('ArtistPage: WARNING - Song with empty title: ${song.toJson()}');
-            return false;
-          }
-          return true;
-        }).toList();
+        final validSongs =
+            matchedSongs.where((song) {
+              if (song.title.isEmpty) {
+                debugPrint(
+                  'ArtistPage: WARNING - Song with empty title: ${song.toJson()}',
+                );
+                return false;
+              }
+              return true;
+            }).toList();
 
         if (validSongs.length != matchedSongs.length) {
-          debugPrint('ArtistPage: Filtered out ${matchedSongs.length - validSongs.length} songs with empty titles');
+          debugPrint(
+            'ArtistPage: Filtered out ${matchedSongs.length - validSongs.length} songs with empty titles',
+          );
         }
 
         setState(() {
@@ -697,11 +715,12 @@ class _ArtistPageState extends State<ArtistPage> {
   /// Builds a playlist starting with popular songs in library order,
   /// followed by all remaining artist songs in random order.
   List<SongModel> _buildArtistPlaylist() {
-    final popularLocalSongs = _popularSongs
-        .where((s) => s.localSong != null)
-        .take(5)
-        .map((s) => s.localSong!)
-        .toList();
+    final popularLocalSongs =
+        _popularSongs
+            .where((s) => s.localSong != null)
+            .take(5)
+            .map((s) => s.localSong!)
+            .toList();
     final popularIds = popularLocalSongs.map((s) => s.id).toSet();
     final remainingSongs = List<SongModel>.from(
       _allArtistSongs.where((s) => !popularIds.contains(s.id)),
@@ -712,7 +731,9 @@ class _ArtistPageState extends State<ArtistPage> {
   void _onPopularSongTap(PopularSong song) {
     if (song.localSong != null) {
       //find index in all artist songs
-      final index = _allArtistSongs.indexWhere((s) => s.id == song.localSong!.id);
+      final index = _allArtistSongs.indexWhere(
+        (s) => s.id == song.localSong!.id,
+      );
       if (index >= 0) {
         SonoPlayer().playNewPlaylist(
           _allArtistSongs,
@@ -899,9 +920,10 @@ class _ArtistPageState extends State<ArtistPage> {
     if (bio.isEmpty) return;
 
     final stats = _artistInfo?['stats'];
-    final playcount = stats != null
-        ? int.tryParse(stats['playcount']?.toString() ?? '0')
-        : null;
+    final playcount =
+        stats != null
+            ? int.tryParse(stats['playcount']?.toString() ?? '0')
+            : null;
 
     AboutModal.show(
       context,
@@ -957,129 +979,136 @@ class _ArtistPageState extends State<ArtistPage> {
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: <Widget>[
               SliverAppBar(
-              expandedHeight: 280.0,
-              floating: false,
-              pinned: true,
-              stretch: true,
-              backgroundColor: AppTheme.backgroundDark,
-              elevation: 0,
-              leading: IconButton(
-                icon: const Icon(
-                  Icons.arrow_back_rounded,
-                  color: AppTheme.textPrimaryDark,
+                expandedHeight: 280.0,
+                floating: false,
+                pinned: true,
+                stretch: true,
+                backgroundColor: AppTheme.backgroundDark,
+                elevation: 0,
+                leading: IconButton(
+                  icon: const Icon(
+                    Icons.arrow_back_rounded,
+                    color: AppTheme.textPrimaryDark,
+                  ),
+                  onPressed: () => Navigator.of(context).pop(),
                 ),
-                onPressed: () => Navigator.of(context).pop(),
-              ),
-              flexibleSpace: LayoutBuilder(
-                builder: (context, constraints) {
-                  //calculate collapse ratio: 1.0 = expanded, 0.0 = collapsed
-                  final expandRatio = ((constraints.maxHeight - kToolbarHeight) /
-                      (280.0 - kToolbarHeight)).clamp(0.0, 1.0);
+                flexibleSpace: LayoutBuilder(
+                  builder: (context, constraints) {
+                    //calculate collapse ratio: 1.0 = expanded, 0.0 = collapsed
+                    final expandRatio = ((constraints.maxHeight -
+                                kToolbarHeight) /
+                            (280.0 - kToolbarHeight))
+                        .clamp(0.0, 1.0);
 
-                  //crossfade: big title fades out while collapsed title fades in
-                  final bigTitleOpacity = ((expandRatio - 0.3) / 0.3).clamp(0.0, 1.0);
-                  final collapsedTitleOpacity = ((0.7 - expandRatio) / 0.2).clamp(0.0, 1.0);
+                    //crossfade: big title fades out while collapsed title fades in
+                    final bigTitleOpacity = ((expandRatio - 0.3) / 0.3).clamp(
+                      0.0,
+                      1.0,
+                    );
+                    final collapsedTitleOpacity = ((0.7 - expandRatio) / 0.2)
+                        .clamp(0.0, 1.0);
 
-                  return FlexibleSpaceBar(
-                    title: expandRatio < 0.7
-                        ? Opacity(
-                            opacity: collapsedTitleOpacity,
-                            child: Text(
-                              widget.artistName,
-                              style: const TextStyle(
-                                fontFamily: AppTheme.fontFamily,
-                                color: AppTheme.textPrimaryDark,
-                                fontSize: AppTheme.fontTitle,
-                                fontWeight: FontWeight.bold,
+                    return FlexibleSpaceBar(
+                      title:
+                          expandRatio < 0.7
+                              ? Opacity(
+                                opacity: collapsedTitleOpacity,
+                                child: Text(
+                                  widget.artistName,
+                                  style: const TextStyle(
+                                    fontFamily: AppTheme.fontFamily,
+                                    color: AppTheme.textPrimaryDark,
+                                    fontSize: AppTheme.fontTitle,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              )
+                              : null,
+                      titlePadding: const EdgeInsets.only(left: 56, bottom: 16),
+                      background: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          Hero(
+                            tag: 'artist-artwork-${widget.artistId}',
+                            child: ArtistArtworkWidget(
+                              artistName: widget.artistName,
+                              artistId: widget.artistId,
+                              fit: BoxFit.cover,
+                              placeholderWidget: _buildArtworkPlaceholder(),
+                            ),
+                          ),
+                          DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  Colors.black.withValues(alpha: 0.3),
+                                  Colors.black.withValues(alpha: 0.7),
+                                  AppTheme.backgroundDark,
+                                ],
+                                stops: [0.0, 0.7, 1.0],
                               ),
                             ),
-                          )
-                        : null,
-                    titlePadding: const EdgeInsets.only(left: 56, bottom: 16),
-                    background: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        Hero(
-                          tag: 'artist-artwork-${widget.artistId}',
-                          child: ArtistArtworkWidget(
-                            artistName: widget.artistName,
-                            artistId: widget.artistId,
-                            fit: BoxFit.cover,
-                            placeholderWidget: _buildArtworkPlaceholder(),
                           ),
-                        ),
-                        DecoratedBox(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Colors.black.withValues(alpha: 0.3),
-                                Colors.black.withValues(alpha: 0.7),
-                                AppTheme.backgroundDark,
-                              ],
-                              stops: [0.0, 0.7, 1.0],
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          bottom: AppTheme.spacing,
-                          left: AppTheme.spacing,
-                          right: AppTheme.spacing,
-                          child: Opacity(
-                            opacity: bigTitleOpacity,
-                            child: Text(
-                              widget.artistName,
-                              style: const TextStyle(
-                                fontFamily: AppTheme.fontFamily,
-                                color: AppTheme.textPrimaryDark,
-                                fontSize: 32,
-                                fontWeight: FontWeight.bold,
+                          Positioned(
+                            bottom: AppTheme.spacing,
+                            left: AppTheme.spacing,
+                            right: AppTheme.spacing,
+                            child: Opacity(
+                              opacity: bigTitleOpacity,
+                              child: Text(
+                                widget.artistName,
+                                style: const TextStyle(
+                                  fontFamily: AppTheme.fontFamily,
+                                  color: AppTheme.textPrimaryDark,
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-            //actions row
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppTheme.spacing,
-                  vertical: AppTheme.spacingMd,
-                ),
-                child: _buildActionsRow(),
-              ),
-            ),
-            //popular songs section
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.only(top: AppTheme.spacing),
-                child: PopularSongsSection(
-                  songs: _popularSongs,
-                  isLoading: _isLoadingPopularSongs,
-                  errorMessage: _popularSongsError,
-                  onSongTap: _onPopularSongTap,
-                  onMoreTap: _showPopularSongOptions,
+                        ],
+                      ),
+                    );
+                  },
                 ),
               ),
-            ),
-            if (_isLoading)
-              _buildArtistPageSkeleton()
-            else ...[
-              _buildAlbumsSection(),
-              _buildDiscographySection("Singles", _singles, 165, 110),
-              _buildDiscographySection("Appears On", _appearsOn, 165, 110),
-              _buildAboutSection(),
+              //actions row
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.spacing,
+                    vertical: AppTheme.spacingMd,
+                  ),
+                  child: _buildActionsRow(),
+                ),
+              ),
+              //popular songs section
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: AppTheme.spacing),
+                  child: PopularSongsSection(
+                    songs: _popularSongs,
+                    isLoading: _isLoadingPopularSongs,
+                    errorMessage: _popularSongsError,
+                    onSongTap: _onPopularSongTap,
+                    onMoreTap: _showPopularSongOptions,
+                  ),
+                ),
+              ),
+              if (_isLoading)
+                _buildArtistPageSkeleton()
+              else ...[
+                _buildAlbumsSection(),
+                _buildDiscographySection("Singles", _singles, 165, 110),
+                _buildDiscographySection("Appears On", _appearsOn, 165, 110),
+                _buildAboutSection(),
+              ],
+              const SliverToBoxAdapter(child: SizedBox(height: 100)),
             ],
-            const SliverToBoxAdapter(child: SizedBox(height: 100)),
-          ],
           ),
         ),
       ),
@@ -1095,10 +1124,7 @@ class _ArtistPageState extends State<ArtistPage> {
           decoration: BoxDecoration(
             color: AppTheme.elevatedSurfaceDark,
             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-            border: Border.all(
-              color: const Color(0xFF3d3d3d),
-              width: 1,
-            ),
+            border: Border.all(color: const Color(0xFF3d3d3d), width: 1),
           ),
           child: Row(
             children: [
@@ -1148,10 +1174,7 @@ class _ArtistPageState extends State<ArtistPage> {
           decoration: BoxDecoration(
             color: AppTheme.elevatedSurfaceDark,
             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-            border: Border.all(
-              color: const Color(0xFF3d3d3d),
-              width: 1,
-            ),
+            border: Border.all(color: const Color(0xFF3d3d3d), width: 1),
           ),
           child: IconButton(
             icon: const Icon(
@@ -1187,17 +1210,13 @@ class _ArtistPageState extends State<ArtistPage> {
                 final expectedContext = "Artist: ${widget.artistName}";
                 final isArtistPlaying =
                     playbackContext == expectedContext &&
-                    (_allArtistSongs.any(
-                          (song) => song.id == currentSong?.id,
-                        ));
+                    (_allArtistSongs.any((song) => song.id == currentSong?.id));
 
                 return Container(
                   height: 48,
                   decoration: BoxDecoration(
                     color: AppTheme.brandPink,
-                    borderRadius: BorderRadius.circular(
-                      AppTheme.radiusMd,
-                    ),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                   ),
                   child: ValueListenableBuilder<bool>(
                     valueListenable: SonoPlayer().isPlaying,
@@ -1348,7 +1367,9 @@ class _ArtistPageState extends State<ArtistPage> {
                         backgroundColor: AppTheme.success,
                         behavior: SnackBarBehavior.floating,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radiusMd,
+                          ),
                         ),
                       ),
                     );
@@ -1403,84 +1424,89 @@ class _ArtistPageState extends State<ArtistPage> {
             ),
           ),
           //show only first 2 albums
-          ..._albums.take(2).map(
-            (album) => Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppTheme.spacing,
-                vertical: AppTheme.spacingSm,
-              ),
-              child: InkWell(
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => AlbumPage(
-                        album: album,
-                        audioQuery: widget.audioQuery,
-                      ),
-                    ),
-                  );
-                },
-                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                child: Row(
-                  children: [
-                    //album artwork
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                      child: SizedBox(
-                        width: 80,
-                        height: 80,
-                        child: QueryArtworkWidget(
-                          id: album.id,
-                          type: ArtworkType.ALBUM,
-                          nullArtworkWidget: Container(
-                            color: AppTheme.elevatedSurfaceDark,
-                            child: const Center(
-                              child: Icon(
-                                Icons.album_rounded,
-                                color: AppTheme.textTertiaryDark,
-                                size: 32,
+          ..._albums
+              .take(2)
+              .map(
+                (album) => Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.spacing,
+                    vertical: AppTheme.spacingSm,
+                  ),
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder:
+                              (context) => AlbumPage(
+                                album: album,
+                                audioQuery: widget.audioQuery,
                               ),
-                            ),
-                          ),
-                          artworkFit: BoxFit.cover,
-                          artworkBorder: BorderRadius.zero,
                         ),
-                      ),
-                    ),
-                    const SizedBox(width: AppTheme.spacingMd),
-                    //album info
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            album.album,
-                            style: const TextStyle(
-                              fontFamily: AppTheme.fontFamily,
-                              color: AppTheme.textPrimaryDark,
-                              fontSize: AppTheme.font,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                    child: Row(
+                      children: [
+                        //album artwork
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radiusSm,
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Album',
-                            style: const TextStyle(
-                              fontFamily: AppTheme.fontFamily,
-                              color: AppTheme.textSecondaryDark,
-                              fontSize: AppTheme.fontSm,
+                          child: SizedBox(
+                            width: 80,
+                            height: 80,
+                            child: QueryArtworkWidget(
+                              id: album.id,
+                              type: ArtworkType.ALBUM,
+                              nullArtworkWidget: Container(
+                                color: AppTheme.elevatedSurfaceDark,
+                                child: const Center(
+                                  child: Icon(
+                                    Icons.album_rounded,
+                                    color: AppTheme.textTertiaryDark,
+                                    size: 32,
+                                  ),
+                                ),
+                              ),
+                              artworkFit: BoxFit.cover,
+                              artworkBorder: BorderRadius.zero,
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(width: AppTheme.spacingMd),
+                        //album info
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                album.album,
+                                style: const TextStyle(
+                                  fontFamily: AppTheme.fontFamily,
+                                  color: AppTheme.textPrimaryDark,
+                                  fontSize: AppTheme.font,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Album',
+                                style: const TextStyle(
+                                  fontFamily: AppTheme.fontFamily,
+                                  color: AppTheme.textSecondaryDark,
+                                  fontSize: AppTheme.fontSm,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ),
           //show all button if more than 2
           if (_albums.length > 2)
             Padding(
@@ -1494,12 +1520,13 @@ class _ArtistPageState extends State<ArtistPage> {
                   onPressed: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (context) => ArtistAlbumsPage(
-                          artistName: widget.artistName,
-                          albums: _albums,
-                          eps: _singles,
-                          audioQuery: widget.audioQuery,
-                        ),
+                        builder:
+                            (context) => ArtistAlbumsPage(
+                              artistName: widget.artistName,
+                              albums: _albums,
+                              eps: _singles,
+                              audioQuery: widget.audioQuery,
+                            ),
                       ),
                     );
                   },
@@ -1507,10 +1534,7 @@ class _ArtistPageState extends State<ArtistPage> {
                     backgroundColor: AppTheme.elevatedSurfaceDark,
                     foregroundColor: AppTheme.textPrimaryDark,
                     elevation: 0,
-                    side: const BorderSide(
-                      color: Color(0xFF3d3d3d),
-                      width: 1,
-                    ),
+                    side: const BorderSide(color: Color(0xFF3d3d3d), width: 1),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                     ),
@@ -1534,9 +1558,10 @@ class _ArtistPageState extends State<ArtistPage> {
 
   Widget _buildAboutSection() {
     final stats = _artistInfo?['stats'];
-    final playcount = stats != null
-        ? int.tryParse(stats['playcount']?.toString() ?? '0')
-        : null;
+    final playcount =
+        stats != null
+            ? int.tryParse(stats['playcount']?.toString() ?? '0')
+            : null;
     final bio = _artistInfo?['bio']?['content']?.toString();
 
     return SliverToBoxAdapter(
@@ -1597,13 +1622,14 @@ class _ArtistPageState extends State<ArtistPage> {
                   padding: const EdgeInsets.only(right: AppTheme.spacing),
                   child: SizedBox(
                     width: itemWidth,
-                    child: album.numOfSongs == 1 && title == "Singles"
-                        ? _buildSingleSongItem(album, itemWidth)
-                        : HomePageAlbumItem(
-                            album: album,
-                            audioQuery: widget.audioQuery,
-                            artworkSize: itemWidth,
-                          ),
+                    child:
+                        album.numOfSongs == 1 && title == "Singles"
+                            ? _buildSingleSongItem(album, itemWidth)
+                            : HomePageAlbumItem(
+                              album: album,
+                              audioQuery: widget.audioQuery,
+                              artworkSize: itemWidth,
+                            ),
                   ),
                 );
               },
@@ -1621,17 +1647,23 @@ class _ArtistPageState extends State<ArtistPage> {
         album.id,
       ),
       builder: (context, snapshot) {
-        final songName = snapshot.hasData && snapshot.data!.isNotEmpty
-            ? snapshot.data!.first.title
-            : album.album;
+        final songName =
+            snapshot.hasData && snapshot.data!.isNotEmpty
+                ? snapshot.data!.first.title
+                : album.album;
 
         return InkWell(
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => AlbumPage(album: album, audioQuery: widget.audioQuery),
-            ),
-          ),
+          onTap:
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder:
+                      (context) => AlbumPage(
+                        album: album,
+                        audioQuery: widget.audioQuery,
+                      ),
+                ),
+              ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,

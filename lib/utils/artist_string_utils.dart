@@ -82,8 +82,8 @@ class ArtistStringUtils {
     int placeholderIndex = 0;
 
     //sort exceptions by length (longest first) to avoid partial matches
-    final sortedExceptions = _exactExceptions.toList()
-      ..sort((a, b) => b.length.compareTo(a.length));
+    final sortedExceptions =
+        _exactExceptions.toList()..sort((a, b) => b.length.compareTo(a.length));
 
     for (final exception in sortedExceptions) {
       //case-insensitive search for exception within the string
@@ -119,13 +119,14 @@ class ArtistStringUtils {
     }
 
     //restore placeholders with original exception artist names
-    artists = artists.map((artist) {
-      String result = artist;
-      placeholders.forEach((placeholder, original) {
-        result = result.replaceAll(placeholder, original);
-      });
-      return result.trim();
-    }).toList();
+    artists =
+        artists.map((artist) {
+          String result = artist;
+          placeholders.forEach((placeholder, original) {
+            result = result.replaceAll(placeholder, original);
+          });
+          return result.trim();
+        }).toList();
 
     return artists;
   }

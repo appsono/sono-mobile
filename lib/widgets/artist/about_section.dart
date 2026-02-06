@@ -54,8 +54,7 @@ class AboutSection extends StatelessWidget {
           const SizedBox(height: AppTheme.spacing),
 
           //stats row
-          if (monthlyListeners != null || totalPlays != null)
-            _buildStatsRow(),
+          if (monthlyListeners != null || totalPlays != null) _buildStatsRow(),
 
           if (monthlyListeners != null || totalPlays != null)
             const SizedBox(height: AppTheme.spacing),

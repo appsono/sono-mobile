@@ -428,167 +428,167 @@ class HomePageState extends State<HomePage>
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: <Widget>[
           SliverAppBar(
-          pinned: true,
-          floating: false,
-          automaticallyImplyLeading: false,
-          backgroundColor: AppTheme.backgroundDark,
-          elevation: 0,
-          toolbarHeight: appBarContentHeight,
-          titleSpacing: 0,
-          title: Builder(
-            builder: (context) {
-              return HomeAppBarContent(
-                key: ValueKey(
-                  'HomeAppBarContent_${widget.isLoggedIn}_${widget.currentUser?['username']}',
-                ),
-                onMenuTap: widget.onMenuTap ?? () {},
-                onNewsTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const AnnouncementsChangelogPage(),
-                    ),
-                  );
-                },
-                onSearchTap: widget.onSearchTap,
-                onSettingsTap: widget.onSettingsTap,
-                toolbarHeight: appBarContentHeight,
-                currentUser: widget.currentUser,
-                isLoggedIn: widget.isLoggedIn,
-              );
-            },
+            pinned: true,
+            floating: false,
+            automaticallyImplyLeading: false,
+            backgroundColor: AppTheme.backgroundDark,
+            elevation: 0,
+            toolbarHeight: appBarContentHeight,
+            titleSpacing: 0,
+            title: Builder(
+              builder: (context) {
+                return HomeAppBarContent(
+                  key: ValueKey(
+                    'HomeAppBarContent_${widget.isLoggedIn}_${widget.currentUser?['username']}',
+                  ),
+                  onMenuTap: widget.onMenuTap ?? () {},
+                  onNewsTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const AnnouncementsChangelogPage(),
+                      ),
+                    );
+                  },
+                  onSearchTap: widget.onSearchTap,
+                  onSettingsTap: widget.onSettingsTap,
+                  toolbarHeight: appBarContentHeight,
+                  currentUser: widget.currentUser,
+                  isLoggedIn: widget.isLoggedIn,
+                );
+              },
+            ),
           ),
-        ),
-        SliverToBoxAdapter(
-          child: ShuffleCreatePlaylistButtons(
-            onShuffleAll: _handleShuffleAll,
-            onCreatePlaylist: widget.onCreatePlaylist ?? () {},
+          SliverToBoxAdapter(
+            child: ShuffleCreatePlaylistButtons(
+              onShuffleAll: _handleShuffleAll,
+              onCreatePlaylist: widget.onCreatePlaylist ?? () {},
+            ),
           ),
-        ),
-        _buildSection<SongModel>(
-          context: context,
-          title: "Recently Added",
-          onSeeAllTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder:
-                    (context) => AllItemsPage(
-                      pageTitle: "All Recently Added",
-                      itemsFuture: AudioFilterUtils.getFilteredSongs(
-                        _audioQuery,
-                        sortType: SongSortType.DATE_ADDED,
+          _buildSection<SongModel>(
+            context: context,
+            title: "Recently Added",
+            onSeeAllTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder:
+                      (context) => AllItemsPage(
+                        pageTitle: "All Recently Added",
+                        itemsFuture: AudioFilterUtils.getFilteredSongs(
+                          _audioQuery,
+                          sortType: SongSortType.DATE_ADDED,
+                          orderType: OrderType.DESC_OR_GREATER,
+                        ),
+                        itemType: ListItemType.song,
+                        audioQuery: _audioQuery,
+                        songSortType: SongSortType.DATE_ADDED,
                         orderType: OrderType.DESC_OR_GREATER,
                       ),
-                      itemType: ListItemType.song,
-                      audioQuery: _audioQuery,
-                      songSortType: SongSortType.DATE_ADDED,
-                      orderType: OrderType.DESC_OR_GREATER,
-                    ),
-              ),
-            );
-          },
-          future: _recentlyAddedSongsPreviewFuture,
-          itemBuilder:
-              (ctx, item, listCtx, idx) => HomePageSongItem(
-                song: item,
-                artworkSize: 70,
-                onSongTap:
-                    (s) => _handleSongTap(
-                      s,
-                      listCtx,
-                      idx,
-                      playbackContext: ": Recently Added",
-                    ),
-              ),
-          itemWidth: 70,
-          listHeight: 125,
-          skeletonLoader: _buildHorizontalSkeletonLoader(
+                ),
+              );
+            },
+            future: _recentlyAddedSongsPreviewFuture,
+            itemBuilder:
+                (ctx, item, listCtx, idx) => HomePageSongItem(
+                  song: item,
+                  artworkSize: 70,
+                  onSongTap:
+                      (s) => _handleSongTap(
+                        s,
+                        listCtx,
+                        idx,
+                        playbackContext: ": Recently Added",
+                      ),
+                ),
             itemWidth: 70,
-            itemHeight: 125,
-            itemCount: 6,
+            listHeight: 125,
+            skeletonLoader: _buildHorizontalSkeletonLoader(
+              itemWidth: 70,
+              itemHeight: 125,
+              itemCount: 6,
+            ),
           ),
-        ),
-        _buildSection<AlbumModel>(
-          context: context,
-          title: "Albums",
-          onSeeAllTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder:
-                    (context) => AllItemsPage(
-                      pageTitle: "All Albums",
-                      itemsFuture: AudioFilterUtils.getFilteredAlbums(
-                        _audioQuery,
-                        sortType: AlbumSortType.ALBUM,
+          _buildSection<AlbumModel>(
+            context: context,
+            title: "Albums",
+            onSeeAllTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder:
+                      (context) => AllItemsPage(
+                        pageTitle: "All Albums",
+                        itemsFuture: AudioFilterUtils.getFilteredAlbums(
+                          _audioQuery,
+                          sortType: AlbumSortType.ALBUM,
+                          orderType: OrderType.ASC_OR_SMALLER,
+                        ),
+                        itemType: ListItemType.album,
+                        audioQuery: _audioQuery,
+                        albumSortType: AlbumSortType.ALBUM,
                         orderType: OrderType.ASC_OR_SMALLER,
                       ),
-                      itemType: ListItemType.album,
-                      audioQuery: _audioQuery,
-                      albumSortType: AlbumSortType.ALBUM,
-                      orderType: OrderType.ASC_OR_SMALLER,
-                    ),
-              ),
-            );
-          },
-          future: _albumsPreviewFuture,
-          itemBuilder:
-              (ctx, item, listCtx, idx) => HomePageAlbumItem(
-                album: item,
-                artworkSize: 110,
-                audioQuery: _audioQuery,
-              ),
-          itemWidth: 110,
-          listHeight: 165,
-          skeletonLoader: _buildHorizontalSkeletonLoader(
+                ),
+              );
+            },
+            future: _albumsPreviewFuture,
+            itemBuilder:
+                (ctx, item, listCtx, idx) => HomePageAlbumItem(
+                  album: item,
+                  artworkSize: 110,
+                  audioQuery: _audioQuery,
+                ),
             itemWidth: 110,
-            itemHeight: 165,
-            itemCount: 4,
+            listHeight: 165,
+            skeletonLoader: _buildHorizontalSkeletonLoader(
+              itemWidth: 110,
+              itemHeight: 165,
+              itemCount: 4,
+            ),
           ),
-        ),
-        _buildSection<ArtistModel>(
-          context: context,
-          title: "Artists",
-          onSeeAllTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder:
-                    (context) => AllItemsPage(
-                      pageTitle: "All Artists",
-                      itemsFuture: AudioFilterUtils.getFilteredArtists(
-                        _audioQuery,
-                        sortType: ArtistSortType.ARTIST,
+          _buildSection<ArtistModel>(
+            context: context,
+            title: "Artists",
+            onSeeAllTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder:
+                      (context) => AllItemsPage(
+                        pageTitle: "All Artists",
+                        itemsFuture: AudioFilterUtils.getFilteredArtists(
+                          _audioQuery,
+                          sortType: ArtistSortType.ARTIST,
+                          orderType: OrderType.ASC_OR_SMALLER,
+                        ),
+                        itemType: ListItemType.artist,
+                        audioQuery: _audioQuery,
+                        artistSortType: ArtistSortType.ARTIST,
                         orderType: OrderType.ASC_OR_SMALLER,
                       ),
-                      itemType: ListItemType.artist,
-                      audioQuery: _audioQuery,
-                      artistSortType: ArtistSortType.ARTIST,
-                      orderType: OrderType.ASC_OR_SMALLER,
-                    ),
-              ),
-            );
-          },
-          future: _artistsPreviewFuture,
-          itemBuilder:
-              (ctx, item, listCtx, idx) => HomePageArtistItem(
-                artist: item,
-                diameter: 80,
-                audioQuery: _audioQuery,
-              ),
-          itemWidth: 80,
-          listHeight: 130,
-          skeletonLoader: _buildCircularSkeletonLoader(
-            diameter: 80,
-            itemCount: 5,
+                ),
+              );
+            },
+            future: _artistsPreviewFuture,
+            itemBuilder:
+                (ctx, item, listCtx, idx) => HomePageArtistItem(
+                  artist: item,
+                  diameter: 80,
+                  audioQuery: _audioQuery,
+                ),
+            itemWidth: 80,
+            listHeight: 130,
+            skeletonLoader: _buildCircularSkeletonLoader(
+              diameter: 80,
+              itemCount: 5,
+            ),
           ),
-        ),
-        _buildAllSongsHeader(),
-        _buildAllSongsList(context),
-        //if (_hasMoreSongs) _buildLoadMoreButton(),
-        const SliverToBoxAdapter(child: SizedBox(height: 150)),
-      ],
+          _buildAllSongsHeader(),
+          _buildAllSongsList(context),
+          //if (_hasMoreSongs) _buildLoadMoreButton(),
+          const SliverToBoxAdapter(child: SizedBox(height: 150)),
+        ],
       ),
     );
   }

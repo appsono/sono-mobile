@@ -327,102 +327,102 @@ class _AllItemsPageState extends State<AllItemsPage> {
                   onPressed: () => Navigator.of(context).pop(),
                 ),
               ),
-            //content list
-            FutureBuilder<List<dynamic>>(
-              future: _itemsFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) => _buildSkeletonListItem(),
-                      childCount: 15,
-                    ),
-                  );
-                }
-                if (snapshot.hasError) {
-                  return SliverFillRemaining(
-                    child: Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(AppTheme.spacing),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.error_outline_rounded,
-                              size: AppTheme.iconHero,
-                              color: AppTheme.textTertiaryDark,
-                            ),
-                            const SizedBox(height: AppTheme.spacing),
-                            Text(
-                              'Error loading items',
-                              style: TextStyle(
-                                color: AppTheme.textSecondaryDark,
-                                fontSize: AppTheme.font,
-                              ),
-                            ),
-                            const SizedBox(height: AppTheme.spacingSm),
-                            Text(
-                              '${snapshot.error}',
-                              style: TextStyle(
+              //content list
+              FutureBuilder<List<dynamic>>(
+                future: _itemsFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) => _buildSkeletonListItem(),
+                        childCount: 15,
+                      ),
+                    );
+                  }
+                  if (snapshot.hasError) {
+                    return SliverFillRemaining(
+                      child: Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(AppTheme.spacing),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.error_outline_rounded,
+                                size: AppTheme.iconHero,
                                 color: AppTheme.textTertiaryDark,
-                                fontSize: AppTheme.fontSm,
                               ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
+                              const SizedBox(height: AppTheme.spacing),
+                              Text(
+                                'Error loading items',
+                                style: TextStyle(
+                                  color: AppTheme.textSecondaryDark,
+                                  fontSize: AppTheme.font,
+                                ),
+                              ),
+                              const SizedBox(height: AppTheme.spacingSm),
+                              Text(
+                                '${snapshot.error}',
+                                style: TextStyle(
+                                  color: AppTheme.textTertiaryDark,
+                                  fontSize: AppTheme.fontSm,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  );
-                }
-                if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return SliverFillRemaining(
-                    child: Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(AppTheme.spacing),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              _getEmptyIcon(),
-                              size: AppTheme.iconHero,
-                              color: AppTheme.textTertiaryDark,
-                            ),
-                            const SizedBox(height: AppTheme.spacing),
-                            Text(
-                              _getEmptyMessage(),
-                              style: TextStyle(
-                                color: AppTheme.textSecondaryDark,
-                                fontSize: AppTheme.font,
+                    );
+                  }
+                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return SliverFillRemaining(
+                      child: Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(AppTheme.spacing),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                _getEmptyIcon(),
+                                size: AppTheme.iconHero,
+                                color: AppTheme.textTertiaryDark,
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: AppTheme.spacing),
+                              Text(
+                                _getEmptyMessage(),
+                                style: TextStyle(
+                                  color: AppTheme.textSecondaryDark,
+                                  fontSize: AppTheme.font,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  );
-                }
+                    );
+                  }
 
-                _resolvedItems = snapshot.data!;
-                return SliverPadding(
-                  padding: const EdgeInsets.only(bottom: 100),
-                  sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final item = _resolvedItems![index];
-                        return RepaintBoundary(
-                          child: _buildListItem(context, item),
-                        );
-                      },
-                      childCount: _resolvedItems!.length,
-                      addAutomaticKeepAlives: false,
-                      addRepaintBoundaries: false,
+                  _resolvedItems = snapshot.data!;
+                  return SliverPadding(
+                    padding: const EdgeInsets.only(bottom: 100),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          final item = _resolvedItems![index];
+                          return RepaintBoundary(
+                            child: _buildListItem(context, item),
+                          );
+                        },
+                        childCount: _resolvedItems!.length,
+                        addAutomaticKeepAlives: false,
+                        addRepaintBoundaries: false,
+                      ),
                     ),
-                  ),
-                );
-              },
-            ),
-          ],
+                  );
+                },
+              ),
+            ],
           ),
         ),
       ),

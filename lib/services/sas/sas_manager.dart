@@ -934,7 +934,6 @@ class SASManager {
       } finally {
         _pendingClockPong = null;
       }
-
     }
 
     //compute median offset
@@ -1241,7 +1240,8 @@ class SASManager {
 
       //compute approximate position NOW so the load issues a range request
       //at the right offset => avoids a post-load seek and its rebuffer penalty
-      final hostNowAtLoad = DateTime.now().millisecondsSinceEpoch + _clockOffset;
+      final hostNowAtLoad =
+          DateTime.now().millisecondsSinceEpoch + _clockOffset;
       final approxPosition = (hostNowAtLoad - broadcastAt).clamp(
         0,
         durationMs ?? 999999999,
@@ -1452,16 +1452,17 @@ class SASManager {
 
       //sync queue to player so QueueView displays it
       _sonoPlayer.sasCurrentIndex = currentIndex;
-      _sonoPlayer.queueNotifier.value = clientQueue.value.map((item) {
-        return MediaItem(
-          id: item['songId'].toString(),
-          title: item['title'] ?? 'Unknown',
-          artist: item['artist'],
-          album: item['album'],
-          duration: Duration(milliseconds: item['duration'] ?? 0),
-          extras: {'songId': item['songId']},
-        );
-      }).toList();
+      _sonoPlayer.queueNotifier.value =
+          clientQueue.value.map((item) {
+            return MediaItem(
+              id: item['songId'].toString(),
+              title: item['title'] ?? 'Unknown',
+              artist: item['artist'],
+              album: item['album'],
+              duration: Duration(milliseconds: item['duration'] ?? 0),
+              extras: {'songId': item['songId']},
+            );
+          }).toList();
 
       if (kDebugMode) {
         debugPrint(

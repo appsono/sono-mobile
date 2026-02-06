@@ -63,7 +63,8 @@ class ArtistNavigation {
       //handles cases where "Tyler, The Creator" was split into "Tyler"
       //but we are searching for the full name
       artist ??= artists.cast<ArtistModel?>().firstWhere(
-        (a) => artistName.toLowerCase().startsWith('${a!.artist.toLowerCase()},'),
+        (a) =>
+            artistName.toLowerCase().startsWith('${a!.artist.toLowerCase()},'),
         orElse: () => null,
       );
 

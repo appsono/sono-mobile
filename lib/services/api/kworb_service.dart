@@ -10,7 +10,11 @@ class KworbServiceException implements Exception {
   final int? statusCode;
   final bool isOffline;
 
-  KworbServiceException(this.message, {this.statusCode, this.isOffline = false});
+  KworbServiceException(
+    this.message, {
+    this.statusCode,
+    this.isOffline = false,
+  });
 
   @override
   String toString() => 'KworbServiceException: $message';
@@ -85,16 +89,10 @@ class KworbService {
       return response;
     } on SocketException catch (e) {
       _logError('Network error', e);
-      throw KworbServiceException(
-        'No internet connection',
-        isOffline: true,
-      );
+      throw KworbServiceException('No internet connection', isOffline: true);
     } on HttpException catch (e) {
       _logError('HTTP error', e);
-      throw KworbServiceException(
-        'Network error',
-        isOffline: true,
-      );
+      throw KworbServiceException('Network error', isOffline: true);
     } catch (e) {
       if (e is KworbServiceException) rethrow;
       _logError('Unexpected error', e);

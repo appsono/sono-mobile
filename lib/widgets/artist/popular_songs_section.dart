@@ -55,9 +55,11 @@ class PopularSongsSection extends StatelessWidget {
         const SizedBox(height: AppTheme.spacingMd),
 
         //song list
-        ...songs.asMap().entries.take(5).map(
-          (entry) => _buildSongTile(entry.key + 1, entry.value),
-        ),
+        ...songs
+            .asMap()
+            .entries
+            .take(5)
+            .map((entry) => _buildSongTile(entry.key + 1, entry.value)),
       ],
     );
   }
@@ -89,10 +91,12 @@ class PopularSongsSection extends StatelessWidget {
     NumberFormat numberFormat,
     bool isCurrentSong,
   ) {
-    final titleColor = isCurrentSong ? AppTheme.brandPink : AppTheme.textPrimaryDark;
-    final subtitleColor = isCurrentSong
-        ? AppTheme.brandPink.withAlpha((255 * 0.7).round())
-        : AppTheme.textSecondaryDark;
+    final titleColor =
+        isCurrentSong ? AppTheme.brandPink : AppTheme.textPrimaryDark;
+    final subtitleColor =
+        isCurrentSong
+            ? AppTheme.brandPink.withAlpha((255 * 0.7).round())
+            : AppTheme.textSecondaryDark;
 
     return InkWell(
       onTap: song.isInLibrary ? () => onSongTap?.call(song) : null,
@@ -110,7 +114,10 @@ class PopularSongsSection extends StatelessWidget {
                 '$rank',
                 style: TextStyle(
                   fontFamily: AppTheme.fontFamily,
-                  color: isCurrentSong ? AppTheme.brandPink : AppTheme.textSecondaryDark,
+                  color:
+                      isCurrentSong
+                          ? AppTheme.brandPink
+                          : AppTheme.textSecondaryDark,
                   fontSize: AppTheme.fontBody,
                   fontWeight: FontWeight.w500,
                 ),
@@ -123,15 +130,16 @@ class PopularSongsSection extends StatelessWidget {
               child: SizedBox(
                 width: 48,
                 height: 48,
-                child: song.localSong != null
-                    ? QueryArtworkWidget(
-                        id: song.localSong!.albumId ?? song.localSong!.id,
-                        type: ArtworkType.ALBUM,
-                        nullArtworkWidget: _buildPlaceholder(),
-                        artworkFit: BoxFit.cover,
-                        artworkBorder: BorderRadius.zero,
-                      )
-                    : _buildPlaceholder(),
+                child:
+                    song.localSong != null
+                        ? QueryArtworkWidget(
+                          id: song.localSong!.albumId ?? song.localSong!.id,
+                          type: ArtworkType.ALBUM,
+                          nullArtworkWidget: _buildPlaceholder(),
+                          artworkFit: BoxFit.cover,
+                          artworkBorder: BorderRadius.zero,
+                        )
+                        : _buildPlaceholder(),
               ),
             ),
             const SizedBox(width: AppTheme.spacingMd),
@@ -171,38 +179,38 @@ class PopularSongsSection extends StatelessWidget {
             if (song.isInLibrary)
               isCurrentSong
                   ? ValueListenableBuilder<bool>(
-                      valueListenable: SonoPlayer().isPlaying,
-                      builder: (context, isPlaying, _) {
-                        return IconButton(
-                          icon: Icon(
-                            isPlaying
-                                ? Icons.bar_chart_rounded
-                                : Icons.play_arrow_rounded,
-                            color: AppTheme.brandPink,
-                            size: 20,
-                          ),
-                          onPressed: () => onMoreTap?.call(song),
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(
-                            minWidth: 32,
-                            minHeight: 32,
-                          ),
-                        );
-                      },
-                    )
+                    valueListenable: SonoPlayer().isPlaying,
+                    builder: (context, isPlaying, _) {
+                      return IconButton(
+                        icon: Icon(
+                          isPlaying
+                              ? Icons.bar_chart_rounded
+                              : Icons.play_arrow_rounded,
+                          color: AppTheme.brandPink,
+                          size: 20,
+                        ),
+                        onPressed: () => onMoreTap?.call(song),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 32,
+                          minHeight: 32,
+                        ),
+                      );
+                    },
+                  )
                   : IconButton(
-                      icon: const Icon(
-                        Icons.more_vert_rounded,
-                        color: AppTheme.textSecondaryDark,
-                      ),
-                      iconSize: 20,
-                      onPressed: () => onMoreTap?.call(song),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(
-                        minWidth: 32,
-                        minHeight: 32,
-                      ),
-                    )
+                    icon: const Icon(
+                      Icons.more_vert_rounded,
+                      color: AppTheme.textSecondaryDark,
+                    ),
+                    iconSize: 20,
+                    onPressed: () => onMoreTap?.call(song),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 32,
+                    ),
+                  )
             else
               const SizedBox(width: 32),
           ],

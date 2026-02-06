@@ -20,7 +20,10 @@ class ArtistAlbumsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     //only show albums and EPs (4+ songs) filter out singles
-    final allReleases = [...albums, ...eps.where((album) => album.numOfSongs >= 4)];
+    final allReleases = [
+      ...albums,
+      ...eps.where((album) => album.numOfSongs >= 4),
+    ];
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundDark,
@@ -44,98 +47,101 @@ class ArtistAlbumsPage extends StatelessWidget {
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
-      body: allReleases.isEmpty
-          ? Center(
-              child: Text(
-                'No albums or EPs found',
-                style: const TextStyle(
-                  fontFamily: AppTheme.fontFamily,
-                  color: AppTheme.textSecondaryDark,
-                  fontSize: AppTheme.fontBody,
+      body:
+          allReleases.isEmpty
+              ? Center(
+                child: Text(
+                  'No albums or EPs found',
+                  style: const TextStyle(
+                    fontFamily: AppTheme.fontFamily,
+                    color: AppTheme.textSecondaryDark,
+                    fontSize: AppTheme.fontBody,
+                  ),
                 ),
-              ),
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.all(AppTheme.spacing),
-              itemCount: allReleases.length,
-              itemBuilder: (context, index) {
-                final album = allReleases[index];
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: AppTheme.spacingMd),
-                  child: InkWell(
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => AlbumPage(
-                            album: album,
-                            audioQuery: audioQuery,
+              )
+              : ListView.builder(
+                padding: const EdgeInsets.all(AppTheme.spacing),
+                itemCount: allReleases.length,
+                itemBuilder: (context, index) {
+                  final album = allReleases[index];
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: AppTheme.spacingMd),
+                    child: InkWell(
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder:
+                                (context) => AlbumPage(
+                                  album: album,
+                                  audioQuery: audioQuery,
+                                ),
                           ),
-                        ),
-                      );
-                    },
-                    borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                    child: Row(
-                      children: [
-                        //album artwork
-                        ClipRRect(
-                          borderRadius:
-                              BorderRadius.circular(AppTheme.radiusSm),
-                          child: SizedBox(
-                            width: 80,
-                            height: 80,
-                            child: QueryArtworkWidget(
-                              id: album.id,
-                              type: ArtworkType.ALBUM,
-                              nullArtworkWidget: Container(
-                                color: AppTheme.elevatedSurfaceDark,
-                                child: const Center(
-                                  child: Icon(
-                                    Icons.album_rounded,
-                                    color: AppTheme.textTertiaryDark,
-                                    size: 32,
+                        );
+                      },
+                      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                      child: Row(
+                        children: [
+                          //album artwork
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radiusSm,
+                            ),
+                            child: SizedBox(
+                              width: 80,
+                              height: 80,
+                              child: QueryArtworkWidget(
+                                id: album.id,
+                                type: ArtworkType.ALBUM,
+                                nullArtworkWidget: Container(
+                                  color: AppTheme.elevatedSurfaceDark,
+                                  child: const Center(
+                                    child: Icon(
+                                      Icons.album_rounded,
+                                      color: AppTheme.textTertiaryDark,
+                                      size: 32,
+                                    ),
                                   ),
                                 ),
+                                artworkFit: BoxFit.cover,
+                                artworkBorder: BorderRadius.zero,
                               ),
-                              artworkFit: BoxFit.cover,
-                              artworkBorder: BorderRadius.zero,
                             ),
                           ),
-                        ),
-                        const SizedBox(width: AppTheme.spacingMd),
-                        //album info
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                album.album,
-                                style: const TextStyle(
-                                  fontFamily: AppTheme.fontFamily,
-                                  color: AppTheme.textPrimaryDark,
-                                  fontSize: AppTheme.font,
-                                  fontWeight: FontWeight.w500,
+                          const SizedBox(width: AppTheme.spacingMd),
+                          //album info
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  album.album,
+                                  style: const TextStyle(
+                                    fontFamily: AppTheme.fontFamily,
+                                    color: AppTheme.textPrimaryDark,
+                                    fontSize: AppTheme.font,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                '${album.numOfSongs} ${album.numOfSongs == 1 ? 'song' : 'songs'}',
-                                style: const TextStyle(
-                                  fontFamily: AppTheme.fontFamily,
-                                  color: AppTheme.textSecondaryDark,
-                                  fontSize: AppTheme.fontSm,
+                                const SizedBox(height: 4),
+                                Text(
+                                  '${album.numOfSongs} ${album.numOfSongs == 1 ? 'song' : 'songs'}',
+                                  style: const TextStyle(
+                                    fontFamily: AppTheme.fontFamily,
+                                    color: AppTheme.textSecondaryDark,
+                                    fontSize: AppTheme.fontSm,
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                );
-              },
-            ),
+                  );
+                },
+              ),
     );
   }
 }

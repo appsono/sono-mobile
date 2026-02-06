@@ -694,7 +694,9 @@ class SonoPlayer extends BaseAudioHandler {
   AudioPlayer get player => _primaryPlayer;
   List<SongModel> get playlist => _queueManager.orderedPlaylist;
   int? get currentIndex =>
-      _isSASStream ? sasCurrentIndex : (_currentSong.value == null ? null : _queueManager.currentIndex);
+      _isSASStream
+          ? sasCurrentIndex
+          : (_currentSong.value == null ? null : _queueManager.currentIndex);
   bool get isSASStream => _isSASStream;
   Map<String, dynamic>? get sasMetadata => _sasMetadata;
   ValueListenable<PlayerLifecycleState> get lifecycleStateListenable =>
@@ -908,7 +910,9 @@ class SonoPlayer extends BaseAudioHandler {
   Future<void> loadSettings() async {
     try {
       final results = await Future.wait([
-        _playbackSettings.getCrossfadeEnabled().timeout(const Duration(seconds: 2)),
+        _playbackSettings.getCrossfadeEnabled().timeout(
+          const Duration(seconds: 2),
+        ),
         _playbackSettings.getCrossfadeDuration().timeout(
           const Duration(seconds: 2),
         ),
@@ -1050,7 +1054,8 @@ class SonoPlayer extends BaseAudioHandler {
   Future<void> restorePlaybackSnapshot() async {
     try {
       //check if resume after reboot is enabled
-      final resumeEnabled = await _playbackSettings.getResumeAfterRebootEnabled();
+      final resumeEnabled =
+          await _playbackSettings.getResumeAfterRebootEnabled();
       if (!resumeEnabled) {
         if (kDebugMode) {
           debugPrint(

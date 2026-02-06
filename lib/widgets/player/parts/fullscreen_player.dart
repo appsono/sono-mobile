@@ -1541,12 +1541,14 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
               onPressed: () {
                 final metadata = _sonoPlayer.sasMetadata;
                 if (metadata != null) {
-                  _showLyricsSheet(SongModel({
-                    '_id': metadata['songId'] ?? 0,
-                    'title': metadata['title'] ?? 'Unknown',
-                    'artist': metadata['artist'],
-                    'album': metadata['album'],
-                  }));
+                  _showLyricsSheet(
+                    SongModel({
+                      '_id': metadata['songId'] ?? 0,
+                      'title': metadata['title'] ?? 'Unknown',
+                      'artist': metadata['artist'],
+                      'album': metadata['album'],
+                    }),
+                  );
                 }
               },
             ),

@@ -56,7 +56,7 @@ class _AlbumArtistTextState extends State<AlbumArtistText> {
       });
     }
 
-    //fetch actual value in background 
+    //fetch actual value in background
     //(will update if different from cache)
     final albumArtist = await _service.getAlbumArtist(
       widget.albumId,

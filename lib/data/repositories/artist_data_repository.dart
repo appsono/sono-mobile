@@ -34,11 +34,7 @@ class ArtistDataError {
   final String? reason;
   final bool isOffline;
 
-  ArtistDataError({
-    required this.message,
-    this.reason,
-    this.isOffline = false,
-  });
+  ArtistDataError({required this.message, this.reason, this.isOffline = false});
 
   String get displayMessage {
     if (isOffline && reason != null) {
@@ -135,9 +131,12 @@ class ArtistDataRepository {
     if (topSongsJson != null && topSongsJson.isNotEmpty) {
       try {
         final decoded = jsonDecode(topSongsJson) as List<dynamic>;
-        topSongs = decoded
-            .map((item) => PopularSong.fromJson(item as Map<String, dynamic>))
-            .toList();
+        topSongs =
+            decoded
+                .map(
+                  (item) => PopularSong.fromJson(item as Map<String, dynamic>),
+                )
+                .toList();
       } catch (e) {
         _logError('Error parsing top_songs JSON', e);
       }
@@ -220,21 +219,17 @@ class ArtistDataRepository {
         data.topSongs.map((s) => s.toJson()).toList(),
       );
 
-      await db.insert(
-        _tableName,
-        {
-          'artist_name': artistName,
-          'artist_name_lower': artistName.toLowerCase(),
-          'top_songs': topSongsJson,
-          'bio': data.bio,
-          'bio_url': data.bioUrl,
-          'monthly_listeners': data.monthlyListeners,
-          'last_fetched_at': now,
-          'created_at': now,
-          'updated_at': now,
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+      await db.insert(_tableName, {
+        'artist_name': artistName,
+        'artist_name_lower': artistName.toLowerCase(),
+        'top_songs': topSongsJson,
+        'bio': data.bio,
+        'bio_url': data.bioUrl,
+        'monthly_listeners': data.monthlyListeners,
+        'last_fetched_at': now,
+        'created_at': now,
+        'updated_at': now,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
 
       _log('Cached data for: $artistName');
     } catch (e) {
@@ -250,7 +245,9 @@ class ArtistDataRepository {
       return popularSongs;
     }
 
-    _log('Matching ${popularSongs.length} songs against ${artistLibrarySongs.length} library songs');
+    _log(
+      'Matching ${popularSongs.length} songs against ${artistLibrarySongs.length} library songs',
+    );
 
     final matchedSongs = <PopularSong>[];
 
@@ -273,9 +270,15 @@ class ArtistDataRepository {
 
       /// Level 2: Match with basic normalization (remove feat/ft, special chars)
       if (!found) {
-        final normalizedTitle = _normalizeTitle(popularSong.title, keepParentheses: true);
+        final normalizedTitle = _normalizeTitle(
+          popularSong.title,
+          keepParentheses: true,
+        );
         for (final librarySong in artistLibrarySongs) {
-          final normalizedLibraryTitle = _normalizeTitle(librarySong.title, keepParentheses: true);
+          final normalizedLibraryTitle = _normalizeTitle(
+            librarySong.title,
+            keepParentheses: true,
+          );
           if (normalizedTitle == normalizedLibraryTitle) {
             bestMatch = librarySong;
             found = true;
@@ -286,9 +289,15 @@ class ArtistDataRepository {
 
       /// Level 3: Match without parentheses (only if no better match found)
       if (!found) {
-        final normalizedTitle = _normalizeTitle(popularSong.title, keepParentheses: false);
+        final normalizedTitle = _normalizeTitle(
+          popularSong.title,
+          keepParentheses: false,
+        );
         for (final librarySong in artistLibrarySongs) {
-          final normalizedLibraryTitle = _normalizeTitle(librarySong.title, keepParentheses: false);
+          final normalizedLibraryTitle = _normalizeTitle(
+            librarySong.title,
+            keepParentheses: false,
+          );
           if (_titlesMatch(normalizedTitle, normalizedLibraryTitle)) {
             bestMatch = librarySong;
             found = true;
@@ -298,10 +307,9 @@ class ArtistDataRepository {
       }
 
       if (found && bestMatch != null) {
-        matchedSongs.add(popularSong.copyWith(
-          isInLibrary: true,
-          localSong: bestMatch,
-        ));
+        matchedSongs.add(
+          popularSong.copyWith(isInLibrary: true, localSong: bestMatch),
+        );
       } else {
         matchedSongs.add(popularSong);
       }
@@ -317,8 +325,14 @@ class ArtistDataRepository {
     var normalized = title.toLowerCase();
 
     //remove feat/ft content
-    normalized = normalized.replaceAll(RegExp(r'feat\..*', caseSensitive: false), '');
-    normalized = normalized.replaceAll(RegExp(r'ft\..*', caseSensitive: false), '');
+    normalized = normalized.replaceAll(
+      RegExp(r'feat\..*', caseSensitive: false),
+      '',
+    );
+    normalized = normalized.replaceAll(
+      RegExp(r'ft\..*', caseSensitive: false),
+      '',
+    );
 
     //(optional) remove parenthetical and bracketed content
     //will keep it for now

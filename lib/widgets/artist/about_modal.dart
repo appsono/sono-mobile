@@ -30,18 +30,20 @@ class AboutModal extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.9,
-        minChildSize: 0.5,
-        maxChildSize: 0.95,
-        builder: (context, scrollController) => AboutModal(
-          artistName: artistName,
-          bio: bio,
-          monthlyListeners: monthlyListeners,
-          totalPlays: totalPlays,
-          artistUrl: artistUrl,
-        ),
-      ),
+      builder:
+          (context) => DraggableScrollableSheet(
+            initialChildSize: 0.9,
+            minChildSize: 0.5,
+            maxChildSize: 0.95,
+            builder:
+                (context, scrollController) => AboutModal(
+                  artistName: artistName,
+                  bio: bio,
+                  monthlyListeners: monthlyListeners,
+                  totalPlays: totalPlays,
+                  artistUrl: artistUrl,
+                ),
+          ),
     );
   }
 

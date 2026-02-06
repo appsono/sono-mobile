@@ -26,7 +26,9 @@ class PopularSong {
     String artist = '';
 
     //first: check if individual title/artist fields exist (from cache)
-    if (json.containsKey('title') && json['title'] != null && json['title'].toString().isNotEmpty) {
+    if (json.containsKey('title') &&
+        json['title'] != null &&
+        json['title'].toString().isNotEmpty) {
       title = json['title'] as String;
       artist = json['artist'] as String? ?? '';
     } else {
@@ -37,7 +39,11 @@ class PopularSong {
           final parts = artistAndTitle.split(' - ');
           if (parts.length >= 2) {
             artist = parts[0].trim();
-            title = parts.sublist(1).join(' - ').trim(); //handles titles with " - " in them
+            title =
+                parts
+                    .sublist(1)
+                    .join(' - ')
+                    .trim(); //handles titles with " - " in them
           }
         } else {
           //fallback: if no separator => use the whole string as title
@@ -63,9 +69,12 @@ class PopularSong {
       'streams': streams,
       'external_url': externalUrl,
       //store original artist_and_title for reconstruction (if needed)
-      'artist_and_title': artist.isNotEmpty && title.isNotEmpty
-          ? '$artist - $title'
-          : title.isNotEmpty ? title : artist,
+      'artist_and_title':
+          artist.isNotEmpty && title.isNotEmpty
+              ? '$artist - $title'
+              : title.isNotEmpty
+              ? title
+              : artist,
     };
   }
 
