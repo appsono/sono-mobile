@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:on_audio_query/on_audio_query.dart';
-import '../../services/utils/artwork_cache_service.dart';
+import 'package:sono/services/utils/artwork_cache_service.dart';
 
 class CachedArtworkImage extends StatefulWidget {
   final int id;
@@ -22,18 +22,57 @@ class CachedArtworkImage extends StatefulWidget {
 }
 
 class _CachedArtworkImageState extends State<CachedArtworkImage> {
+  Future<Uint8List?>? _artworkFuture;
+  int _requestSize = 0;
+  int _lastId = -1;
+  ArtworkType? _lastType;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _initializeFuture();
+  }
+
+  @override
+  void didUpdateWidget(CachedArtworkImage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.id != widget.id ||
+        oldWidget.type != widget.type ||
+        oldWidget.size != widget.size) {
+      _initializeFuture();
+    }
+  }
+
+  void _initializeFuture() {
+    final double devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
+    int newRequestSize = (widget.size * devicePixelRatio).round();
+
+    if (widget.type == ArtworkType.ALBUM) {
+      newRequestSize = newRequestSize.clamp(300, 600);
+    }
+
+    if (_artworkFuture != null &&
+        _requestSize == newRequestSize &&
+        _lastId == widget.id &&
+        _lastType == widget.type) {
+      return;
+    }
+
+    _requestSize = newRequestSize;
+    _lastId = widget.id;
+    _lastType = widget.type;
+    _artworkFuture = ArtworkCacheService.instance.getArtwork(
+      widget.id,
+      type: widget.type,
+      size: _requestSize,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final double devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
-    final int requestSize = (widget.size * devicePixelRatio).round();
-
     return RepaintBoundary(
       child: FutureBuilder<Uint8List?>(
-        future: ArtworkCacheService.instance.getArtwork(
-          widget.id,
-          type: widget.type,
-          size: requestSize,
-        ),
+        future: _artworkFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done &&
               snapshot.hasData &&
@@ -45,8 +84,8 @@ class _CachedArtworkImageState extends State<CachedArtworkImage> {
               fit: BoxFit.cover,
               gaplessPlayback: true,
               filterQuality: FilterQuality.high,
-              cacheWidth: requestSize,
-              cacheHeight: requestSize,
+              cacheWidth: _requestSize,
+              cacheHeight: _requestSize,
             );
 
             return widget.borderRadius != null

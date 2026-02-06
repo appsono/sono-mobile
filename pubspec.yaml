@@ -11,6 +11,13 @@ dependencies:
   flutter:
     sdk: flutter
 
+  # Custom packages
+  sono_refresh:
+    # path: ../../plugins/sono_refresh
+    git:
+      url: https://github.com/appsono/sono_refresh
+      ref: v1.0.0
+
   # UI & visuals
   cupertino_icons: ^1.0.8
   flutter_blurhash: ^0.9.1
@@ -43,8 +50,9 @@ dependencies:
     git:
       url: https://github.com/appsono/on_audio_query.git
       path: packages/on_audio_query
-      ref: v2.9.5
+      ref: v2.9.6
   audio_service: ^0.18.18
+
   # Device & storage
   permission_handler: ^12.0.1
   path_provider: ^2.1.5
@@ -53,7 +61,6 @@ dependencies:
   shared_preferences: ^2.5.3
   flutter_secure_storage: ^10.0.0
   file_picker: ^10.3.3
-  open_filex: ^4.7.0
   image_picker: ^1.2.0
 
   # Firebase

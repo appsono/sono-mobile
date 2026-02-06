@@ -11,10 +11,10 @@ import 'package:sono/styles/app_theme.dart';
 import 'package:sono/services/utils/artwork_cache_service.dart';
 import 'package:sono/utils/artist_string_utils.dart';
 import 'package:sono/utils/artist_navigation.dart';
-import 'package:sono/services/utils/analytics_service.dart';
 
 import 'package:sono/widgets/sas/sas_modal.dart';
-import 'package:sono/widgets/global/refresh_indicator.dart';
+import 'package:sono_refresh/sono_refresh.dart';
+import 'package:sono/widgets/library/artist_artwork_widget.dart';
 import 'package:provider/provider.dart';
 
 class AlbumPage extends StatefulWidget {
@@ -30,10 +30,10 @@ class AlbumPage extends StatefulWidget {
 class _AlbumPageState extends State<AlbumPage> {
   late Future<List<SongModel>> _songsFuture;
   List<SongModel>? _loadedSongs;
-  final Map<int, Uint8List?> _artistArtworkCache = {};
   final Map<String, ArtistModel> _artistLookup =
       {}; //artist name (lowercase) -> ArtistModel
   bool _isAlbumFavorite = false;
+  String? _albumArtist; //true album artist from song metadata
 
   @override
   void initState() {
@@ -41,7 +41,6 @@ class _AlbumPageState extends State<AlbumPage> {
     _loadSongs();
     _loadFavoriteStatus();
     _loadArtists();
-    AnalyticsService.logScreenView('AlbumPage');
   }
 
   //duration formatter
@@ -115,6 +114,29 @@ class _AlbumPageState extends State<AlbumPage> {
     );
   }
 
+  //extract album artist from song metadata
+  String? _extractAlbumArtist(List<SongModel> songs) {
+    if (songs.isEmpty) return null;
+
+    //try to get album_artist from first songs metadata
+    try {
+      final albumArtistFromMetadata = songs.first.getMap["album_artist"];
+      if (albumArtistFromMetadata != null &&
+          albumArtistFromMetadata.toString().isNotEmpty &&
+          albumArtistFromMetadata.toString().toLowerCase() != 'unknown' &&
+          albumArtistFromMetadata.toString() != '<unknown>') {
+        return albumArtistFromMetadata.toString();
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('Error extracting album_artist: $e');
+      }
+    }
+
+    //fallback to albums artist field
+    return widget.album.artist;
+  }
+
   void _loadArtists() async {
     try {
       //query all artists
@@ -125,25 +147,9 @@ class _AlbumPageState extends State<AlbumPage> {
         _artistLookup[artist.artist.toLowerCase()] = artist;
       }
 
-      //preload artwork for this albums artists
-      final albumArtists = ArtistStringUtils.splitArtists(
-        widget.album.artist ?? 'Unknown',
-      );
-
-      for (final artistName in albumArtists.take(3)) {
-        final artist = _artistLookup[artistName.toLowerCase()];
-        if (artist != null && !_artistArtworkCache.containsKey(artist.id)) {
-          final artwork = await ArtworkCacheService.instance.getArtwork(
-            artist.id,
-            type: ArtworkType.ARTIST,
-            size: 100,
-          );
-          if (mounted) {
-            setState(() {
-              _artistArtworkCache[artist.id] = artwork;
-            });
-          }
-        }
+      //trigger rebuild to show artist avatars with correct IDs
+      if (mounted) {
+        setState(() {});
       }
     } catch (e) {
       if (kDebugMode) {
@@ -197,6 +203,7 @@ class _AlbumPageState extends State<AlbumPage> {
 
             setState(() {
               _loadedSongs = songs;
+              _albumArtist = _extractAlbumArtist(songs);
             });
 
             //preload artwork => better scrolling
@@ -285,7 +292,7 @@ class _AlbumPageState extends State<AlbumPage> {
 
   void _showArtistsModal() {
     final artists = ArtistStringUtils.splitArtists(
-      widget.album.artist ?? 'Unknown',
+      _albumArtist ?? widget.album.artist ?? 'Unknown',
     );
 
     if (artists.length == 1) {
@@ -344,8 +351,6 @@ class _AlbumPageState extends State<AlbumPage> {
               //artist list
               ...artists.map((artistName) {
                 final artist = _artistLookup[artistName.toLowerCase()];
-                final cachedArtwork =
-                    artist != null ? _artistArtworkCache[artist.id] : null;
 
                 return ListTile(
                   leading: ClipRRect(
@@ -353,23 +358,20 @@ class _AlbumPageState extends State<AlbumPage> {
                     child: SizedBox(
                       width: 50,
                       height: 50,
-                      child:
-                          cachedArtwork != null
-                              ? Image.memory(
-                                cachedArtwork,
-                                width: 50,
-                                height: 50,
-                                fit: BoxFit.cover,
-                                gaplessPlayback: true,
-                              )
-                              : Container(
-                                color: Colors.grey.shade800,
-                                child: const Icon(
-                                  Icons.person_rounded,
-                                  color: Colors.white54,
-                                  size: 30,
-                                ),
-                              ),
+                      child: ArtistArtworkWidget(
+                        artistName: artistName,
+                        artistId: artist?.id ?? 0,
+                        fit: BoxFit.cover,
+                        borderRadius: BorderRadius.circular(25),
+                        placeholderWidget: Container(
+                          color: Colors.grey.shade800,
+                          child: const Icon(
+                            Icons.person_rounded,
+                            color: Colors.white54,
+                            size: 30,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                   title: Text(
@@ -558,7 +560,7 @@ class _AlbumPageState extends State<AlbumPage> {
   }
 
   void _openLastFmLink() async {
-    final artist = widget.album.artist ?? '';
+    final artist = _albumArtist ?? widget.album.artist ?? '';
     final album = widget.album.album;
 
     if (artist.isEmpty) {
@@ -814,14 +816,14 @@ class _AlbumPageState extends State<AlbumPage> {
 
   Widget _buildArtistAvatars() {
     final artists = ArtistStringUtils.splitArtists(
-      widget.album.artist ?? 'Unknown',
+      _albumArtist ?? widget.album.artist ?? 'Unknown',
     );
     final displayArtists = artists.take(2).toList();
 
-    // Return empty if artists haven't loaded yet
-    if (_artistLookup.isEmpty) {
-      return const SizedBox(width: 24, height: 24);
-    }
+    //return empty if artists havent loaded yet
+    //if (_artistLookup.isEmpty) {
+    //  return const SizedBox(width: 24, height: 24);
+    //}
 
     return SizedBox(
       width: displayArtists.length == 1 ? 26 : 38,
@@ -832,8 +834,6 @@ class _AlbumPageState extends State<AlbumPage> {
               final index = entry.key;
               final artistName = entry.value;
               final artist = _artistLookup[artistName.toLowerCase()];
-              final cachedArtwork =
-                  artist != null ? _artistArtworkCache[artist.id] : null;
 
               return Positioned(
                 left: index * 12.0,
@@ -852,28 +852,25 @@ class _AlbumPageState extends State<AlbumPage> {
                     child: SizedBox(
                       width: 24,
                       height: 24,
-                      child:
-                          cachedArtwork != null
-                              ? Image.memory(
-                                cachedArtwork,
-                                width: 24,
-                                height: 24,
-                                fit: BoxFit.cover,
-                                gaplessPlayback: true,
-                              )
-                              : Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.grey.shade800,
-                                  borderRadius: BorderRadius.circular(
-                                    AppTheme.radiusMd,
-                                  ),
-                                ),
-                                child: const Icon(
-                                  Icons.person_rounded,
-                                  color: Colors.white54,
-                                  size: 14,
-                                ),
-                              ),
+                      child: ArtistArtworkWidget(
+                        artistName: artistName,
+                        artistId: artist?.id ?? 0,
+                        fit: BoxFit.cover,
+                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                        placeholderWidget: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade800,
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radiusMd,
+                            ),
+                          ),
+                          child: const Icon(
+                            Icons.person_rounded,
+                            color: Colors.white54,
+                            size: 14,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -964,12 +961,20 @@ class _AlbumPageState extends State<AlbumPage> {
           backgroundColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_rounded, color: Colors.white),
+            icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
             onPressed: () => Navigator.of(context).pop(),
           ),
         ),
         body: SonoRefreshIndicator(
           onRefresh: _onRefresh,
+          logo: Image.asset(
+            'assets/images/logos/favicon-white.png',
+            width: 28,
+            height: 28,
+            color: AppTheme.backgroundLight,
+            colorBlendMode: BlendMode.srcIn,
+          ),
+          indicatorColor: AppTheme.elevatedSurfaceDark,
           child: ListView(
             padding: const EdgeInsets.all(0),
             children: [
@@ -1039,7 +1044,9 @@ class _AlbumPageState extends State<AlbumPage> {
                       Expanded(
                         child: Text(
                           ArtistStringUtils.getShortDisplay(
-                            widget.album.artist ?? 'Unknown Artist',
+                            _albumArtist ??
+                                widget.album.artist ??
+                                'Unknown Artist',
                           ),
                           style: AppStyles.sonoPlayerArtist.copyWith(
                             fontSize: 16,
@@ -1176,53 +1183,61 @@ class _AlbumPageState extends State<AlbumPage> {
                     ValueListenableBuilder<SongModel?>(
                       valueListenable: SonoPlayer().currentSong,
                       builder: (context, currentSong, _) {
-                        final isAlbumPlaying =
-                            _loadedSongs?.any(
-                              (song) => song.id == currentSong?.id,
-                            ) ??
-                            false;
+                        return ValueListenableBuilder<String?>(
+                          valueListenable: SonoPlayer().playbackContext,
+                          builder: (context, playbackContext, _) {
+                            final expectedContext =
+                                "Album: ${widget.album.album}";
+                            final isAlbumPlaying =
+                                playbackContext == expectedContext &&
+                                (_loadedSongs?.any(
+                                      (song) => song.id == currentSong?.id,
+                                    ) ??
+                                    false);
 
-                        return Container(
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: AppTheme.brandPink,
-                            borderRadius: BorderRadius.circular(
-                              AppTheme.radiusMd,
-                            ),
-                          ),
-                          child: ValueListenableBuilder<bool>(
-                            valueListenable: SonoPlayer().isPlaying,
-                            builder: (context, isPlaying, _) {
-                              return IconButton(
-                                icon: Icon(
-                                  (isAlbumPlaying && isPlaying)
-                                      ? Icons.pause_rounded
-                                      : Icons.play_arrow_rounded,
-                                  color: Colors.white,
+                            return Container(
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: AppTheme.brandPink,
+                                borderRadius: BorderRadius.circular(
+                                  AppTheme.radiusMd,
                                 ),
-                                iconSize: 24,
-                                onPressed:
-                                    _loadedSongs != null &&
-                                            _loadedSongs!.isNotEmpty
-                                        ? () {
-                                          if (isAlbumPlaying && isPlaying) {
-                                            SonoPlayer().pause();
-                                          } else if (isAlbumPlaying &&
-                                              !isPlaying) {
-                                            SonoPlayer().play();
-                                          } else {
-                                            SonoPlayer().playNewPlaylist(
-                                              _loadedSongs!,
-                                              0,
-                                              context:
-                                                  "Album: ${widget.album.album}",
-                                            );
-                                          }
-                                        }
-                                        : null,
-                              );
-                            },
-                          ),
+                              ),
+                              child: ValueListenableBuilder<bool>(
+                                valueListenable: SonoPlayer().isPlaying,
+                                builder: (context, isPlaying, _) {
+                                  return IconButton(
+                                    icon: Icon(
+                                      (isAlbumPlaying && isPlaying)
+                                          ? Icons.pause_rounded
+                                          : Icons.play_arrow_rounded,
+                                      color: Colors.white,
+                                    ),
+                                    iconSize: 24,
+                                    onPressed:
+                                        _loadedSongs != null &&
+                                                _loadedSongs!.isNotEmpty
+                                            ? () {
+                                              if (isAlbumPlaying && isPlaying) {
+                                                SonoPlayer().pause();
+                                              } else if (isAlbumPlaying &&
+                                                  !isPlaying) {
+                                                SonoPlayer().play();
+                                              } else {
+                                                SonoPlayer().playNewPlaylist(
+                                                  _loadedSongs!,
+                                                  0,
+                                                  context:
+                                                      "Album: ${widget.album.album}",
+                                                );
+                                              }
+                                            }
+                                            : null,
+                                  );
+                                },
+                              ),
+                            );
+                          },
                         );
                       },
                     ),

@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
-import '../sono_player.dart';
+import 'package:sono/widgets/player/sono_player.dart';
 
 //represents single lyrics line
 class LyricLine {

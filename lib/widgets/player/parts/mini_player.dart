@@ -846,7 +846,7 @@ class _SonoBottomPlayerState extends State<SonoBottomPlayer>
     );
   }
 
-  Widget _buildJamSessionButton() {
+  Widget _buildSASSessionButton() {
     return ValueListenableBuilder<bool>(
       valueListenable: ValueNotifier(
         SASManager().isHost || SASManager().isConnected,
@@ -907,7 +907,7 @@ class _SonoBottomPlayerState extends State<SonoBottomPlayer>
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildJamSessionButton(),
+              _buildSASSessionButton(),
               SizedBox(
                 width: AppTheme.responsiveSpacing(context, AppTheme.spacingXs),
               ),

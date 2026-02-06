@@ -4,7 +4,6 @@ import 'package:sono/services/utils/recents_service.dart';
 import 'package:sono/services/utils/analytics_service.dart';
 import 'package:sono/widgets/player/sono_player.dart';
 import 'package:sono/styles/text.dart';
-import 'package:sono/services/utils/preferences_service.dart';
 import 'package:sono/utils/audio_filter_utils.dart';
 import 'package:sono/styles/app_theme.dart';
 import 'package:intl/intl.dart';
@@ -18,7 +17,6 @@ class RecentsPage extends StatefulWidget {
 
 class _RecentsPageState extends State<RecentsPage> {
   final OnAudioQuery _audioQuery = OnAudioQuery();
-  final PreferencesService _prefsService = PreferencesService();
   final RecentsService _recentsService = RecentsService.instance;
   final SonoPlayer _sonoPlayer = SonoPlayer();
 
@@ -28,7 +26,6 @@ class _RecentsPageState extends State<RecentsPage> {
   void initState() {
     super.initState();
     _loadSessions();
-    AnalyticsService.logScreenView('RecentsPage');
   }
 
   void _loadSessions() {
@@ -46,10 +43,7 @@ class _RecentsPageState extends State<RecentsPage> {
       }
 
       //get all songs
-      final allSongs = await AudioFilterUtils.getFilteredSongs(
-        _audioQuery,
-        _prefsService,
-      );
+      final allSongs = await AudioFilterUtils.getFilteredSongs(_audioQuery);
       final songMap = {for (var song in allSongs) song.id: song};
 
       //group by listening sessions based on context and time gaps
@@ -67,7 +61,8 @@ class _RecentsPageState extends State<RecentsPage> {
 
         //check if this is a new session
         //new session if: different context, or >30 min gap
-        final isNewSession = currentContext == null ||
+        final isNewSession =
+            currentContext == null ||
             context != currentContext ||
             (lastPlayTime != null &&
                 playTime.difference(lastPlayTime).inMinutes.abs() > 30);
@@ -231,7 +226,10 @@ class _RecentsPageState extends State<RecentsPage> {
                 child: Row(
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+                      icon: const Icon(
+                        Icons.arrow_back_rounded,
+                        color: Colors.white,
+                      ),
                       onPressed: () => Navigator.of(context).pop(),
                     ),
                     SizedBox(width: AppTheme.spacingXs),
@@ -338,67 +336,69 @@ class _RecentsPageState extends State<RecentsPage> {
                             '${songs.length} ${songs.length == 1 ? 'song' : 'songs'}${timestamp != null ? ' • ${_formatSessionTime(timestamp)}' : ''}',
                             style: AppStyles.sonoListItemSubtitle,
                           ),
-                          tilePadding:
-                              const EdgeInsets.symmetric(horizontal: 16.0),
+                          tilePadding: const EdgeInsets.symmetric(
+                            horizontal: 16.0,
+                          ),
                           childrenPadding: EdgeInsets.zero,
                           iconColor: AppTheme.brandPink,
                           collapsedIconColor: Colors.white54,
-                          children: songs.map((song) {
-                            return ListTile(
-                              contentPadding: const EdgeInsets.only(
-                                left: 72.0,
-                                right: 16.0,
-                              ),
-                              leading: ClipRRect(
-                                borderRadius: BorderRadius.circular(
-                                  AppTheme.radiusMd,
-                                ),
-                                child: SizedBox(
-                                  width: 40,
-                                  height: 40,
-                                  child: QueryArtworkWidget(
-                                    id: song.id,
-                                    type: ArtworkType.AUDIO,
-                                    artworkFit: BoxFit.cover,
-                                    artworkQuality: FilterQuality.medium,
-                                    artworkBorder: BorderRadius.zero,
-                                    size: 80,
-                                    nullArtworkWidget: Container(
-                                      color: Colors.grey.shade800,
-                                      child: const Icon(
-                                        Icons.music_note_rounded,
-                                        color: Colors.white54,
-                                        size: 20,
+                          children:
+                              songs.map((song) {
+                                return ListTile(
+                                  contentPadding: const EdgeInsets.only(
+                                    left: 72.0,
+                                    right: 16.0,
+                                  ),
+                                  leading: ClipRRect(
+                                    borderRadius: BorderRadius.circular(
+                                      AppTheme.radiusMd,
+                                    ),
+                                    child: SizedBox(
+                                      width: 40,
+                                      height: 40,
+                                      child: QueryArtworkWidget(
+                                        id: song.id,
+                                        type: ArtworkType.AUDIO,
+                                        artworkFit: BoxFit.cover,
+                                        artworkQuality: FilterQuality.medium,
+                                        artworkBorder: BorderRadius.zero,
+                                        size: 80,
+                                        nullArtworkWidget: Container(
+                                          color: Colors.grey.shade800,
+                                          child: const Icon(
+                                            Icons.music_note_rounded,
+                                            color: Colors.white54,
+                                            size: 20,
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              ),
-                              title: Text(
-                                song.title,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: AppStyles.sonoListItemTitle.copyWith(
-                                  fontSize: 14,
-                                ),
-                              ),
-                              subtitle: Text(
-                                song.artist ?? 'Unknown Artist',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: AppStyles.sonoListItemSubtitle.copyWith(
-                                  fontSize: 12,
-                                ),
-                              ),
-                              onTap: () {
-                                _sonoPlayer.playNewPlaylist(
-                                  songs,
-                                  songs.indexOf(song),
-                                  context: 'recents_${_getSessionTitle(context)}',
+                                  title: Text(
+                                    song.title,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: AppStyles.sonoListItemTitle.copyWith(
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  subtitle: Text(
+                                    song.artist ?? 'Unknown Artist',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: AppStyles.sonoListItemSubtitle
+                                        .copyWith(fontSize: 12),
+                                  ),
+                                  onTap: () {
+                                    _sonoPlayer.playNewPlaylist(
+                                      songs,
+                                      songs.indexOf(song),
+                                      context:
+                                          'recents_${_getSessionTitle(context)}',
+                                    );
+                                  },
                                 );
-                              },
-                            );
-                          }).toList(),
+                              }).toList(),
                         );
                       },
                     );

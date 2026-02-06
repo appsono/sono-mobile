@@ -27,6 +27,7 @@ import 'package:sono/services/api/lastfm_service.dart';
 import 'package:sono/services/api/lyrics_service.dart';
 import 'package:sono/services/utils/preferences_service.dart';
 import 'package:sono/services/settings/library_settings_service.dart';
+import 'package:sono/services/settings/playback_settings_service.dart';
 import 'package:sono/services/utils/recents_service.dart';
 import 'package:sono/services/sas/sas_manager.dart';
 import 'package:sono/services/settings/audio_effects_service.dart';
@@ -53,16 +54,15 @@ const AudioLoadConfiguration _minimalBufferConfig = AudioLoadConfiguration(
 );
 
 /// Network-optimized buffer configuration for SAS streaming
-/// Ultra-minimal buffers for low-latency local network peer-to-peer streaming
-/// Optimized for <100ms latency on local WiFi networks
+/// Minimal buffers for low-latency local network peer-to-peer streaming
 const AudioLoadConfiguration _networkBufferConfig = AudioLoadConfiguration(
   androidLoadControl: AndroidLoadControl(
-    minBufferDuration: Duration(milliseconds: 500),
-    maxBufferDuration: Duration(seconds: 2),
-    bufferForPlaybackDuration: Duration(milliseconds: 250),
-    bufferForPlaybackAfterRebufferDuration: Duration(milliseconds: 500),
+    minBufferDuration: Duration(milliseconds: 100),
+    maxBufferDuration: Duration(seconds: 1),
+    bufferForPlaybackDuration: Duration(milliseconds: 50),
+    bufferForPlaybackAfterRebufferDuration: Duration(milliseconds: 100),
     prioritizeTimeOverSizeThresholds: true,
-    targetBufferBytes: 256 * 1024, //256KB target for minimal latency
+    targetBufferBytes: 256 * 1024,
   ),
 );
 
@@ -117,7 +117,7 @@ class _SubscriptionManager {
 //============================================================================
 
 class _QueueManager {
-  /// O riginal playlist order (never shuffled)
+  /// Original playlist order (never shuffled)
   final List<SongModel> _originalQueue = [];
 
   /// Current playback indices.
@@ -631,6 +631,8 @@ class SonoPlayer extends BaseAudioHandler {
   final AudioEffectsService _audioEffectsService = AudioEffectsService.instance;
   final LibrarySettingsService _librarySettings =
       LibrarySettingsService.instance;
+  final PlaybackSettingsService _playbackSettings =
+      PlaybackSettingsService.instance;
 
   //state managers
   final _QueueManager _queueManager = _QueueManager();
@@ -667,8 +669,8 @@ class SonoPlayer extends BaseAudioHandler {
   int? _lastCompletedSongId;
   bool _isSASStream = false;
   Map<String, dynamic>? _sasMetadata;
+  int? sasCurrentIndex;
   PlayerLifecycleState _lifecycleState = PlayerLifecycleState.idle;
-  bool _isLoadingPlaylist = false;
   final ValueNotifier<PlayerLifecycleState> lifecycleState = ValueNotifier(
     PlayerLifecycleState.idle,
   );
@@ -692,7 +694,9 @@ class SonoPlayer extends BaseAudioHandler {
   AudioPlayer get player => _primaryPlayer;
   List<SongModel> get playlist => _queueManager.orderedPlaylist;
   int? get currentIndex =>
-      _currentSong.value == null ? null : _queueManager.currentIndex;
+      _isSASStream
+          ? sasCurrentIndex
+          : (_currentSong.value == null ? null : _queueManager.currentIndex);
   bool get isSASStream => _isSASStream;
   Map<String, dynamic>? get sasMetadata => _sasMetadata;
   ValueListenable<PlayerLifecycleState> get lifecycleStateListenable =>
@@ -718,7 +722,9 @@ class SonoPlayer extends BaseAudioHandler {
     if (Platform.isAndroid) {
       final effects = <AndroidAudioEffect>[];
       if (_equalizer != null) effects.add(_equalizer!);
-      return effects.isNotEmpty ? AudioPipeline(androidAudioEffects: effects) : null;
+      return effects.isNotEmpty
+          ? AudioPipeline(androidAudioEffects: effects)
+          : null;
     }
     return null;
   }
@@ -904,12 +910,14 @@ class SonoPlayer extends BaseAudioHandler {
   Future<void> loadSettings() async {
     try {
       final results = await Future.wait([
-        _prefsService.isCrossfadeEnabled().timeout(const Duration(seconds: 2)),
-        _prefsService.getCrossfadeDurationSeconds().timeout(
+        _playbackSettings.getCrossfadeEnabled().timeout(
           const Duration(seconds: 2),
         ),
-        _prefsService.getPlaybackSpeed().timeout(const Duration(seconds: 2)),
-        _prefsService.getPlaybackPitch().timeout(const Duration(seconds: 2)),
+        _playbackSettings.getCrossfadeDuration().timeout(
+          const Duration(seconds: 2),
+        ),
+        _playbackSettings.getSpeed().timeout(const Duration(seconds: 2)),
+        _playbackSettings.getPitch().timeout(const Duration(seconds: 2)),
         _librarySettings.getCoverRotationEnabled().timeout(
           const Duration(seconds: 2),
         ),
@@ -990,7 +998,7 @@ class SonoPlayer extends BaseAudioHandler {
           _isSASStream ||
           _playbackMode != _PlaybackMode.local) {
         if (kDebugMode) {
-          debugPrint('[Snapshot] Skipping save - empty queue or SAS mode');
+          debugPrint('[Snapshot] Skipping save => empty queue or SAS mode');
         }
         return;
       }
@@ -1046,7 +1054,8 @@ class SonoPlayer extends BaseAudioHandler {
   Future<void> restorePlaybackSnapshot() async {
     try {
       //check if resume after reboot is enabled
-      final resumeEnabled = await _prefsService.isResumeAfterRebootEnabled();
+      final resumeEnabled =
+          await _playbackSettings.getResumeAfterRebootEnabled();
       if (!resumeEnabled) {
         if (kDebugMode) {
           debugPrint(
@@ -1488,49 +1497,33 @@ class SonoPlayer extends BaseAudioHandler {
       return;
     }
 
-    //guard against concurrent playlist loads
-    if (_isLoadingPlaylist) {
-      if (kDebugMode) {
-        debugPrint(
-          'Ignoring playNewPlaylist call - already loading a playlist',
-        );
-      }
-      return;
-    }
-
     if (newPlaylist.isEmpty) {
       _playerErrorMessage.value = 'Playlist is empty';
       await stop();
       return;
     }
 
-    _isLoadingPlaylist = true;
+    //clear any previous errors
+    _playerErrorMessage.value = null;
+
+    _playbackMode = _PlaybackMode.local;
+    _playbackContext.value = context;
+
+    final clampedIndex = index.clamp(0, newPlaylist.length - 1);
+    _queueManager.setPlaylist(newPlaylist, clampedIndex);
+    _isShuffleEnabled.value = _queueManager.shuffleEnabled;
 
     try {
-      //clear any previous errors
-      _playerErrorMessage.value = null;
-
-      _playbackMode = _PlaybackMode.local;
-      _playbackContext.value = context;
-
-      final clampedIndex = index.clamp(0, newPlaylist.length - 1);
-      _queueManager.setPlaylist(newPlaylist, clampedIndex);
-      _isShuffleEnabled.value = _queueManager.shuffleEnabled;
-
-      try {
-        await _playCurrentSong();
-        _updateQueueNotifier();
-        //save snapshot after successfully loading new playlist
-        savePlaybackSnapshot();
-      } catch (e) {
-        if (kDebugMode) {
-          debugPrint('Error in playNewPlaylist: $e');
-        }
-        _playerErrorMessage.value = 'Failed to start playback';
-        _setLifecycleState(PlayerLifecycleState.error);
+      await _playCurrentSong();
+      _updateQueueNotifier();
+      //save snapshot after successfully loading new playlist
+      savePlaybackSnapshot();
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('Error in playNewPlaylist: $e');
       }
-    } finally {
-      _isLoadingPlaylist = false;
+      _playerErrorMessage.value = 'Failed to start playback';
+      _setLifecycleState(PlayerLifecycleState.error);
     }
   }
 
@@ -1679,7 +1672,7 @@ class SonoPlayer extends BaseAudioHandler {
     await _primaryPlayer.setSpeed(clampedSpeed);
     await _secondaryPlayer?.setSpeed(clampedSpeed);
     _currentSpeed.value = clampedSpeed;
-    await _prefsService.setPlaybackSpeed(clampedSpeed);
+    await _playbackSettings.setSpeed(clampedSpeed);
     _broadcastState();
   }
 
@@ -1688,7 +1681,7 @@ class SonoPlayer extends BaseAudioHandler {
     await _primaryPlayer.setPitch(clampedPitch);
     await _secondaryPlayer?.setPitch(clampedPitch);
     _currentPitch.value = clampedPitch;
-    await _prefsService.setPlaybackPitch(clampedPitch);
+    await _playbackSettings.setPitch(clampedPitch);
     _broadcastState();
   }
 
@@ -1861,10 +1854,11 @@ class SonoPlayer extends BaseAudioHandler {
 
         await _primaryPlayer.dispose();
 
-        //create new player with network buffer configuration and audio effects
+        //create new player with network buffer configuration
+        //no audio pipeline here: effects hold a reference to the previous player
+        //and just_audio asserts _player == null on _setup. SAS doesnt need EQ
         _primaryPlayer = AudioPlayer(
           audioLoadConfiguration: _networkBufferConfig,
-          audioPipeline: _buildAudioPipeline(),
         );
         _setupPlayerListeners(_primaryPlayer);
         _playbackMode = _PlaybackMode.network;
@@ -1917,12 +1911,22 @@ class SonoPlayer extends BaseAudioHandler {
     }
 
     await _primaryPlayer.dispose();
+
+    //recreate equalizer: the old instance is still bound to the disposed player
+    //and just_audio asserts _player == null on effect._setup
+    if (Platform.isAndroid) {
+      _equalizer = AndroidEqualizer();
+    }
+
     _primaryPlayer = AudioPlayer(
       audioLoadConfiguration: _minimalBufferConfig,
       audioPipeline: _buildAudioPipeline(),
     );
     _setupPlayerListeners(_primaryPlayer);
     _playbackMode = _PlaybackMode.local;
+
+    //restore saved EQ settings onto the fresh equalizer
+    await _loadEqualizerSettings();
   }
 
   /// Updates player state with SAS metadata to create a "virtual" song
@@ -1936,6 +1940,7 @@ class SonoPlayer extends BaseAudioHandler {
     int? songId,
   }) {
     _isSASStream = true;
+    _playbackContext.value = 'stream: SAS';
     _sasMetadata = {
       'title': title,
       'artist': artist,
@@ -1976,6 +1981,7 @@ class SonoPlayer extends BaseAudioHandler {
   void clearSASMetadata() {
     _isSASStream = false;
     _sasMetadata = null;
+    sasCurrentIndex = null;
     _currentSong.value = null;
     _duration.value = Duration.zero;
     _position.value = Duration.zero;
@@ -2035,6 +2041,33 @@ class SonoPlayer extends BaseAudioHandler {
     if (kDebugMode) {
       debugPrint('[Player] SAS mode exited, ready for local playback');
     }
+  }
+
+  /// Play the currently loaded network stream (SAS client mode)
+  /// Bypasses the _currentSong null check in play()
+  Future<void> playStream() async {
+    if (!_isSASStream) return;
+    await _primaryPlayer.play();
+    _setLifecycleState(PlayerLifecycleState.sasPlaying);
+    _broadcastState();
+  }
+
+  /// Pause the currently loaded network stream (SAS client mode)
+  /// Skips playback snapshot saving that pause() does
+  Future<void> pauseStream() async {
+    if (!_isSASStream) return;
+    await _primaryPlayer.pause();
+    _setLifecycleState(PlayerLifecycleState.paused);
+    _broadcastState();
+  }
+
+  /// Seek within the current network stream (SAS client mode)
+  /// Does NOT call broadcastPosition (avoids loop on client side)
+  Future<void> seekStream(Duration position) async {
+    if (!_isSASStream) return;
+    await _primaryPlayer.seek(position);
+    _position.value = position;
+    _broadcastState();
   }
 
   //============================================================================
@@ -2239,8 +2272,10 @@ class SonoPlayer extends BaseAudioHandler {
 
     //handle unexpected errors
     if (!isPreloading) {
-      _playerErrorMessage.value =
-          'Playback error: ${e.toString().substring(0, 50)}';
+      final errorStr = e.toString();
+      final truncatedError =
+          errorStr.length > 50 ? errorStr.substring(0, 50) : errorStr;
+      _playerErrorMessage.value = 'Playback error: $truncatedError';
       _setLifecycleState(PlayerLifecycleState.error);
 
       //try to skip to next song if available
@@ -2292,7 +2327,7 @@ class SonoPlayer extends BaseAudioHandler {
   AudioPlayer _getOrCreateSecondaryPlayer() {
     _secondaryPlayer ??= AudioPlayer(
       audioLoadConfiguration: _minimalBufferConfig,
-      audioPipeline: _buildAudioPipeline(),
+      audioPipeline: null,
     );
     return _secondaryPlayer!;
   }
@@ -2970,7 +3005,7 @@ class SonoPlayer extends BaseAudioHandler {
 
       case 'loadAlbumCoverRotationPreference':
         albumCoverRotationEnabled.value =
-            await _prefsService.isAlbumCoverRotationEnabled();
+            await _librarySettings.getCoverRotationEnabled();
         break;
 
       case 'setPersistentSessionMode':
@@ -2988,7 +3023,7 @@ class SonoPlayer extends BaseAudioHandler {
     //called when app is swiped away from recents
     //check background playback setting
     final backgroundPlaybackEnabled =
-        await _prefsService.isBackgroundPlaybackEnabled();
+        await _playbackSettings.getBackgroundPlaybackEnabled();
 
     if (kDebugMode) {
       debugPrint(

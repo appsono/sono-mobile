@@ -48,7 +48,10 @@ class ArtistProfileImageService {
       final destinationPath = await _getImagePath(artistName);
 
       //process image in isolate to avoid blocking UI
-      final processedBytes = await compute(_processImage, Uint8List.fromList(imageBytes));
+      final processedBytes = await compute(
+        _processImage,
+        Uint8List.fromList(imageBytes),
+      );
 
       //save processed image
       final destFile = File(destinationPath);
@@ -64,7 +67,9 @@ class ArtistProfileImageService {
       return destinationPath;
     } catch (e) {
       if (kDebugMode) {
-        print('ArtistProfileImageService: Error saving image for "$artistName": $e');
+        print(
+          'ArtistProfileImageService: Error saving image for "$artistName": $e',
+        );
       }
       rethrow;
     }
@@ -128,7 +133,9 @@ class ArtistProfileImageService {
       return true;
     } catch (e) {
       if (kDebugMode) {
-        print('ArtistProfileImageService: Error deleting image for "$artistName": $e');
+        print(
+          'ArtistProfileImageService: Error deleting image for "$artistName": $e',
+        );
       }
       return false;
     }
@@ -161,10 +168,11 @@ class ArtistProfileImageService {
       int deletedCount = 0;
 
       final artistsWithImages = await _repository.getArtistsWithCustomImages();
-      final validPaths = artistsWithImages
-          .map((a) => a['custom_image_path'] as String?)
-          .where((p) => p != null)
-          .toSet();
+      final validPaths =
+          artistsWithImages
+              .map((a) => a['custom_image_path'] as String?)
+              .where((p) => p != null)
+              .toSet();
 
       for (final entity in files) {
         if (entity is File && !validPaths.contains(entity.path)) {
@@ -175,7 +183,9 @@ class ArtistProfileImageService {
 
       if (kDebugMode && deletedCount > 0) {
         if (kDebugMode) {
-          print('ArtistProfileImageService: Cleaned up $deletedCount orphaned images');
+          print(
+            'ArtistProfileImageService: Cleaned up $deletedCount orphaned images',
+          );
         }
       }
 
