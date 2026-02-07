@@ -54,24 +54,11 @@ class EnvConfig {
   static bool get isLastfmConfigured =>
       lastfmApiKey.isNotEmpty && lastfmApiKey != 'your_lastfm_api_key_here';
 
-  //=== Feature Flags =====
+  //=== Telemetry =====
 
-  /// Ebable cloud features (collections, sync)
-  static bool get enableCloudFeatures =>
-      _getBool('ENABLE_CLOUD_FEATURES', true);
-
-  /// Ebable SAS (Sono Audio Stream - P2P audio streaming)
-  static bool get enableSAS => _getBool('ENABLE_SAS', true);
-
-  /// Enable lyrics display
-  static bool get enableLyricsDisplay =>
-      _getBool('ENABLE_LYRICS_DISPLAY', true);
-
-  /// Enable crossfade between tracks
-  static bool get enableCrossfade => _getBool('ENABLE_CROSSFADE', true);
-
-  /// Enable sleep timer feature
-  static bool get enableSleepTimer => _getBool('ENABLE_SLEEP_TIMER', true);
+  /// Enable crashlytics collection (default from .env can be overridden by user)
+  static bool get crashlyticsEnabledDefault =>
+      _getBool('CRASHLYTICS_ENABLED', true);
 
   //=== Debug Settings =====
 
@@ -106,11 +93,6 @@ class EnvConfig {
       'cdnBaseUrl': cdnBaseUrl,
       'updateApiUrl': updateApiUrl,
       'lastfmConfigured': isLastfmConfigured,
-      'cloudFeatures': enableCloudFeatures,
-      'sas': enableSAS,
-      'lyricsDisplay': enableLyricsDisplay,
-      'crossfade': enableCrossfade,
-      'sleepTimer': enableSleepTimer,
       'debugMode': debugMode,
     };
   }

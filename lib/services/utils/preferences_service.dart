@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sono/services/utils/env_config.dart';
 
 class PreferencesService with ChangeNotifier {
   static const String excludedFoldersKey = 'excluded_folders_v1';
@@ -516,8 +517,12 @@ class PreferencesService with ChangeNotifier {
   //--- Crashlytics Settings ---
 
   Future<bool> isCrashlyticsEnabled() async {
-    return await _getCachedValue<bool>(crashlyticsEnabledKey, () => true) ??
-        true;
+    final defaultValue = EnvConfig.crashlyticsEnabledDefault;
+    return await _getCachedValue<bool>(
+          crashlyticsEnabledKey,
+          () => defaultValue,
+        ) ??
+        defaultValue;
   }
 
   Future<void> setCrashlyticsEnabled(bool enabled) async {

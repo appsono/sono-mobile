@@ -7,6 +7,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:sono/services/utils/theme_service.dart';
 import 'package:sono/services/utils/env_config.dart';
 import 'package:sono/services/utils/crashlytics_service.dart';
+import 'package:sono/services/utils/firebase_availability.dart';
 import 'package:sono/services/sas/sas_manager.dart';
 import 'package:sono/services/playlist/playlist_service.dart';
 import 'package:sono/services/artists/artist_fetch_progress_service.dart';
@@ -22,6 +23,8 @@ import 'package:http/http.dart' as http;
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 /// Initialize Firebase and Crashlytics in a separate function
+/// If Firebase fails (e.g. missing google-services / GoogleService-Info.plist),
+/// the app will continue to run without Firebase features.
 Future<void> _initializeFirebase() async {
   try {
     if (defaultTargetPlatform == TargetPlatform.iOS ||
@@ -33,21 +36,30 @@ Future<void> _initializeFirebase() async {
       );
     }
 
-    // Initialize crashlytics service
+    //mark firebase as available
+    FirebaseAvailability.instance.markAvailable();
+
+    //initialize crashlytics service (only meaningful when firebase is up)
     await CrashlyticsService.instance.initialize();
 
     //only set up error handlers if crashlytics is enabled
     if (CrashlyticsService.instance.isEnabled) {
-      FlutterError.onError =
-          FirebaseCrashlytics.instance.recordFlutterFatalError;
+      FlutterError.onError = (FlutterErrorDetails details) {
+        if (FirebaseAvailability.instance.isAvailable) {
+          FirebaseCrashlytics.instance.recordFlutterFatalError(details);
+        }
+      };
       PlatformDispatcher.instance.onError = (error, stack) {
-        FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+        if (FirebaseAvailability.instance.isAvailable) {
+          FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+        }
         return true;
       };
     }
   } catch (e) {
     if (e.toString().contains('already exists')) {
-      //ignore re-init warnings
+      //firebase was already initialized
+      FirebaseAvailability.instance.markAvailable();
     } else {
       if (kDebugMode) {
         print(
@@ -55,7 +67,7 @@ Future<void> _initializeFirebase() async {
         );
         print(e);
       }
-      //do NOT rethrow
+      //do NOT rethrow, app works fine without firebase
     }
   }
 }
@@ -75,6 +87,12 @@ void main() async {
 
   //run independent initializations
   await Future.wait([EnvConfig.initialize(), _initializeFirebase()]);
+
+  if (kDebugMode) {
+    debugPrint(
+      '[Firebase] Available: ${FirebaseAvailability.instance.isAvailable}',
+    );
+  }
 
   runApp(
     MultiProvider(

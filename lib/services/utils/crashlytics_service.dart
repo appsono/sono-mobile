@@ -1,5 +1,6 @@
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
+import 'package:sono/services/utils/firebase_availability.dart';
 import 'package:sono/services/utils/preferences_service.dart';
 
 /// Centralized service for crash reporting
@@ -16,6 +17,7 @@ class CrashlyticsService {
   /// Initialize the service
   Future<void> initialize() async {
     if (_isInitialized) return;
+    if (!FirebaseAvailability.instance.isAvailable) return;
 
     _isEnabled = await _prefsService.isCrashlyticsEnabled();
     await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(
@@ -35,6 +37,8 @@ class CrashlyticsService {
 
   /// Update the enabled state (called from settings)
   Future<void> setEnabled(bool enabled) async {
+    if (!FirebaseAvailability.instance.isAvailable) return;
+
     _isEnabled = enabled;
     await _prefsService.setCrashlyticsEnabled(enabled);
     await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(enabled);
@@ -51,6 +55,7 @@ class CrashlyticsService {
     String? reason,
     bool fatal = false,
   }) async {
+    if (!FirebaseAvailability.instance.isAvailable) return;
     if (!_isEnabled) return;
 
     try {
@@ -75,6 +80,7 @@ class CrashlyticsService {
 
   /// Log a message to crashlytics
   Future<void> log(String message) async {
+    if (!FirebaseAvailability.instance.isAvailable) return;
     if (!_isEnabled) return;
 
     try {
@@ -88,6 +94,7 @@ class CrashlyticsService {
 
   /// Set a custom key-value pair for crash reports
   Future<void> setCustomKey(String key, dynamic value) async {
+    if (!FirebaseAvailability.instance.isAvailable) return;
     if (!_isEnabled) return;
 
     try {

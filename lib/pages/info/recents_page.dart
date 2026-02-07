@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:sono/services/utils/recents_service.dart';
-import 'package:sono/services/utils/analytics_service.dart';
 import 'package:sono/widgets/player/sono_player.dart';
 import 'package:sono/styles/text.dart';
 import 'package:sono/utils/audio_filter_utils.dart';
@@ -189,8 +188,6 @@ class _RecentsPageState extends State<RecentsPage> {
             ),
           );
         }
-
-        AnalyticsService.logEvent('clear_history');
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(

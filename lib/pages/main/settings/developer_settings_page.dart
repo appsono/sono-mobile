@@ -8,6 +8,7 @@ import 'package:sono/services/api/lastfm_service.dart';
 import 'package:sono/services/api/lyrics_service.dart';
 import 'package:sono/services/utils/artwork_cache_service.dart';
 import 'package:sono/services/utils/crashlytics_service.dart';
+import 'package:sono/services/utils/firebase_availability.dart';
 import 'package:sono/services/utils/preferences_service.dart';
 import 'package:sono/data/database/database_helper.dart';
 import 'package:sono/widgets/library/artist_artwork_widget.dart';
@@ -648,6 +649,13 @@ class _DeveloperSettingsPageState extends State<DeveloperSettingsPage> {
     );
 
     if (confirmed == true) {
+      if (!FirebaseAvailability.instance.isAvailable) {
+        _showSnackBar(
+          message: 'Firebase is not available, cannot test crash',
+          isError: true,
+        );
+        return;
+      }
       FirebaseCrashlytics.instance.crash();
     }
   }
