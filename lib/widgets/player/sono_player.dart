@@ -940,9 +940,12 @@ class SonoPlayer extends BaseAudioHandler {
 
       if (_currentPitch.value != pitch) {
         _currentPitch.value = pitch;
-        await _primaryPlayer.setPitch(pitch);
-        if (_secondaryPlayer != null) {
-          await _secondaryPlayer!.setPitch(pitch);
+        //setPitch is only supported on android
+        if (Platform.isAndroid) {
+          await _primaryPlayer.setPitch(pitch);
+          if (_secondaryPlayer != null) {
+            await _secondaryPlayer!.setPitch(pitch);
+          }
         }
       }
 
@@ -1153,7 +1156,10 @@ class SonoPlayer extends BaseAudioHandler {
       }
       if (_currentPitch.value != snapshot.playbackPitch) {
         _currentPitch.value = snapshot.playbackPitch;
-        await _primaryPlayer.setPitch(snapshot.playbackPitch);
+        //setPitch is only supported on android
+        if (Platform.isAndroid) {
+          await _primaryPlayer.setPitch(snapshot.playbackPitch);
+        }
       }
 
       //restore playback context
@@ -1680,8 +1686,11 @@ class SonoPlayer extends BaseAudioHandler {
 
   Future<void> setPitch(double pitch) async {
     final clampedPitch = pitch.clamp(0.5, 2.0);
-    await _primaryPlayer.setPitch(clampedPitch);
-    await _secondaryPlayer?.setPitch(clampedPitch);
+    //setPitch is only supported on android
+    if (Platform.isAndroid) {
+      await _primaryPlayer.setPitch(clampedPitch);
+      await _secondaryPlayer?.setPitch(clampedPitch);
+    }
     _currentPitch.value = clampedPitch;
     await _playbackSettings.setPitch(clampedPitch);
     _broadcastState();
@@ -2208,7 +2217,10 @@ class SonoPlayer extends BaseAudioHandler {
         _repeatMode.value == RepeatMode.one ? LoopMode.one : LoopMode.off,
       );
       await targetPlayer.setSpeed(_currentSpeed.value);
-      await targetPlayer.setPitch(_currentPitch.value);
+      //setPitch is only supported on android
+      if (Platform.isAndroid) {
+        await targetPlayer.setPitch(_currentPitch.value);
+      }
 
       if (!isPreloading) {
         await targetPlayer.play();
