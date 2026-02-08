@@ -79,6 +79,9 @@ class _TimeBasedGreetingState extends State<TimeBasedGreeting> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isLargeScreen = screenWidth > 600;
+
     if (greeting.isEmpty) {
       return SizedBox(
         width: AppTheme.responsiveDimension(context, 100),
@@ -101,7 +104,7 @@ class _TimeBasedGreetingState extends State<TimeBasedGreeting> {
         widget.userName != null ? '$greeting,' : '$greeting!',
         style: TextStyle(
           fontFamily: 'VarelaRound',
-          fontSize: AppTheme.responsiveFontSize(context, 22, min: 18),
+          fontSize: isLargeScreen ? 22.0 : AppTheme.responsiveFontSize(context, 22, min: 18),
           color: Colors.white,
           fontWeight: FontWeight.bold,
         ),
@@ -116,17 +119,17 @@ class _TimeBasedGreetingState extends State<TimeBasedGreeting> {
           '$greeting,',
           style: TextStyle(
             fontFamily: 'VarelaRound',
-            fontSize: AppTheme.responsiveFontSize(context, 14, min: 12),
+            fontSize: isLargeScreen ? 14.0 : AppTheme.responsiveFontSize(context, 14, min: 12),
             color: Colors.white.withAlpha(179),
             fontWeight: FontWeight.normal,
           ),
         ),
-        SizedBox(height: AppTheme.responsiveSpacing(context, 2)),
+        SizedBox(height: isLargeScreen ? 2.0 : AppTheme.responsiveSpacing(context, 2)),
         Text(
           widget.userName!,
           style: TextStyle(
             fontFamily: 'VarelaRound',
-            fontSize: AppTheme.responsiveFontSize(context, 20, min: 16),
+            fontSize: isLargeScreen ? 20.0 : AppTheme.responsiveFontSize(context, 20, min: 16),
             color: Colors.white,
             fontWeight: FontWeight.bold,
           ),

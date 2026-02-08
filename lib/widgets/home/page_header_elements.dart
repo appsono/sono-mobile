@@ -67,15 +67,17 @@ class _ActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isLargeScreen = screenWidth > 600;
+
     final backgroundColor = isDark ? const Color(0xFF2A2A2A) : Colors.white;
     final foregroundColor = isDark ? Colors.white : AppTheme.cardDark;
     final borderColor =
         isDark ? Colors.white.withAlpha(25) : Colors.transparent;
 
-    final borderRadius = AppTheme.responsiveDimension(
-      context,
-      AppTheme.radiusMd,
-    );
+    final borderRadius = isLargeScreen
+        ? AppTheme.radiusMd
+        : AppTheme.responsiveDimension(context, AppTheme.radiusMd);
 
     return Material(
       color: backgroundColor,
@@ -85,14 +87,14 @@ class _ActionButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(borderRadius),
         child: Container(
           padding: EdgeInsets.symmetric(
-            horizontal: AppTheme.responsiveSpacing(context, 16),
-            vertical: AppTheme.responsiveSpacing(context, 14),
+            horizontal: isLargeScreen ? 16.0 : AppTheme.responsiveSpacing(context, 16),
+            vertical: isLargeScreen ? 14.0 : AppTheme.responsiveSpacing(context, 14),
           ),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(borderRadius),
             border: Border.all(
               color: borderColor,
-              width: AppTheme.responsiveDimension(context, 1),
+              width: isLargeScreen ? 1.0 : AppTheme.responsiveDimension(context, 1),
             ),
           ),
           child: Row(
@@ -101,15 +103,15 @@ class _ActionButton extends StatelessWidget {
               Icon(
                 icon,
                 color: foregroundColor,
-                size: AppTheme.responsiveIconSize(context, 20, min: 18),
+                size: isLargeScreen ? 20.0 : AppTheme.responsiveIconSize(context, 20, min: 18),
               ),
-              SizedBox(width: AppTheme.responsiveSpacing(context, 10)),
+              SizedBox(width: isLargeScreen ? 10.0 : AppTheme.responsiveSpacing(context, 10)),
               Expanded(
                 child: Text(
                   label,
                   style: TextStyle(
                     fontFamily: 'VarelaRound',
-                    fontSize: AppTheme.responsiveFontSize(context, 14, min: 12),
+                    fontSize: isLargeScreen ? 14.0 : AppTheme.responsiveFontSize(context, 14, min: 12),
                     fontWeight: FontWeight.w600,
                     color: foregroundColor,
                   ),

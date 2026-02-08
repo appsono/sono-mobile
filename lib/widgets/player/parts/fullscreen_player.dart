@@ -555,63 +555,37 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
                             ),
                           ],
                         ),
-                        body: OrientationBuilder(
-                          builder: (context, orientation) {
-                            final isLandscape =
-                                orientation == Orientation.landscape;
+                        body: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final isLandscape = constraints.maxWidth > constraints.maxHeight;
 
                             if (isLandscape) {
-                              //landscape layout: row with artwork on left, controls on right
+                              //landscape: side-by-side layout
                               return Padding(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: AppTheme.responsiveSpacing(
-                                    context,
-                                    AppTheme.spacing,
-                                  ),
-                                  vertical: AppTheme.spacing,
-                                ),
+                                padding: const EdgeInsets.all(16),
                                 child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
-                                    //artwork on left side
+                                    //artwork on left
                                     Expanded(
-                                      flex: 5,
+                                      flex: 4,
                                       child: Center(
-                                        child:
-                                            _sonoPlayer.isSASStream &&
-                                                    currentSong == null
-                                                ? _buildSASArtwork()
-                                                : _buildSwipeableArtwork(),
+                                        child: _sonoPlayer.isSASStream && currentSong == null
+                                            ? _buildSASArtwork()
+                                            : _buildSwipeableArtworkLandscape(),
                                       ),
                                     ),
-                                    SizedBox(
-                                      width: AppTheme.responsiveSpacing(
-                                        context,
-                                        AppTheme.spacing,
-                                      ),
-                                    ),
-                                    //controls on right side
+                                    const SizedBox(width: 24),
+                                    //controls on right
                                     Expanded(
                                       flex: 6,
                                       child: Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
+                                        mainAxisAlignment: MainAxisAlignment.center,
                                         children: [
                                           const Spacer(),
                                           _buildTrackInfo(currentSong),
-                                          SizedBox(
-                                            height: AppTheme.responsiveSpacing(
-                                              context,
-                                              AppTheme.spacingMd,
-                                            ),
-                                          ),
+                                          const SizedBox(height: 16),
                                           _buildSeekbar(),
-                                          SizedBox(
-                                            height: AppTheme.responsiveSpacing(
-                                              context,
-                                              AppTheme.spacingMd,
-                                            ),
-                                          ),
+                                          const SizedBox(height: 16),
                                           _buildPlaybackControls(),
                                           const Spacer(),
                                         ],
@@ -622,17 +596,13 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
                               );
                             }
 
-                            //portrait layout: original column layout
+                            //portrait: original vertical layout
                             return Padding(
                               padding: EdgeInsets.symmetric(
-                                horizontal: AppTheme.responsiveSpacing(
-                                  context,
-                                  AppTheme.spacingXl,
-                                ),
+                                horizontal: AppTheme.responsiveSpacing(context, AppTheme.spacingXl),
                               ),
                               child: Column(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   const Spacer(flex: 1),
                                   //show SAS artwork or swipeable local playlist artwork
@@ -641,19 +611,9 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
                                       : _buildSwipeableArtwork(),
                                   const Spacer(flex: 2),
                                   _buildTrackInfo(currentSong),
-                                  SizedBox(
-                                    height: AppTheme.responsiveSpacing(
-                                      context,
-                                      AppTheme.spacing,
-                                    ),
-                                  ),
+                                  SizedBox(height: AppTheme.responsiveSpacing(context, AppTheme.spacing)),
                                   _buildSeekbar(),
-                                  SizedBox(
-                                    height: AppTheme.responsiveSpacing(
-                                      context,
-                                      AppTheme.spacing,
-                                    ),
-                                  ),
+                                  SizedBox(height: AppTheme.responsiveSpacing(context, AppTheme.spacing)),
                                   _buildPlaybackControls(),
                                   const Spacer(flex: 1),
                                 ],
@@ -766,21 +726,19 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
 
   /// Build artwork display for SAS mode (network image from host)
   Widget _buildSASArtwork() {
-    final orientation = MediaQuery.of(context).orientation;
-    final isLandscape = orientation == Orientation.landscape;
-
-    //in landscape, limit artwork to screen height, not width
-    final artworkSize = isLandscape
-        ? MediaQuery.of(context).size.height * 0.55 //55% of screen height
-        : AppTheme.responsiveArtworkSize(context, AppTheme.artworkHero);
-
     return ValueListenableBuilder<String?>(
       valueListenable: SASManager().clientArtworkUrl,
       builder: (context, artworkUrl, _) {
         return RepaintBoundary(
           child: SizedBox(
-            width: artworkSize,
-            height: artworkSize,
+            width: AppTheme.responsiveArtworkSize(
+              context,
+              AppTheme.artworkHero,
+            ),
+            height: AppTheme.responsiveArtworkSize(
+              context,
+              AppTheme.artworkHero,
+            ),
             child: Center(
               child: AspectRatio(
                 aspectRatio: 1.0,
@@ -847,18 +805,10 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
   }
 
   Widget _buildSwipeableArtwork() {
-    final orientation = MediaQuery.of(context).orientation;
-    final isLandscape = orientation == Orientation.landscape;
-
-    //in landscape, limit artwork to screen height, not width
-    final artworkSize = isLandscape
-        ? MediaQuery.of(context).size.height * 0.55 //55% of screen height
-        : AppTheme.responsiveArtworkSize(context, AppTheme.artworkHero);
-
     return RepaintBoundary(
       child: SizedBox(
-        width: artworkSize,
-        height: artworkSize,
+        width: AppTheme.responsiveArtworkSize(context, AppTheme.artworkHero),
+        height: AppTheme.responsiveArtworkSize(context, AppTheme.artworkHero),
         child: Listener(
           onPointerDown: (_) {
             _isUserSwiping = true;
@@ -911,6 +861,71 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
                 child: _buildArtworkPageItem(_sonoPlayer.playlist[index]),
               );
             },
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSwipeableArtworkLandscape() {
+    return RepaintBoundary(
+      child: ClipRect(
+        child: SizedBox(
+          width: AppTheme.responsiveArtworkSize(context, AppTheme.artworkHero),
+          height: AppTheme.responsiveArtworkSize(context, AppTheme.artworkHero),
+          child: Listener(
+            onPointerDown: (_) {
+              _isUserSwiping = true;
+            },
+            onPointerUp: (_) {
+              _handleSwipeRelease();
+            },
+            onPointerCancel: (_) {
+              _handleSwipeCancel();
+            },
+            child: PageView.builder(
+              controller: _pageController,
+              itemCount: _sonoPlayer.playlist.length,
+              clipBehavior: Clip.hardEdge,
+
+              onPageChanged: (index) {
+                //only trigger song change if user was swiping
+                //(not from programmatic changes like skip buttons)
+                if (_isUserSwiping) {
+                  final currentPlayerIndex = _sonoPlayer.currentIndex ?? 0;
+                  if (index != currentPlayerIndex) {
+                    _sonoPlayer.skipToQueueItem(index);
+                  }
+                  _isUserSwiping = false;
+                }
+              },
+
+              itemBuilder: (context, index) {
+                return ValueListenableBuilder<double>(
+                  valueListenable: _pageNotifier,
+                  builder: (context, page, child) {
+                    final double pageValue = page - index;
+                    final double scale = (1 - (pageValue.abs() * 0.2)).clamp(
+                      0.8,
+                      1.0,
+                    );
+                    final double rotationY = pageValue * -0.4;
+
+                    return Transform(
+                      alignment: Alignment.center,
+                      transform:
+                          Matrix4.identity()
+                            ..setEntry(3, 2, 0.002)
+                            ..rotateY(rotationY)
+                            //ignore: deprecated_member_use
+                            ..scale(scale),
+                      child: child,
+                    );
+                  },
+                  child: _buildArtworkPageItem(_sonoPlayer.playlist[index]),
+                );
+              },
+            ),
           ),
         ),
       ),

@@ -23,8 +23,12 @@ class HomePageSongItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final responsiveSize = AppTheme.responsiveArtworkSize(context, artworkSize);
-    final borderRadius = 12.0.r;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isLargeScreen = screenWidth > 600;
+    final responsiveSize = isLargeScreen
+        ? artworkSize.clamp(60.0, 90.0)
+        : AppTheme.responsiveArtworkSize(context, artworkSize);
+    final borderRadius = isLargeScreen ? 12.0 : 12.0.r;
     return InkWell(
       onTap: () => onSongTap(song),
       child: Column(
@@ -93,8 +97,12 @@ class HomePageAlbumItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final responsiveSize = AppTheme.responsiveArtworkSize(context, artworkSize);
-    final borderRadius = 12.0.r;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isLargeScreen = screenWidth > 600;
+    final responsiveSize = isLargeScreen
+        ? artworkSize.clamp(100.0, 130.0)
+        : AppTheme.responsiveArtworkSize(context, artworkSize);
+    final borderRadius = isLargeScreen ? 12.0 : 12.0.r;
     return InkWell(
       onTap:
           () => Navigator.push(
@@ -171,10 +179,11 @@ class HomePageArtistItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final responsiveDiameter = AppTheme.responsiveArtworkSize(
-      context,
-      diameter,
-    );
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isLargeScreen = screenWidth > 600;
+    final responsiveDiameter = isLargeScreen
+        ? diameter.clamp(80.0, 100.0)
+        : AppTheme.responsiveArtworkSize(context, diameter);
     return InkWell(
       onTap:
           () => Navigator.push(
