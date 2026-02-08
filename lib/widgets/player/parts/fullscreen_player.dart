@@ -555,40 +555,111 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
                             ),
                           ],
                         ),
-                        body: Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: AppTheme.responsiveSpacing(
-                              context,
-                              AppTheme.spacingXl,
-                            ),
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Spacer(flex: 1),
-                              //show SAS artwork or swipeable local playlist artwork
-                              _sonoPlayer.isSASStream && currentSong == null
-                                  ? _buildSASArtwork()
-                                  : _buildSwipeableArtwork(),
-                              const Spacer(flex: 2),
-                              _buildTrackInfo(currentSong),
-                              SizedBox(
-                                height: AppTheme.responsiveSpacing(
+                        body: OrientationBuilder(
+                          builder: (context, orientation) {
+                            final isLandscape =
+                                orientation == Orientation.landscape;
+
+                            if (isLandscape) {
+                              //landscape layout: row with artwork on left, controls on right
+                              return Padding(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: AppTheme.responsiveSpacing(
+                                    context,
+                                    AppTheme.spacing,
+                                  ),
+                                  vertical: AppTheme.spacing,
+                                ),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    //artwork on left side
+                                    Expanded(
+                                      flex: 5,
+                                      child: Center(
+                                        child:
+                                            _sonoPlayer.isSASStream &&
+                                                    currentSong == null
+                                                ? _buildSASArtwork()
+                                                : _buildSwipeableArtwork(),
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: AppTheme.responsiveSpacing(
+                                        context,
+                                        AppTheme.spacing,
+                                      ),
+                                    ),
+                                    //controls on right side
+                                    Expanded(
+                                      flex: 6,
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          const Spacer(),
+                                          _buildTrackInfo(currentSong),
+                                          SizedBox(
+                                            height: AppTheme.responsiveSpacing(
+                                              context,
+                                              AppTheme.spacingMd,
+                                            ),
+                                          ),
+                                          _buildSeekbar(),
+                                          SizedBox(
+                                            height: AppTheme.responsiveSpacing(
+                                              context,
+                                              AppTheme.spacingMd,
+                                            ),
+                                          ),
+                                          _buildPlaybackControls(),
+                                          const Spacer(),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }
+
+                            //portrait layout: original column layout
+                            return Padding(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: AppTheme.responsiveSpacing(
                                   context,
-                                  AppTheme.spacing,
+                                  AppTheme.spacingXl,
                                 ),
                               ),
-                              _buildSeekbar(),
-                              SizedBox(
-                                height: AppTheme.responsiveSpacing(
-                                  context,
-                                  AppTheme.spacing,
-                                ),
+                              child: Column(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Spacer(flex: 1),
+                                  //show SAS artwork or swipeable local playlist artwork
+                                  _sonoPlayer.isSASStream && currentSong == null
+                                      ? _buildSASArtwork()
+                                      : _buildSwipeableArtwork(),
+                                  const Spacer(flex: 2),
+                                  _buildTrackInfo(currentSong),
+                                  SizedBox(
+                                    height: AppTheme.responsiveSpacing(
+                                      context,
+                                      AppTheme.spacing,
+                                    ),
+                                  ),
+                                  _buildSeekbar(),
+                                  SizedBox(
+                                    height: AppTheme.responsiveSpacing(
+                                      context,
+                                      AppTheme.spacing,
+                                    ),
+                                  ),
+                                  _buildPlaybackControls(),
+                                  const Spacer(flex: 1),
+                                ],
                               ),
-                              _buildPlaybackControls(),
-                              const Spacer(flex: 1),
-                            ],
-                          ),
+                            );
+                          },
                         ),
                         bottomNavigationBar:
                             currentSong != null
@@ -695,19 +766,21 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
 
   /// Build artwork display for SAS mode (network image from host)
   Widget _buildSASArtwork() {
+    final orientation = MediaQuery.of(context).orientation;
+    final isLandscape = orientation == Orientation.landscape;
+
+    //in landscape, limit artwork to screen height, not width
+    final artworkSize = isLandscape
+        ? MediaQuery.of(context).size.height * 0.55 //55% of screen height
+        : AppTheme.responsiveArtworkSize(context, AppTheme.artworkHero);
+
     return ValueListenableBuilder<String?>(
       valueListenable: SASManager().clientArtworkUrl,
       builder: (context, artworkUrl, _) {
         return RepaintBoundary(
           child: SizedBox(
-            width: AppTheme.responsiveArtworkSize(
-              context,
-              AppTheme.artworkHero,
-            ),
-            height: AppTheme.responsiveArtworkSize(
-              context,
-              AppTheme.artworkHero,
-            ),
+            width: artworkSize,
+            height: artworkSize,
             child: Center(
               child: AspectRatio(
                 aspectRatio: 1.0,
@@ -774,10 +847,18 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
   }
 
   Widget _buildSwipeableArtwork() {
+    final orientation = MediaQuery.of(context).orientation;
+    final isLandscape = orientation == Orientation.landscape;
+
+    //in landscape, limit artwork to screen height, not width
+    final artworkSize = isLandscape
+        ? MediaQuery.of(context).size.height * 0.55 //55% of screen height
+        : AppTheme.responsiveArtworkSize(context, AppTheme.artworkHero);
+
     return RepaintBoundary(
       child: SizedBox(
-        width: AppTheme.responsiveArtworkSize(context, AppTheme.artworkHero),
-        height: AppTheme.responsiveArtworkSize(context, AppTheme.artworkHero),
+        width: artworkSize,
+        height: artworkSize,
         child: Listener(
           onPointerDown: (_) {
             _isUserSwiping = true;

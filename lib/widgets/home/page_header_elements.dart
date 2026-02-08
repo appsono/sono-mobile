@@ -13,30 +13,40 @@ class ShuffleCreatePlaylistButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isLargeScreen = screenWidth > 600;
+
     return Padding(
       padding: EdgeInsets.all(AppTheme.responsiveSpacing(context, 16)),
-      child: Row(
-        children: [
-          Expanded(
-            child: _ActionButton(
-              onTap: onShuffleAll,
-              icon: Icons.shuffle_rounded,
-              label: 'Shuffle all',
-              isDark: true,
-            ),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: isLargeScreen ? 600 : double.infinity,
           ),
-          SizedBox(
-            width: AppTheme.responsiveSpacing(context, AppTheme.spacingSm),
+          child: Row(
+            children: [
+              Expanded(
+                child: _ActionButton(
+                  onTap: onShuffleAll,
+                  icon: Icons.shuffle_rounded,
+                  label: 'Shuffle all',
+                  isDark: true,
+                ),
+              ),
+              SizedBox(
+                width: AppTheme.responsiveSpacing(context, AppTheme.spacingSm),
+              ),
+              Expanded(
+                child: _ActionButton(
+                  onTap: onCreatePlaylist,
+                  icon: Icons.add_rounded,
+                  label: 'Create Playlist',
+                  isDark: false,
+                ),
+              ),
+            ],
           ),
-          Expanded(
-            child: _ActionButton(
-              onTap: onCreatePlaylist,
-              icon: Icons.add_rounded,
-              label: 'Create Playlist',
-              isDark: false,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

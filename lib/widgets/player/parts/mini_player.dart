@@ -379,10 +379,12 @@ class _SonoBottomPlayerState extends State<SonoBottomPlayer>
           child: GestureDetector(
             onTap: _openFullscreenPlayer,
             child: Container(
-              height: AppTheme.responsiveDimension(
-                context,
-                AppTheme.miniPlayerHeight,
-              ),
+              height: isLargeScreen
+                  ? AppTheme.miniPlayerHeight // Fixed height on large screens
+                  : AppTheme.responsiveDimension(
+                    context,
+                    AppTheme.miniPlayerHeight,
+                  ),
               margin: EdgeInsets.fromLTRB(
                 isLargeScreen ? (screenWidth - 600) / 2 + 12 : 12,
                 0,
@@ -464,10 +466,12 @@ class _SonoBottomPlayerState extends State<SonoBottomPlayer>
                       }
                     },
                     child: Container(
-                      height: AppTheme.responsiveDimension(
-                        context,
-                        AppTheme.miniPlayerHeight,
-                      ),
+                      height: isLargeScreen
+                          ? AppTheme.miniPlayerHeight // Fixed height on large screens
+                          : AppTheme.responsiveDimension(
+                            context,
+                            AppTheme.miniPlayerHeight,
+                          ),
                       margin: EdgeInsets.fromLTRB(
                         isLargeScreen ? (screenWidth - 600) / 2 + 12 : 12,
                         0,
@@ -612,13 +616,13 @@ class _SonoBottomPlayerState extends State<SonoBottomPlayer>
                     : 0.0;
 
             return ClipRRect(
-              borderRadius: BorderRadius.circular(30),
+              borderRadius: BorderRadius.circular(16),
               child: Stack(
                 alignment: Alignment.center,
                 children: [
                   Container(
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(30),
+                      borderRadius: BorderRadius.circular(16),
                       border: Border.all(
                         color: AppTheme.miniPlayerProgressFill,
                         width: 2,
@@ -628,7 +632,7 @@ class _SonoBottomPlayerState extends State<SonoBottomPlayer>
                   Container(
                     margin: const EdgeInsets.all(2.0),
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(28),
+                      borderRadius: BorderRadius.circular(14),
                       gradient: LinearGradient(
                         colors: [
                           AppTheme.surfaceDark,
@@ -644,7 +648,7 @@ class _SonoBottomPlayerState extends State<SonoBottomPlayer>
                       child: Container(
                         margin: const EdgeInsets.all(2.0),
                         child: ClipRRect(
-                          borderRadius: BorderRadius.circular(28),
+                          borderRadius: BorderRadius.circular(14),
                           child: FractionallySizedBox(
                             widthFactor: progress,
                             alignment: Alignment.centerLeft,
@@ -1001,13 +1005,13 @@ class _MiniPlayerContent extends StatelessWidget {
                     : 0.0;
 
             return ClipRRect(
-              borderRadius: BorderRadius.circular(30),
+              borderRadius: BorderRadius.circular(16),
               child: Stack(
                 alignment: Alignment.center,
                 children: [
                   Container(
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(30),
+                      borderRadius: BorderRadius.circular(16),
                       border: Border.all(
                         color: AppTheme.miniPlayerProgressFill,
                         width: 2,
@@ -1017,7 +1021,7 @@ class _MiniPlayerContent extends StatelessWidget {
                   Container(
                     margin: const EdgeInsets.all(2.0),
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(28),
+                      borderRadius: BorderRadius.circular(14),
                       gradient: LinearGradient(
                         colors: [
                           AppTheme.surfaceDark,
@@ -1033,7 +1037,7 @@ class _MiniPlayerContent extends StatelessWidget {
                       child: Container(
                         margin: const EdgeInsets.all(2.0),
                         child: ClipRRect(
-                          borderRadius: BorderRadius.circular(28),
+                          borderRadius: BorderRadius.circular(14),
                           child: FractionallySizedBox(
                             widthFactor: progress,
                             alignment: Alignment.centerLeft,

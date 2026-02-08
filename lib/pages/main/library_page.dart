@@ -387,10 +387,24 @@ class _LibraryPageState extends State<LibraryPage>
   }
 
   Widget _buildGridView(List<_LibraryCategory> categories) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    //responsive column count based on screen width
+    int crossAxisCount = 2; //default
+    if (screenWidth > 1200) {
+      crossAxisCount = 6; //large tablets/desktops
+    } else if (screenWidth > 900) {
+      crossAxisCount = 5; //medium tablets
+    } else if (screenWidth > 700) {
+      crossAxisCount = 4; //small tablets
+    } else if (screenWidth > 500) {
+      crossAxisCount = 3; //large phones in landscape
+    }
+
     return GridView.builder(
       padding: const EdgeInsets.all(16).copyWith(bottom: 180),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: crossAxisCount,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
         childAspectRatio: 1.2,
