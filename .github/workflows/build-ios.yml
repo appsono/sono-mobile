@@ -23,11 +23,6 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
-      - name: Install CocoaPods dependencies
-        run: |
-          cd ios
-          pod install
-
       - name: Create .env file
         run: |
           cat > .env << EOF
@@ -60,8 +55,34 @@ jobs:
           echo "version_code=$VERSION_CODE" >> $GITHUB_OUTPUT
           echo "Version: $VERSION, Code: $VERSION_CODE"
 
+      - name: Install CocoaPods (pre-build)
+        run: |
+          cd ios
+          pod install
+
       - name: Build iOS (unsigned)
         run: flutter build ios --profile --no-codesign
+
+      - name: Verify Frameworks in Runner.app
+        run: |
+          APP_PATH="build/ios/iphoneos/Runner.app"
+          echo "Checking frameworks in Runner.app..."
+          if [ -d "$APP_PATH/Frameworks" ]; then
+            echo "✓ Frameworks directory exists"
+            ls -la "$APP_PATH/Frameworks/"
+          else
+            echo "✗ Frameworks directory missing! Plugins won't work."
+            exit 1
+          fi
+
+          echo "Checking for just_audio framework..."
+          if [ -d "$APP_PATH/Frameworks/just_audio.framework" ] || [ -f "$APP_PATH/Frameworks/just_audio.framework" ]; then
+            echo "✓ just_audio framework found"
+          else
+            echo "✗ just_audio framework NOT found!"
+            echo "Available frameworks:"
+            ls -la "$APP_PATH/Frameworks/" || echo "No frameworks at all!"
+          fi
 
       - name: Package unsigned IPA
         run: |
