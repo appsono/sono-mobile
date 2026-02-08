@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:on_audio_query/on_audio_query.dart' as query;
 import 'package:sono/data/repositories/playlists_repository.dart';
@@ -6,6 +7,7 @@ import 'package:sono/data/models/playlist_model.dart';
 
 /// Service for synchronizing playlists with Android MediaStore
 /// Handles creating, updating, and deleting MediaStore playlists
+/// Note: MediaStore operations are Android-only and will be skipped on iOS
 class MediaStoreSyncService {
   final query.OnAudioQuery _audioQuery = query.OnAudioQuery();
   final PlaylistsRepository _playlistsRepo = PlaylistsRepository();
@@ -15,7 +17,16 @@ class MediaStoreSyncService {
 
   /// Create a playlist in MediaStore with duplicate name handling
   /// Returns the MediaStore playlist ID or null if failed
+  /// Note: Returns null on iOS (MediaStore is Android-only)
   Future<int?> createMediaStorePlaylist(String baseName) async {
+    //skip MediaStore operations on iOS
+    if (!Platform.isAndroid) {
+      debugPrint(
+        'MediaStoreSyncService: Skipping MediaStore playlist creation on iOS',
+      );
+      return null;
+    }
+
     try {
       String finalName = baseName;
       int attempt = 1;
@@ -65,6 +76,11 @@ class MediaStoreSyncService {
 
   /// Check if a MediaStore playlist with the given name exists
   Future<bool> _mediaStorePlaylistExists(String name) async {
+    //skip on iOS
+    if (!Platform.isAndroid) {
+      return false;
+    }
+
     try {
       final playlists = await _audioQuery.queryPlaylists();
       return playlists.any((p) => p.playlist == name);
@@ -80,6 +96,14 @@ class MediaStoreSyncService {
 
   /// Delete a playlist from MediaStore
   Future<bool> deleteMediaStorePlaylist(int mediastoreId) async {
+    //skip on iOS
+    if (!Platform.isAndroid) {
+      debugPrint(
+        'MediaStoreSyncService: Skipping MediaStore playlist deletion on iOS',
+      );
+      return true; //return success since theres nothing to delete on iOS
+    }
+
     try {
       final success = await _audioQuery.removePlaylist(mediastoreId);
 
@@ -106,6 +130,11 @@ class MediaStoreSyncService {
 
   /// Add a song to a MediaStore playlist
   Future<bool> addSongToMediaStorePlaylist(int mediastoreId, int songId) async {
+    //skip on iOS
+    if (!Platform.isAndroid) {
+      return true; //return success since MediaStore doesnt exist on iOS
+    }
+
     try {
       final success = await _audioQuery.addToPlaylist(mediastoreId, songId);
 
@@ -133,6 +162,11 @@ class MediaStoreSyncService {
     int mediastoreId,
     int songId,
   ) async {
+    //skip on iOS
+    if (!Platform.isAndroid) {
+      return true; //return success since MediaStore doesnt exist on iOS
+    }
+
     try {
       final success = await _audioQuery.removeFromPlaylist(
         mediastoreId,
@@ -163,6 +197,14 @@ class MediaStoreSyncService {
     int playlistId,
     int mediastoreId,
   ) async {
+    //skip on iOS
+    if (!Platform.isAndroid) {
+      debugPrint(
+        'MediaStoreSyncService: Skipping MediaStore sync on iOS',
+      );
+      return true; //return success since MediaStore doesnt exist on iOS
+    }
+
     try {
       //get songs from database
       final songIds = await _playlistSongsRepo.getSongIds(playlistId);
@@ -216,6 +258,14 @@ class MediaStoreSyncService {
 
   /// Retry syncing a playlist that previously failed
   Future<bool> retrySyncPlaylist(int playlistId) async {
+    //skip on iOS
+    if (!Platform.isAndroid) {
+      debugPrint(
+        'MediaStoreSyncService: Skipping retry sync on iOS',
+      );
+      return true; //return success since MediaStore doesnt exist on iOS
+    }
+
     try {
       final playlist = await _playlistsRepo.getPlaylist(playlistId);
       if (playlist == null) {
@@ -300,6 +350,14 @@ class MediaStoreSyncService {
 
   /// Retry all playlists that need syncing
   Future<Map<String, int>> retryAllFailedSyncs() async {
+    //skip on iOS
+    if (!Platform.isAndroid) {
+      debugPrint(
+        'MediaStoreSyncService: Skipping retry all failed syncs on iOS',
+      );
+      return {'succeeded': 0, 'failed': 0, 'total': 0};
+    }
+
     try {
       final playlistsNeedingSync =
           await _playlistsRepo.getPlaylistsNeedingSync();
@@ -335,6 +393,11 @@ class MediaStoreSyncService {
 
   /// Get the display name for a MediaStore playlist (with number suffix if exists)
   Future<String> getDisplayName(String baseName) async {
+    //skip on iOS => just return the base name
+    if (!Platform.isAndroid) {
+      return baseName;
+    }
+
     String finalName = baseName;
     int attempt = 1;
 
@@ -355,6 +418,11 @@ class MediaStoreSyncService {
 
   /// Check if MediaStore playlist still exists
   Future<bool> mediaStorePlaylistExists(int mediastoreId) async {
+    //skip on iOS
+    if (!Platform.isAndroid) {
+      return false;
+    }
+
     try {
       final playlists = await _audioQuery.queryPlaylists();
       return playlists.any((p) => p.id == mediastoreId);
