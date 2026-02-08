@@ -75,7 +75,7 @@
 	<string>Sono may use location for personalized content and features.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Camera access needed to scan QR codes for joining SAS streams and taking Profile Pictures for Sono</string>
-	<key>NSUserNotificationUsageDescription</key>
+	<key>NSUserNotificationsUsageDescription</key>
 	<string>Sono sends notifications about session updates and app status.</string>
 	<key>NSDocumentsFolderUsageDescription</key>
 	<string>Sono needs access to save and load audio files.</string>
