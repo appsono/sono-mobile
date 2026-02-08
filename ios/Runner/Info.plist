@@ -79,6 +79,8 @@
 	<string>Sono sends notifications about session updates and app status.</string>
 	<key>NSDocumentsFolderUsageDescription</key>
 	<string>Sono needs access to save and load audio files.</string>
+	<key>NSAppleMusicUsageDescription</key>
+	<string>Sono needs access to your music library to display and play your songs.</string>
     
     <key>NSBluetoothAlwaysUsageDescription</key>
     <string>Sono needs Bluetooth access to connect to external speakers and devices.</string>

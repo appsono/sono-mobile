@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:on_audio_query/on_audio_query.dart';
 import 'package:sono/styles/app_theme.dart';
 import 'package:sono/services/settings/developer_settings_service.dart';
 import 'package:sono/services/settings/library_settings_service.dart';
@@ -111,7 +112,8 @@ class _SetupFlowPageState extends State<SetupFlowPage>
       _installPermissionGranted =
           await Permission.requestInstallPackages.isGranted;
     } else {
-      _mediaPermissionGranted = true;
+      //iOS: check media library permission via on_audio_query
+      _mediaPermissionGranted = await OnAudioQuery().permissionsStatus();
       _allFilesPermissionGranted = true;
       _notificationPermissionGranted = await Permission.notification.isGranted;
       _alarmPermissionGranted = true;
@@ -251,6 +253,10 @@ class _SetupFlowPageState extends State<SetupFlowPage>
                 status = await Permission.storage.request();
               }
               setState(() => _mediaPermissionGranted = status.isGranted);
+            } else {
+              //iOS: request media library permission via on_audio_query
+              final granted = await OnAudioQuery().permissionsRequest();
+              setState(() => _mediaPermissionGranted = granted);
             }
           },
           onNext: _nextPage,
