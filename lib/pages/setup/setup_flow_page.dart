@@ -141,6 +141,7 @@ class _SetupFlowPageState extends State<SetupFlowPage>
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('[SetupFlow] build() page=$_currentPage');
     return Scaffold(
       backgroundColor: AppTheme.backgroundDark,
       body: SafeArea(

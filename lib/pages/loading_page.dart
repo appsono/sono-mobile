@@ -30,12 +30,18 @@ class _LoadingPageState extends State<LoadingPage> {
   }
 
   Future<void> _initializeApp() async {
+    debugPrint('[LoadingPage] _initializeApp started');
+
     //check if setup has been completed
     final setupCompleted =
         await DeveloperSettingsService.instance.getSetupCompleted();
+    debugPrint(
+      '[LoadingPage] setupCompleted=$setupCompleted, mounted=$mounted',
+    );
 
     if (!setupCompleted && mounted) {
       //show setup flow for first-time users
+      debugPrint('[LoadingPage] Navigating to SetupFlowPage');
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder:
@@ -53,8 +59,11 @@ class _LoadingPageState extends State<LoadingPage> {
       return;
     }
 
+    debugPrint('[LoadingPage] Setup done, checking permissions...');
     await _checkAndRequestPermissions();
+    debugPrint('[LoadingPage] Permissions done, initializing audio...');
     await _initializeAudioService();
+    debugPrint('[LoadingPage] Audio done, navigating to AppScaffold');
 
     if (mounted) {
       Navigator.of(context).pushReplacement(

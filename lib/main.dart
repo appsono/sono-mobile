@@ -61,12 +61,7 @@ Future<void> _initializeFirebase() async {
       //firebase was already initialized
       FirebaseAvailability.instance.markAvailable();
     } else {
-      if (kDebugMode) {
-        print(
-          "CRITICAL: Firebase Init Failed. App will run without Firebase features.",
-        );
-        print(e);
-      }
+      debugPrint('[Firebase] Init FAILED: $e');
       //do NOT rethrow, app works fine without firebase
     }
   }
@@ -86,14 +81,13 @@ void main() async {
   }
 
   //run independent initializations
+  debugPrint('[Init] Starting EnvConfig + Firebase initialization...');
   await Future.wait([EnvConfig.initialize(), _initializeFirebase()]);
+  debugPrint(
+    '[Init] Firebase available: ${FirebaseAvailability.instance.isAvailable}',
+  );
 
-  if (kDebugMode) {
-    debugPrint(
-      '[Firebase] Available: ${FirebaseAvailability.instance.isAvailable}',
-    );
-  }
-
+  debugPrint('[Init] Calling runApp...');
   runApp(
     MultiProvider(
       providers: [

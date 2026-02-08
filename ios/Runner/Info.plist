@@ -97,6 +97,8 @@
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 
+	<key>FLTEnableImpeller</key>
+	<false/>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
