@@ -20,7 +20,7 @@ class SetupFlowPage extends StatefulWidget {
 class _SetupFlowPageState extends State<SetupFlowPage>
     with TickerProviderStateMixin {
   int _currentPage = 0;
-  final int _totalSteps = 8;
+  late final int _totalSteps;
   bool _isTransitioning = false;
 
   late AnimationController _contentController;
@@ -41,6 +41,9 @@ class _SetupFlowPageState extends State<SetupFlowPage>
   @override
   void initState() {
     super.initState();
+    //iOS: 4 relevant steps (Welcome, Media, Excluded Folders, Notifications, All Set)
+    //Android: 8 steps (all pages)
+    _totalSteps = Platform.isIOS ? 4 : 8;
     _setupAnimations();
     _checkInitialPermissions();
   }
@@ -137,8 +140,48 @@ class _SetupFlowPageState extends State<SetupFlowPage>
     _isTransitioning = false;
   }
 
-  void _nextPage() => _navigateToPage(_currentPage + 1);
-  void _previousPage() => _navigateToPage(_currentPage - 1);
+  int _getDisplayStep() {
+    if (Platform.isAndroid) return _currentPage;
+
+    //iOS: map page number to display step (skipping Android-only pages)
+    //Page 0 -> Step 0, Page 1 -> Step 1, Page 3 -> Step 2, Page 4 -> Step 3, Page 8 -> Step 4
+    switch (_currentPage) {
+      case 0:
+        return 0;
+      case 1:
+        return 1;
+      case 3:
+        return 2;
+      case 4:
+        return 3;
+      case 8:
+        return 4;
+      default:
+        return _currentPage;
+    }
+  }
+
+  void _nextPage() {
+    int nextPage = _currentPage + 1;
+    //iOS: skip Android-only pages (2, 5, 6, 7)
+    if (Platform.isIOS) {
+      while (nextPage == 2 || nextPage == 5 || nextPage == 6 || nextPage == 7) {
+        nextPage++;
+      }
+    }
+    _navigateToPage(nextPage);
+  }
+
+  void _previousPage() {
+    int prevPage = _currentPage - 1;
+    //iOS: skip Android-only pages (2, 5, 6, 7)
+    if (Platform.isIOS) {
+      while (prevPage == 2 || prevPage == 5 || prevPage == 6 || prevPage == 7) {
+        prevPage--;
+      }
+    }
+    _navigateToPage(prevPage);
+  }
 
   Future<void> _completeSetup() async {
     await DeveloperSettingsService.instance.setSetupCompleted(true);
@@ -165,7 +208,7 @@ class _SetupFlowPageState extends State<SetupFlowPage>
             // Progress indicator (only show after welcome)
             if (_currentPage > 0)
               _ProgressIndicator(
-                currentStep: _currentPage,
+                currentStep: _getDisplayStep(),
                 totalSteps: _totalSteps,
               ),
           ],
@@ -175,6 +218,19 @@ class _SetupFlowPageState extends State<SetupFlowPage>
   }
 
   Widget _buildCurrentPage() {
+    //iOS: skip Android-only pages
+    if (Platform.isIOS) {
+      if (_currentPage == 2 ||
+          _currentPage == 5 ||
+          _currentPage == 6 ||
+          _currentPage == 7) {
+        //auto-skip All Files Access, Alarms, Battery, Install Updates on iOS
+        WidgetsBinding.instance
+            .addPostFrameCallback((_) => _navigateToPage(_currentPage + 1));
+        return const Center(child: CircularProgressIndicator());
+      }
+    }
+
     switch (_currentPage) {
       case 0:
         return _WelcomePage(onNext: _nextPage);

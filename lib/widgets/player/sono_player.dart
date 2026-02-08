@@ -1163,9 +1163,11 @@ class SonoPlayer extends BaseAudioHandler {
       //load the audio source
       final songUri = Uri.parse(currentSong.uri!);
       final AudioSource audioSource;
-      if (songUri.scheme == 'content') {
+      if (songUri.scheme == 'content' || songUri.scheme == 'ipod-library') {
+        //android content:// URIs or iOS ipod-library:// URIs
         audioSource = AudioSource.uri(songUri);
       } else {
+        //file path
         audioSource = AudioSource.uri(Uri.file(currentSong.uri!));
       }
 
@@ -2139,9 +2141,11 @@ class SonoPlayer extends BaseAudioHandler {
       final AudioSource audioSource;
       final songUri = Uri.parse(song.uri!);
 
-      if (songUri.scheme == 'content') {
+      if (songUri.scheme == 'content' || songUri.scheme == 'ipod-library') {
+        //android content:// URIs or iOS ipod-library:// URIs
         audioSource = AudioSource.uri(songUri);
       } else {
+        //file path
         audioSource = AudioSource.uri(Uri.file(song.uri!));
       }
 
@@ -2279,6 +2283,9 @@ class SonoPlayer extends BaseAudioHandler {
       } catch (e) {
         return false;
       }
+    } else if (song.uri?.startsWith('ipod-library://') ?? false) {
+      //iOS Apple Music library items => assume playable
+      return true;
     } else if (song.uri?.startsWith('/') ?? false) {
       return await File(song.uri!).exists();
     }
