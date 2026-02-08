@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:on_audio_query/on_audio_query.dart' as query;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -7,6 +8,7 @@ import 'package:sono/data/models/playlist_model.dart';
 
 /// Service for migrating playlists from MediaStore to database
 /// This is a one-time (!) operation that runs on first app launch after update
+/// Note: Only runs on Android (MediaStore doesnt exist on iOS)
 class PlaylistMigrationService {
   final query.OnAudioQuery _audioQuery = query.OnAudioQuery();
   final PlaylistsRepository _playlistsRepo = PlaylistsRepository();
@@ -32,6 +34,22 @@ class PlaylistMigrationService {
   /// Perform the full migration
   /// Returns a map with migration statistics
   Future<Map<String, dynamic>> migrate() async {
+    //skip migration on iOS (MediaStore doesnt exist)
+    if (!Platform.isAndroid) {
+      debugPrint(
+        'PlaylistMigrationService: Skipping migration on iOS (MediaStore not available)',
+      );
+      //mark as complete so it doesnt try to run again
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_migrationFlagKey, true);
+      return {
+        'success': true,
+        'skippedOnIOS': true,
+        'playlistCount': 0,
+        'songCount': 0,
+      };
+    }
+
     try {
       final stopwatch = Stopwatch()..start();
       debugPrint('PlaylistMigrationService: Starting migration...');
