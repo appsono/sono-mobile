@@ -2277,8 +2277,18 @@ class SonoPlayer extends BaseAudioHandler {
     //handle unexpected errors
     if (!isPreloading) {
       final errorStr = e.toString();
+      final stackStr = stackTrace.toString();
+
+      //log full error to console
+      debugPrint('=== PLAYBACK ERROR ===');
+      debugPrint('Error: $errorStr');
+      debugPrint('Stack trace: $stackStr');
+      debugPrint('Song: ${song.title} (${song.uri})');
+      debugPrint('=====================');
+
+      //show truncated error in UI (limit to 200 chars for better visibility)
       final truncatedError =
-          errorStr.length > 50 ? errorStr.substring(0, 50) : errorStr;
+          errorStr.length > 200 ? '${errorStr.substring(0, 200)}...' : errorStr;
       _playerErrorMessage.value = 'Playback error: $truncatedError';
       _setLifecycleState(PlayerLifecycleState.error);
 
