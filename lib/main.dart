@@ -293,8 +293,15 @@ class _SonoState extends State<Sono> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     return Consumer<ThemeService>(
       builder: (context, themeService, child) {
+        final data = MediaQueryData.fromView(View.of(context));
+        final shortestSide = data.size.shortestSide;
+        final isTablet = shortestSide > 600;
+
         return ScreenUtilInit(
-          designSize: const Size(414, 896), //base design size
+          designSize:
+              isTablet
+                  ? const Size(768, 1024) //tablet design size
+                  : const Size(414, 896), //phone design size
           minTextAdapt: true,
           splitScreenMode: true,
           builder: (context, child) {
