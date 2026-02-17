@@ -44,13 +44,16 @@ dependencies:
   crypto: ^3.0.6
 
   # Audio
-  just_audio: ^0.10.5
+  just_audio: ^0.9.40
+  just_audio_mpv: ^0.1.7 # discontinued
+  just_audio_media_kit: ^2.1.0
+  media_kit_libs_linux: any
   on_audio_query:
-    # path: ../../plugins/on_audio_query/packages/on_audio_query
+    #path: ../../plugins/on_audio_query/packages/on_audio_query
     git:
       url: https://github.com/appsono/on_audio_query.git
       path: packages/on_audio_query
-      ref: v2.9.6
+      ref: v2.9.7
   audio_service: ^0.18.18
 
   # Device & storage
@@ -95,6 +98,7 @@ dependencies:
 
   # Environment configuration
   flutter_dotenv: ^6.0.0
+  sqflite_common_ffi: ^2.4.0+2
 
 dev_dependencies:
   flutter_test:

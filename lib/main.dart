@@ -1,9 +1,12 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:just_audio_media_kit/just_audio_media_kit.dart';
 import 'package:sono/services/utils/theme_service.dart';
 import 'package:sono/services/utils/env_config.dart';
 import 'package:sono/services/utils/crashlytics_service.dart';
@@ -69,6 +72,19 @@ Future<void> _initializeFirebase() async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  //initialize sqflite for desktop platforms (Linux, Windows, macOS)
+  if (Platform.isLinux || Platform.isWindows || Platform.isMacOS) {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+    debugPrint('[Init] Initialized sqflite_common_ffi for desktop platform');
+  }
+
+  //initialize just_audio_media_kit for Linux (fixes MPV URI encoding issues)
+  if (Platform.isLinux) {
+    JustAudioMediaKit.ensureInitialized();
+    debugPrint('[Init] Initialized just_audio_media_kit for Linux');
+  }
 
   //cap flutters imageCache to prevent RAM overflow
   //default is unbounded which can cause memory to balloon to 1GB+
