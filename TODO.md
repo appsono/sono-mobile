@@ -29,7 +29,12 @@
 - [x] Remove weird pinkish background, when scrolling, from all headers
 see on
 - [x] Re-design search page, from scratch
-- [ ] Re-design artist page, from scratch
+- [x] Re-design artist page, from scratch
+- [ ] Add way to add Custom Server IP to fetch and stream songs from it (similiar how it was intially planned with Tidal)
+- [ ] Add some form of Extension System
+  - will allow third-party devs to build installable plugins that interact with UI, player, and UI (cross-platform)
+  - Concept: Extension = packaged bundles (.sopk files) containing Lua scripts, UI definitions, runtime and rendering layer
+  - Calls will be made through a **bridged API**. Can read current track, react to playback events, access audio data, render custom screens, and more. 
 
 ## Long-term tasks
 
