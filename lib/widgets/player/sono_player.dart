@@ -1033,10 +1033,7 @@ class SonoPlayer extends BaseAudioHandler {
 
       final jsonString = jsonEncode(snapshot.toJson());
       await _prefsService.setString(playbackSnapshotKey, jsonString);
-
-      if (kDebugMode) {
-        debugPrint('[Snapshot] Saved: $snapshot');
-      }
+      
     } catch (e) {
       if (kDebugMode) {
         debugPrint('[Snapshot] Save failed: $e');
@@ -1261,14 +1258,14 @@ class SonoPlayer extends BaseAudioHandler {
     //cancel existing timer if any
     _positionSaveTimer?.cancel();
 
-    //save position every 15 seconds during playback
+    //save position every 5 seconds during playback
     _positionSaveTimer = Timer.periodic(
-      const Duration(seconds: 15),
+      const Duration(seconds: 5),
       (_) => savePlaybackSnapshot(),
     );
 
     if (kDebugMode) {
-      debugPrint('[PositionSave] Periodic saving started (15s interval)');
+      debugPrint('[PositionSave] Periodic saving started (5s interval)');
     }
   }
 
