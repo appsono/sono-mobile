@@ -1157,9 +1157,6 @@ class SonoPlayer extends BaseAudioHandler {
       //restore repeat mode
       final restoredRepeatMode = _parseRepeatMode(snapshot.repeatMode);
       _repeatMode.value = restoredRepeatMode;
-      final loopMode =
-          restoredRepeatMode == RepeatMode.one ? LoopMode.one : LoopMode.off;
-      await _primaryPlayer.setLoopMode(loopMode);
 
       //restore speed and pitch
       if (_currentSpeed.value != snapshot.playbackSpeed) {
@@ -1503,8 +1500,18 @@ class SonoPlayer extends BaseAudioHandler {
       _queueManager.moveTo(index);
       await _crossfadeToCurrentSong();
     } else {
+      //check if target is the preloaded next song on secondary player
+      final isNextSong = index == _queueManager.currentIndex + 1;
+
       _queueManager.moveTo(index);
-      await _playCurrentSong();
+
+      if (isNextSong &&
+          _secondaryPlayer != null &&
+          _secondaryPlayer!.processingState == ProcessingState.ready) {
+        await _swapToPreloadedSong();
+      } else {
+        await _playCurrentSong();
+      }
     }
   }
 
@@ -1669,26 +1676,22 @@ class SonoPlayer extends BaseAudioHandler {
     if (!SASManager().checkPlaybackControl()) return;
     final current = _repeatMode.value;
     RepeatMode next;
-    LoopMode playerLoop;
 
     switch (current) {
       case RepeatMode.off:
         next = RepeatMode.all;
-        playerLoop = LoopMode.off;
         break;
       case RepeatMode.all:
         next = RepeatMode.one;
-        playerLoop = LoopMode.one;
         break;
       case RepeatMode.one:
         next = RepeatMode.off;
-        playerLoop = LoopMode.off;
         break;
     }
 
     _repeatMode.value = next;
-    _primaryPlayer.setLoopMode(playerLoop);
-    _secondaryPlayer?.setLoopMode(playerLoop);
+    //LoopMode always stays off => repeat-one is handled manually in
+    //_handleProcessingStateChange so the notification resets properly
 
     playbackState.add(
       playbackState.value.copyWith(repeatMode: _toAudioServiceRepeatMode(next)),
@@ -2259,9 +2262,9 @@ class SonoPlayer extends BaseAudioHandler {
       }
 
       //set playback parameters
-      await targetPlayer.setLoopMode(
-        _repeatMode.value == RepeatMode.one ? LoopMode.one : LoopMode.off,
-      );
+      //always use LoopMode.off => repeat-one is handled manually in
+      //_handleProcessingStateChange so the notification resets properly
+      await targetPlayer.setLoopMode(LoopMode.off);
 
       //apply speed => skip on Linux/MPV if default (1.0) to avoid compatibility issues
       //only apply if user has changed it from default
@@ -2835,10 +2838,9 @@ class SonoPlayer extends BaseAudioHandler {
       if (_repeatMode.value == RepeatMode.one) {
         await _primaryPlayer.seek(Duration.zero);
         _position.value = Duration.zero;
+        await _primaryPlayer.play();
+        _setLifecycleState(PlayerLifecycleState.playing);
         _broadcastState();
-        if (!_primaryPlayer.playing) {
-          play();
-        }
       } else {
         final hasNext =
             _repeatMode.value == RepeatMode.all ||
