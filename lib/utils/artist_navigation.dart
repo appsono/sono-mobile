@@ -4,6 +4,30 @@ import 'package:sono/pages/library/artist_page.dart';
 
 /// Helper class for navigating to artist pages
 class ArtistNavigation {
+  //cached artist list to avoid re-querying MediaStore on every navigation
+  static List<ArtistModel>? _cachedArtists;
+  static DateTime? _cacheTimestamp;
+  static const _cacheDuration = Duration(minutes: 5);
+
+  /// Get artists with caching to avoid slow MediaStore queries
+  static Future<List<ArtistModel>> _getArtists(OnAudioQuery audioQuery) async {
+    final now = DateTime.now();
+    if (_cachedArtists != null &&
+        _cacheTimestamp != null &&
+        now.difference(_cacheTimestamp!) < _cacheDuration) {
+      return _cachedArtists!;
+    }
+    _cachedArtists = await audioQuery.queryArtists();
+    _cacheTimestamp = now;
+    return _cachedArtists!;
+  }
+
+  /// Invalidate the cached artist list
+  static void invalidateCache() {
+    _cachedArtists = null;
+    _cacheTimestamp = null;
+  }
+
   /// Navigate to an artist page using an ArtistModel directly
   static void navigateWithArtistModel(
     BuildContext context,
@@ -25,9 +49,7 @@ class ArtistNavigation {
     OnAudioQuery audioQuery,
   ) async {
     try {
-      //query all artists to find the matching one
-      //note: this is optimized by the native side
-      final artists = await audioQuery.queryArtists();
+      final artists = await _getArtists(audioQuery);
       final artist = artists.firstWhere(
         (a) => a.id == artistId,
         orElse: () => throw Exception('Artist not found'),
@@ -50,8 +72,7 @@ class ArtistNavigation {
     OnAudioQuery audioQuery,
   ) async {
     try {
-      //query all artists
-      final artists = await audioQuery.queryArtists();
+      final artists = await _getArtists(audioQuery);
 
       //try exact match first (case-insensitive)
       var artist = artists.cast<ArtistModel?>().firstWhere(

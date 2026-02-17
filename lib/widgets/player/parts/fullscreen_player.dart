@@ -820,22 +820,15 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
           onPointerCancel: (_) {
             _handleSwipeCancel();
           },
-          child: PageView.builder(
+          child: NotificationListener<ScrollEndNotification>(
+            onNotification: (notification) {
+              _onScrollEnd();
+              return false;
+            },
+            child: PageView.builder(
             controller: _pageController,
             itemCount: _sonoPlayer.playlist.length,
             clipBehavior: Clip.none,
-
-            onPageChanged: (index) {
-              //only trigger song change if user was swiping
-              //(not from programmatic changes like skip buttons)
-              if (_isUserSwiping) {
-                final currentPlayerIndex = _sonoPlayer.currentIndex ?? 0;
-                if (index != currentPlayerIndex) {
-                  _sonoPlayer.skipToQueueItem(index);
-                }
-                _isUserSwiping = false;
-              }
-            },
 
             itemBuilder: (context, index) {
               return ValueListenableBuilder<double>(
@@ -865,7 +858,7 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
           ),
         ),
       ),
-    );
+    ));
   }
 
   Widget _buildSwipeableArtworkLandscape() {
@@ -889,17 +882,7 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
               itemCount: _sonoPlayer.playlist.length,
               clipBehavior: Clip.hardEdge,
 
-              onPageChanged: (index) {
-                //only trigger song change if user was swiping
-                //(not from programmatic changes like skip buttons)
-                if (_isUserSwiping) {
-                  final currentPlayerIndex = _sonoPlayer.currentIndex ?? 0;
-                  if (index != currentPlayerIndex) {
-                    _sonoPlayer.skipToQueueItem(index);
-                  }
-                  _isUserSwiping = false;
-                }
-              },
+              //no onPageChanged: song change is handled via NotificationListener below
 
               itemBuilder: (context, index) {
                 return ValueListenableBuilder<double>(
@@ -934,11 +917,8 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
   }
 
   void _handleSwipeRelease() {
-    if (_pageController.hasClients) {
-      Future.delayed(const Duration(milliseconds: 100), () {
-        _isUserSwiping = false;
-      });
-    }
+    //song change is deferred until scroll settles (via _onScrollEnd)
+    //just mark that the user initiated this swipe
   }
 
   void _handleSwipeCancel() {
@@ -951,6 +931,20 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOutCubic,
       );
+    }
+  }
+
+  /// Called when the PageView scroll animation fully settles after a swipe
+  void _onScrollEnd() {
+    if (!_isUserSwiping) return;
+    _isUserSwiping = false;
+
+    if (!_pageController.hasClients) return;
+    final settledPage = _pageController.page?.round() ?? 0;
+    final currentPlayerIndex = _sonoPlayer.currentIndex ?? 0;
+
+    if (settledPage != currentPlayerIndex) {
+      _sonoPlayer.skipToQueueItem(settledPage);
     }
   }
 
@@ -1923,8 +1917,19 @@ class _SongCreditsViewState extends State<SongCreditsView> {
                     widget.song.artist ?? '',
                   ),
                   onTap: () {
-                    Navigator.pop(context);
-                    _navigateToArtistPage(widget.song);
+                    //capture navigator before popping, since context becomes invalid after pop
+                    final navigator = Navigator.of(context);
+                    final song = widget.song;
+                    navigator.pop();
+                    //use the parent fullscreen player context for navigation
+                    if (song.artist != null) {
+                      final primaryArtist = ArtistStringUtils.getPrimaryArtist(song.artist!);
+                      ArtistNavigation.navigateToArtistByName(
+                        navigator.context,
+                        primaryArtist,
+                        _audioQuery,
+                      );
+                    }
                   },
                 ),
                 if (_isLoadingDate)
@@ -1956,16 +1961,6 @@ class _SongCreditsViewState extends State<SongCreditsView> {
     );
   }
 
-  void _navigateToArtistPage(SongModel song) {
-    if (song.artist == null) return;
-    //get the primary (first) artist from the songs artist string
-    final primaryArtist = ArtistStringUtils.getPrimaryArtist(song.artist!);
-    ArtistNavigation.navigateToArtistByName(
-      context,
-      primaryArtist,
-      _audioQuery,
-    );
-  }
 }
 
 Widget _buildInfoTile({required String label, required String value}) {
