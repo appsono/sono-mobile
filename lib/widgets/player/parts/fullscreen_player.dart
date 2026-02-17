@@ -144,7 +144,9 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
   late SliderThemeData _sliderTheme;
 
   bool _ignoreSwipe = false;
-  bool _isUserSwiping = false; //track if actively swiping
+  bool _isUserSwiping = false; //track if finger is down on artwork
+  bool _swipeInitiatedChange = false; //true when song change was triggered by swipe
+  int? _pendingSwipePage; //page index from onPageChanged while finger is down
 
   bool _isDraggingSeekBar = false;
   double? _draggedPosition;
@@ -269,19 +271,14 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
 
     //sync PageView to new song position
     if (_pageController.hasClients) {
-      final currentPage = _pageController.page?.round() ?? 0;
+      //if the song change was triggered by swiping, the PageView is already
+      //animating to the correct page => dont interfere
+      if (_swipeInitiatedChange) {
+        _swipeInitiatedChange = false;
+      } else {
+        final currentPage = _pageController.page?.round() ?? 0;
 
-      if (currentPage != playerIndex) {
-        //check if PageView is currently animating/being dragged
-        if (_pageController.position.isScrollingNotifier.value) {
-          // PageView is being swiped, wait for scroll to settle then sync
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted && _pageController.hasClients) {
-              _pageController.jumpToPage(playerIndex);
-              _pageNotifier.value = playerIndex.toDouble();
-            }
-          });
-        } else {
+        if (currentPage != playerIndex) {
           //not scrolling (skip button pressed) => animate the cover change
           _pageController.animateToPage(
             playerIndex,
@@ -820,15 +817,11 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
           onPointerCancel: (_) {
             _handleSwipeCancel();
           },
-          child: NotificationListener<ScrollEndNotification>(
-            onNotification: (notification) {
-              _onScrollEnd();
-              return false;
-            },
-            child: PageView.builder(
+          child: PageView.builder(
             controller: _pageController,
             itemCount: _sonoPlayer.playlist.length,
             clipBehavior: Clip.none,
+            onPageChanged: _onPageChanged,
 
             itemBuilder: (context, index) {
               return ValueListenableBuilder<double>(
@@ -858,7 +851,7 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
           ),
         ),
       ),
-    ));
+    );
   }
 
   Widget _buildSwipeableArtworkLandscape() {
@@ -881,8 +874,7 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
               controller: _pageController,
               itemCount: _sonoPlayer.playlist.length,
               clipBehavior: Clip.hardEdge,
-
-              //no onPageChanged: song change is handled via NotificationListener below
+              onPageChanged: _onPageChanged,
 
               itemBuilder: (context, index) {
                 return ValueListenableBuilder<double>(
@@ -916,14 +908,39 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
     );
   }
 
+  void _onPageChanged(int index) {
+    final currentPlayerIndex = _sonoPlayer.currentIndex ?? 0;
+    if (index == currentPlayerIndex) return;
+
+    if (_isUserSwiping) {
+      //finger is still down => store and apply on release
+      _pendingSwipePage = index;
+    } else {
+      //finger already lifted (fast flick) => apply immediately
+      _swipeInitiatedChange = true;
+      _sonoPlayer.skipToQueueItem(index);
+    }
+  }
+
   void _handleSwipeRelease() {
-    //song change is deferred until scroll settles (via _onScrollEnd)
-    //just mark that the user initiated this swipe
+    if (!_isUserSwiping) return;
+    _isUserSwiping = false;
+
+    final pending = _pendingSwipePage;
+    _pendingSwipePage = null;
+
+    if (pending != null) {
+      final currentPlayerIndex = _sonoPlayer.currentIndex ?? 0;
+      if (pending != currentPlayerIndex) {
+        _swipeInitiatedChange = true;
+        _sonoPlayer.skipToQueueItem(pending);
+      }
+    }
   }
 
   void _handleSwipeCancel() {
-    //if swipe was cancelled => snap back to current song
     _isUserSwiping = false;
+    _pendingSwipePage = null;
     final currentPlayerIndex = _sonoPlayer.currentIndex ?? 0;
     if (_pageController.hasClients) {
       _pageController.animateToPage(
@@ -934,19 +951,7 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
     }
   }
 
-  /// Called when the PageView scroll animation fully settles after a swipe
-  void _onScrollEnd() {
-    if (!_isUserSwiping) return;
-    _isUserSwiping = false;
 
-    if (!_pageController.hasClients) return;
-    final settledPage = _pageController.page?.round() ?? 0;
-    final currentPlayerIndex = _sonoPlayer.currentIndex ?? 0;
-
-    if (settledPage != currentPlayerIndex) {
-      _sonoPlayer.skipToQueueItem(settledPage);
-    }
-  }
 
   Widget _buildArtworkPageItem(SongModel song) {
     return RepaintBoundary(
