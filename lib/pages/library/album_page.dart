@@ -945,6 +945,336 @@ class _AlbumPageState extends State<AlbumPage> {
     return Column(children: widgets);
   }
 
+  Widget _buildAlbumArtworkWidget() {
+    return Hero(
+      tag: 'album-artwork-${widget.album.id}',
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+        child: QueryArtworkWidget(
+          id: widget.album.id,
+          type: ArtworkType.ALBUM,
+          artworkFit: BoxFit.cover,
+          artworkQuality: FilterQuality.high,
+          artworkBorder: BorderRadius.zero,
+          size: 800,
+          nullArtworkWidget: Container(
+            decoration: BoxDecoration(
+              color: Colors.grey.shade800,
+              borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+            ),
+            child: const Icon(
+              Icons.album_rounded,
+              color: Colors.white54,
+              size: 100,
+            ),
+          ),
+          keepOldArtwork: true,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAlbumInfoSection({bool isWide = false}) {
+    final horizontalPadding = isWide ? 0.0 : 24.0;
+
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: isWide ? 32.0 : 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          //album artwork section
+          Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: horizontalPadding,
+              vertical: 8.0,
+            ),
+            child: AspectRatio(
+              aspectRatio: 1,
+              child: _buildAlbumArtworkWidget(),
+            ),
+          ),
+
+          SizedBox(height: isWide ? AppTheme.spacingMd : AppTheme.spacingXs),
+
+          //Album Title
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+            child: Text(
+              widget.album.album,
+              style: AppStyles.sonoPlayerTitle.copyWith(
+                fontSize: isWide ? 28 : 32,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.left,
+            ),
+          ),
+
+          SizedBox(height: AppTheme.spacingSm),
+
+          //artist profile pictures
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+            child: InkWell(
+              onTap: _showArtistsModal,
+              borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+              child: Row(
+                children: [
+                  _buildArtistAvatars(),
+                  SizedBox(width: AppTheme.spacingXs),
+                  Expanded(
+                    child: Text(
+                      ArtistStringUtils.getShortDisplay(
+                        _albumArtist ??
+                            widget.album.artist ??
+                            'Unknown Artist',
+                      ),
+                      style: AppStyles.sonoPlayerArtist.copyWith(
+                        fontSize: 16,
+                        color: AppTheme.textSecondaryDark,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          SizedBox(height: AppTheme.spacingSm),
+
+          //song count + duration
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+            child:
+                _loadedSongs != null && _loadedSongs!.isNotEmpty
+                    ? Text(
+                      '${_loadedSongs!.length} songs • ${_formatDuration(_calculateAlbumDuration(_loadedSongs!))}',
+                      style: AppStyles.sonoPlayerArtist.copyWith(
+                        fontSize: 14,
+                        color: Colors.white54,
+                      ),
+                    )
+                    : Text(
+                      '${widget.album.numOfSongs} songs',
+                      style: AppStyles.sonoPlayerArtist.copyWith(
+                        fontSize: 14,
+                        color: Colors.white54,
+                      ),
+                    ),
+          ),
+
+          SizedBox(height: isWide ? AppTheme.spacingLg : AppTheme.spacing),
+
+          //action buttons row
+          _buildActionButtons(isWide: isWide),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButtons({bool isWide = false}) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: isWide ? 0.0 : 24.0),
+      child: Row(
+        children: [
+          //combined left buttons container
+          Container(
+            height: 48,
+            decoration: BoxDecoration(
+              color: AppTheme.elevatedSurfaceDark,
+              borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+              border: Border.all(
+                color: const Color(0xFF3d3d3d),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              children: [
+                //favorite button
+                IconButton(
+                  icon: Icon(
+                    _isAlbumFavorite
+                        ? Icons.star_rounded
+                        : Icons.star_border_rounded,
+                    color:
+                        _isAlbumFavorite
+                            ? AppTheme.textPrimaryDark
+                            : AppTheme.textSecondaryDark,
+                  ),
+                  iconSize: 24,
+                  onPressed: _toggleFavorite,
+                ),
+
+                //share/external link button
+                IconButton(
+                  icon: const Icon(
+                    Icons.open_in_new_rounded,
+                    color: AppTheme.textSecondaryDark,
+                  ),
+                  iconSize: 24,
+                  onPressed: _openLastFmLink,
+                ),
+
+                //three-dot menu button
+                IconButton(
+                  icon: const Icon(
+                    Icons.more_vert_rounded,
+                    color: AppTheme.textSecondaryDark,
+                  ),
+                  iconSize: 24,
+                  onPressed: _showAlbumOptionsBottomSheet,
+                ),
+              ],
+            ),
+          ),
+
+          const Spacer(),
+
+          //shuffle button
+          Container(
+            height: 48,
+            decoration: BoxDecoration(
+              color: AppTheme.elevatedSurfaceDark,
+              borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+              border: Border.all(
+                color: const Color(0xFF3d3d3d),
+                width: 1,
+              ),
+            ),
+            child: IconButton(
+              icon: const Icon(
+                Icons.shuffle_rounded,
+                color: AppTheme.textSecondaryDark,
+              ),
+              iconSize: 24,
+              onPressed:
+                  _loadedSongs != null && _loadedSongs!.isNotEmpty
+                      ? () {
+                        final shuffledSongs = List<SongModel>.from(
+                          _loadedSongs!,
+                        )..shuffle();
+                        SonoPlayer().playNewPlaylist(
+                          shuffledSongs,
+                          0,
+                          context: "Album: ${widget.album.album}",
+                        );
+                      }
+                      : null,
+            ),
+          ),
+
+          SizedBox(width: AppTheme.spacingSm),
+
+          //play/pause button
+          ValueListenableBuilder<SongModel?>(
+            valueListenable: SonoPlayer().currentSong,
+            builder: (context, currentSong, _) {
+              return ValueListenableBuilder<String?>(
+                valueListenable: SonoPlayer().playbackContext,
+                builder: (context, playbackContext, _) {
+                  final expectedContext =
+                      "Album: ${widget.album.album}";
+                  final isAlbumPlaying =
+                      playbackContext == expectedContext &&
+                      (_loadedSongs?.any(
+                            (song) => song.id == currentSong?.id,
+                          ) ??
+                          false);
+
+                  return Container(
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: AppTheme.brandPink,
+                      borderRadius: BorderRadius.circular(
+                        AppTheme.radiusMd,
+                      ),
+                    ),
+                    child: ValueListenableBuilder<bool>(
+                      valueListenable: SonoPlayer().isPlaying,
+                      builder: (context, isPlaying, _) {
+                        return IconButton(
+                          icon: Icon(
+                            (isAlbumPlaying && isPlaying)
+                                ? Icons.pause_rounded
+                                : Icons.play_arrow_rounded,
+                            color: Colors.white,
+                          ),
+                          iconSize: 24,
+                          onPressed:
+                              _loadedSongs != null &&
+                                      _loadedSongs!.isNotEmpty
+                                  ? () {
+                                    if (isAlbumPlaying && isPlaying) {
+                                      SonoPlayer().pause();
+                                    } else if (isAlbumPlaying &&
+                                        !isPlaying) {
+                                      SonoPlayer().play();
+                                    } else {
+                                      SonoPlayer().playNewPlaylist(
+                                        _loadedSongs!,
+                                        0,
+                                        context:
+                                            "Album: ${widget.album.album}",
+                                      );
+                                    }
+                                  }
+                                  : null,
+                        );
+                      },
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSongListSection() {
+    return FutureBuilder<List<SongModel>>(
+      future: _songsFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting &&
+            _loadedSongs == null) {
+          return Column(
+            children: List.generate(
+              8,
+              (index) => _buildSongListSkeleton(),
+            ),
+          );
+        } else if (_loadedSongs != null) {
+          if (_loadedSongs!.isEmpty) {
+            return const Center(
+              child: Padding(
+                padding: EdgeInsets.all(32.0),
+                child: Text(
+                  'No songs found in this album',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            );
+          }
+          return _buildSongsList(_loadedSongs!);
+        } else if (snapshot.hasError) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32.0),
+              child: Text(
+                'Error loading songs: ${snapshot.error}',
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
+          );
+        }
+        return const SizedBox.shrink();
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -965,335 +1295,78 @@ class _AlbumPageState extends State<AlbumPage> {
             onPressed: () => Navigator.of(context).pop(),
           ),
         ),
-        body: SonoRefreshIndicator(
-          onRefresh: _onRefresh,
-          logo: Image.asset(
-            'assets/images/logos/favicon-white.png',
-            width: 28,
-            height: 28,
-            color: AppTheme.backgroundLight,
-            colorBlendMode: BlendMode.srcIn,
-          ),
-          indicatorColor: AppTheme.elevatedSurfaceDark,
-          child: ListView(
-            padding: const EdgeInsets.all(0),
-            children: [
-              //album artwork section
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24.0,
-                  vertical: 8.0,
-                ),
-                child: AspectRatio(
-                  aspectRatio: 1,
-                  child: Hero(
-                    tag: 'album-artwork-${widget.album.id}',
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                      child: QueryArtworkWidget(
-                        id: widget.album.id,
-                        type: ArtworkType.ALBUM,
-                        artworkFit: BoxFit.cover,
-                        artworkQuality: FilterQuality.high,
-                        artworkBorder: BorderRadius.zero,
-                        size: 800,
-                        nullArtworkWidget: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade800,
-                            borderRadius: BorderRadius.circular(
-                              AppTheme.radiusSm,
-                            ),
-                          ),
-                          child: const Icon(
-                            Icons.album_rounded,
-                            color: Colors.white54,
-                            size: 100,
-                          ),
-                        ),
-                        keepOldArtwork: true,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+        body: LayoutBuilder(
+          builder: (context, constraints) {
+            final isWideScreen = constraints.maxWidth > 600;
 
-              //Album Title
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                child: Text(
-                  widget.album.album,
-                  style: AppStyles.sonoPlayerTitle.copyWith(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.left,
-                ),
-              ),
-
-              SizedBox(height: AppTheme.spacingXs),
-
-              //artist profile pictures
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                child: InkWell(
-                  onTap: _showArtistsModal,
-                  child: Row(
-                    children: [
-                      _buildArtistAvatars(),
-                      SizedBox(width: AppTheme.spacingXs),
-                      Expanded(
-                        child: Text(
-                          ArtistStringUtils.getShortDisplay(
-                            _albumArtist ??
-                                widget.album.artist ??
-                                'Unknown Artist',
-                          ),
-                          style: AppStyles.sonoPlayerArtist.copyWith(
-                            fontSize: 16,
-                            color: AppTheme.textSecondaryDark,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              SizedBox(height: AppTheme.spacingXs),
-
-              //song count + duration
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                child:
-                    _loadedSongs != null && _loadedSongs!.isNotEmpty
-                        ? Text(
-                          '${_loadedSongs!.length} songs • ${_formatDuration(_calculateAlbumDuration(_loadedSongs!))}',
-                          style: AppStyles.sonoPlayerArtist.copyWith(
-                            fontSize: 14,
-                            color: Colors.white54,
-                          ),
-                        )
-                        : Text(
-                          '${widget.album.numOfSongs} songs',
-                          style: AppStyles.sonoPlayerArtist.copyWith(
-                            fontSize: 14,
-                            color: Colors.white54,
-                          ),
-                        ),
-              ),
-
-              SizedBox(height: AppTheme.spacing),
-
-              //action buttons row
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                child: Row(
-                  children: [
-                    //combined left buttons container
-                    Container(
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: AppTheme.elevatedSurfaceDark,
-                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                        border: Border.all(
-                          color: const Color(0xFF3d3d3d),
-                          width: 1,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          //favorite button
-                          IconButton(
-                            icon: Icon(
-                              _isAlbumFavorite
-                                  ? Icons.star_rounded
-                                  : Icons.star_border_rounded,
-                              color:
-                                  _isAlbumFavorite
-                                      ? AppTheme.textPrimaryDark
-                                      : AppTheme.textSecondaryDark,
-                            ),
-                            iconSize: 24,
-                            onPressed: _toggleFavorite,
-                          ),
-
-                          //share/external link button
-                          IconButton(
-                            icon: const Icon(
-                              Icons.open_in_new_rounded,
-                              color: AppTheme.textSecondaryDark,
-                            ),
-                            iconSize: 24,
-                            onPressed: _openLastFmLink,
-                          ),
-
-                          //three-dot menu button
-                          IconButton(
-                            icon: const Icon(
-                              Icons.more_vert_rounded,
-                              color: AppTheme.textSecondaryDark,
-                            ),
-                            iconSize: 24,
-                            onPressed: _showAlbumOptionsBottomSheet,
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const Spacer(),
-
-                    //shuffle button
-                    Container(
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: AppTheme.elevatedSurfaceDark,
-                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                        border: Border.all(
-                          color: const Color(0xFF3d3d3d),
-                          width: 1,
-                        ),
-                      ),
-                      child: IconButton(
-                        icon: const Icon(
-                          Icons.shuffle_rounded,
-                          color: AppTheme.textSecondaryDark,
-                        ),
-                        iconSize: 24,
-                        onPressed:
-                            _loadedSongs != null && _loadedSongs!.isNotEmpty
-                                ? () {
-                                  final shuffledSongs = List<SongModel>.from(
-                                    _loadedSongs!,
-                                  )..shuffle();
-                                  SonoPlayer().playNewPlaylist(
-                                    shuffledSongs,
-                                    0,
-                                    context: "Album: ${widget.album.album}",
-                                  );
-                                }
-                                : null,
-                      ),
-                    ),
-
-                    SizedBox(width: AppTheme.spacingSm),
-
-                    //play/pause button
-                    ValueListenableBuilder<SongModel?>(
-                      valueListenable: SonoPlayer().currentSong,
-                      builder: (context, currentSong, _) {
-                        return ValueListenableBuilder<String?>(
-                          valueListenable: SonoPlayer().playbackContext,
-                          builder: (context, playbackContext, _) {
-                            final expectedContext =
-                                "Album: ${widget.album.album}";
-                            final isAlbumPlaying =
-                                playbackContext == expectedContext &&
-                                (_loadedSongs?.any(
-                                      (song) => song.id == currentSong?.id,
-                                    ) ??
-                                    false);
-
-                            return Container(
-                              height: 48,
-                              decoration: BoxDecoration(
-                                color: AppTheme.brandPink,
-                                borderRadius: BorderRadius.circular(
-                                  AppTheme.radiusMd,
-                                ),
-                              ),
-                              child: ValueListenableBuilder<bool>(
-                                valueListenable: SonoPlayer().isPlaying,
-                                builder: (context, isPlaying, _) {
-                                  return IconButton(
-                                    icon: Icon(
-                                      (isAlbumPlaying && isPlaying)
-                                          ? Icons.pause_rounded
-                                          : Icons.play_arrow_rounded,
-                                      color: Colors.white,
-                                    ),
-                                    iconSize: 24,
-                                    onPressed:
-                                        _loadedSongs != null &&
-                                                _loadedSongs!.isNotEmpty
-                                            ? () {
-                                              if (isAlbumPlaying && isPlaying) {
-                                                SonoPlayer().pause();
-                                              } else if (isAlbumPlaying &&
-                                                  !isPlaying) {
-                                                SonoPlayer().play();
-                                              } else {
-                                                SonoPlayer().playNewPlaylist(
-                                                  _loadedSongs!,
-                                                  0,
-                                                  context:
-                                                      "Album: ${widget.album.album}",
-                                                );
-                                              }
-                                            }
-                                            : null,
-                                  );
-                                },
-                              ),
-                            );
-                          },
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ),
-
-              SizedBox(height: AppTheme.spacing),
-
-              //song list
-              FutureBuilder<List<SongModel>>(
-                future: _songsFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting &&
-                      _loadedSongs == null) {
-                    //show skeleton while loading
-                    return Column(
-                      children: List.generate(
-                        8,
-                        (index) => _buildSongListSkeleton(),
-                      ),
-                    );
-                  } else if (_loadedSongs != null) {
-                    if (_loadedSongs!.isEmpty) {
-                      return const Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(32.0),
-                          child: Text(
-                            'No songs found in this album',
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ),
-                      );
-                    }
-                    return _buildSongsList(_loadedSongs!);
-                  } else if (snapshot.hasError) {
-                    return Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(32.0),
-                        child: Text(
-                          'Error loading songs: ${snapshot.error}',
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                      ),
-                    );
-                  }
-                  return const SizedBox.shrink();
-                },
-              ),
-
-              //bottom padding for player
-              const SizedBox(height: 120),
-            ],
-          ),
+            if (isWideScreen) {
+              return _buildWideLayout();
+            }
+            return _buildCompactLayout();
+          },
         ),
       ),
+    );
+  }
+
+  Widget _buildCompactLayout() {
+    return SonoRefreshIndicator(
+      onRefresh: _onRefresh,
+      logo: Image.asset(
+        'assets/images/logos/favicon-white.png',
+        width: 28,
+        height: 28,
+        color: AppTheme.backgroundLight,
+        colorBlendMode: BlendMode.srcIn,
+      ),
+      indicatorColor: AppTheme.elevatedSurfaceDark,
+      child: ListView(
+        padding: const EdgeInsets.all(0),
+        children: [
+          _buildAlbumInfoSection(),
+
+          SizedBox(height: AppTheme.spacing),
+
+          _buildSongListSection(),
+
+          //bottom padding for player
+          const SizedBox(height: 120),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWideLayout() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        //scale left panel based on available width
+        final leftPanelWidth = (constraints.maxWidth * 0.35).clamp(320.0, 480.0);
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            //left side: album info
+            SizedBox(
+              width: leftPanelWidth,
+              child: ListView(
+                padding: const EdgeInsets.only(bottom: 120),
+                children: [
+                  _buildAlbumInfoSection(isWide: true),
+                ],
+              ),
+            ),
+            //right side: song list
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.only(top: 8.0, bottom: 120),
+                children: [
+                  _buildSongListSection(),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

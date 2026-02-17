@@ -9,6 +9,7 @@ import 'package:sono/utils/audio_filter_utils.dart';
 import 'package:sono/widgets/global/page_header.dart';
 import 'package:sono/styles/app_theme.dart';
 import 'package:provider/provider.dart';
+import 'package:sono/widgets/global/content_constraint.dart';
 
 class LibraryPage extends StatefulWidget {
   final VoidCallback? onMenuTap;
@@ -378,10 +379,13 @@ class _LibraryPageState extends State<LibraryPage>
             colors: [AppTheme.backgroundDark, AppTheme.surfaceDark],
           ),
         ),
-        child:
-            widget.hasPermission
-                ? _buildGridView(categories)
-                : _buildPermissionDenied(),
+        child: ContentConstraint(
+          maxWidth: 1200,
+          child:
+              widget.hasPermission
+                  ? _buildGridView(categories)
+                  : _buildPermissionDenied(),
+        ),
       ),
     );
   }

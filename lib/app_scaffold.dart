@@ -1581,6 +1581,9 @@ Tap "Read Full Terms" below to view the complete Terms of Service.
 
   @override
   Widget build(BuildContext context) {
+    final isCompact = ResponsiveBreakpoints.isCompact(context);
+    final isDesktop = ResponsiveBreakpoints.isDesktop(context);
+
     return PageStorage(
       bucket: _pageStorageBucket,
       child: Container(
@@ -1590,73 +1593,192 @@ Tap "Read Full Terms" below to view the complete Terms of Service.
           bottom: true,
           child: Scaffold(
             resizeToAvoidBottomInset: false,
-            body: buildWithSidebar(
-              customSidebarWidth:
-                  MediaQuery.of(context).size.width * 0.8 < 320
-                      ? MediaQuery.of(context).size.width * 0.8
-                      : 320.0,
-              sidebar: Sidebar(
-                userName: _sidebarUserName,
-                appVersion: _displayAppVersion,
-                currentRoute: _getRouteNameForSidebar(),
-                profilePictureUrl: _profilePictureUrl,
-                onProfileTap: () {
-                  if (_isLoggedIn) {
-                    _navigateToProfilePage();
-                  } else {
-                    _navigateToLoginPage();
-                  }
-                },
-                onWhatsNewTap: _navigateToChangelog,
-                onSettingsTap: () {
-                  _navigateToTabAndCloseSidebar(3);
-                },
-                onRecentsTap: _navigateToRecents,
-                onLogoutTap: () {
-                  if (_isLoggedIn) {
-                    _handleLogout();
-                  } else {
-                    _navigateToLoginPage();
-                  }
-                },
-              ),
-              child:
-                  _isLoadingPermission
-                      ? const Center(
-                        child: CircularProgressIndicator(
-                          color: Color(0xFFFF4893),
-                        ),
-                      )
-                      : Stack(
-                        children: [
-                          PageView(
-                            key: const PageStorageKey('page_view_key'),
-                            controller: _pageController,
-                            onPageChanged: (index) {
-                              setState(() {
-                                _currentIndex = index;
-                                _activeNonTabRoute = null;
-                              });
-                            },
-                            physics: const NeverScrollableScrollPhysics(),
-                            children: _screens,
-                          ),
-                          const Positioned(
-                            bottom: 70,
-                            left: 0,
-                            right: 0,
-                            child: SonoBottomPlayer(),
-                          ),
-                          const ArtistFetchProgressButton(),
-                        ],
-                      ),
-            ),
-            extendBody: true,
+            body:
+                isCompact
+                    ? _buildCompactLayout()
+                    : isDesktop
+                    ? _buildDesktopLayout()
+                    : _buildTabletLayout(),
+            extendBody: isCompact,
             backgroundColor: Colors.transparent,
-            bottomNavigationBar: _buildBottomNavBar(),
+            bottomNavigationBar: isCompact ? _buildBottomNavBar() : null,
           ),
         ),
       ),
+    );
+  }
+
+  /// Compact layout: slide-out sidebar + bottom nav
+  Widget _buildCompactLayout() {
+    return buildWithSidebar(
+      customSidebarWidth:
+          MediaQuery.of(context).size.width * 0.8 < 320
+              ? MediaQuery.of(context).size.width * 0.8
+              : 320.0,
+      sidebar: _buildOverlaySidebar(),
+      child: _buildPageContent(bottomPadding: 70),
+    );
+  }
+
+  /// Tablet layout: NavigationRail on the left + page content
+  Widget _buildTabletLayout() {
+    return Row(
+      children: [
+        _buildNavigationRail(),
+        Expanded(child: _buildPageContent(bottomPadding: 0)),
+      ],
+    );
+  }
+
+  /// Desktop layout: permanent expanded sidebar + page content
+  Widget _buildDesktopLayout() {
+    return Row(
+      children: [
+        SizedBox(
+          width: 256,
+          child: Sidebar(
+            userName: _sidebarUserName,
+            appVersion: _displayAppVersion,
+            currentRoute: _getRouteNameForSidebar(),
+            profilePictureUrl: _profilePictureUrl,
+            showNavItems: true,
+            currentTabIndex: _currentIndex,
+            onNavItemTap: _onItemTapped,
+            onProfileTap: () {
+              if (_isLoggedIn) {
+                _navigateToProfilePage();
+              } else {
+                _navigateToLoginPage();
+              }
+            },
+            onWhatsNewTap: _navigateToChangelog,
+            onSettingsTap: () => _onItemTapped(3),
+            onRecentsTap: _navigateToRecents,
+            onLogoutTap: () {
+              if (_isLoggedIn) {
+                _handleLogout();
+              } else {
+                _navigateToLoginPage();
+              }
+            },
+          ),
+        ),
+        Expanded(child: _buildPageContent(bottomPadding: 0)),
+      ],
+    );
+  }
+
+  /// The overlay sidebar used on compact screens
+  Sidebar _buildOverlaySidebar() {
+    return Sidebar(
+      userName: _sidebarUserName,
+      appVersion: _displayAppVersion,
+      currentRoute: _getRouteNameForSidebar(),
+      profilePictureUrl: _profilePictureUrl,
+      onProfileTap: () {
+        if (_isLoggedIn) {
+          _navigateToProfilePage();
+        } else {
+          _navigateToLoginPage();
+        }
+      },
+      onWhatsNewTap: _navigateToChangelog,
+      onSettingsTap: () {
+        _navigateToTabAndCloseSidebar(3);
+      },
+      onRecentsTap: _navigateToRecents,
+      onLogoutTap: () {
+        if (_isLoggedIn) {
+          _handleLogout();
+        } else {
+          _navigateToLoginPage();
+        }
+      },
+    );
+  }
+
+  /// NavigationRail for tablet-sized screens
+  Widget _buildNavigationRail() {
+    return Container(
+      color: const Color(0xFF1A1A1A),
+      child: SafeArea(
+        child: NavigationRail(
+          backgroundColor: Colors.transparent,
+          selectedIndex: _currentIndex,
+          onDestinationSelected: _onItemTapped,
+          labelType: NavigationRailLabelType.selected,
+          indicatorColor: AppTheme.brandPink.withAlpha(30),
+          selectedIconTheme: const IconThemeData(color: Colors.white, size: 24),
+          unselectedIconTheme: IconThemeData(
+            color: Colors.white.withAlpha(153),
+            size: 24,
+          ),
+          selectedLabelTextStyle: const TextStyle(
+            color: Colors.white,
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+          ),
+          unselectedLabelTextStyle: TextStyle(
+            color: Colors.white.withAlpha(153),
+            fontSize: 11,
+          ),
+          destinations: const [
+            NavigationRailDestination(
+              icon: Icon(Icons.home_outlined),
+              selectedIcon: Icon(Icons.home_rounded),
+              label: Text('Home'),
+            ),
+            NavigationRailDestination(
+              icon: Icon(Icons.search_outlined),
+              selectedIcon: Icon(Icons.search_rounded),
+              label: Text('Search'),
+            ),
+            NavigationRailDestination(
+              icon: Icon(Icons.library_music_outlined),
+              selectedIcon: Icon(Icons.library_music_rounded),
+              label: Text('Library'),
+            ),
+            NavigationRailDestination(
+              icon: Icon(Icons.settings_outlined),
+              selectedIcon: Icon(Icons.settings_rounded),
+              label: Text('Settings'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Page content stack (shared across all layouts)
+  Widget _buildPageContent({required double bottomPadding}) {
+    if (_isLoadingPermission) {
+      return const Center(
+        child: CircularProgressIndicator(color: Color(0xFFFF4893)),
+      );
+    }
+
+    return Stack(
+      children: [
+        PageView(
+          key: const PageStorageKey('page_view_key'),
+          controller: _pageController,
+          onPageChanged: (index) {
+            setState(() {
+              _currentIndex = index;
+              _activeNonTabRoute = null;
+            });
+          },
+          physics: const NeverScrollableScrollPhysics(),
+          children: _screens,
+        ),
+        Positioned(
+          bottom: bottomPadding,
+          left: 0,
+          right: 0,
+          child: const SonoBottomPlayer(),
+        ),
+        const ArtistFetchProgressButton(),
+      ],
     );
   }
 

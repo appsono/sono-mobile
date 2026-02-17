@@ -32,7 +32,8 @@ class ApiService {
 
   bool _isRefreshing = false;
   final List<Completer<String?>> _tokenWaiters = [];
-  Timer? _refreshTimer;
+  Timer? _periodicCheckTimer;
+  Timer? _scheduledRefreshTimer;
   StreamController<bool>? _authStateController;
   StreamController<String>? _notificationController;
   FlutterLocalNotificationsPlugin? _flutterLocalNotificationsPlugin;
@@ -121,8 +122,14 @@ class ApiService {
       const AndroidInitializationSettings initializationSettingsAndroid =
           AndroidInitializationSettings('@mipmap/ic_launcher');
 
-      const InitializationSettings initializationSettings =
-          InitializationSettings(android: initializationSettingsAndroid);
+      const LinuxInitializationSettings initializationSettingsLinux =
+          LinuxInitializationSettings(defaultActionName: 'Open notification');
+
+      final InitializationSettings initializationSettings =
+          InitializationSettings(
+        android: initializationSettingsAndroid,
+        linux: initializationSettingsLinux,
+      );
 
       await _flutterLocalNotificationsPlugin?.initialize(
         initializationSettings,
@@ -151,7 +158,8 @@ class ApiService {
       prefs.remove(_cachedUserDataKey),
     ]);
 
-    _refreshTimer?.cancel();
+    _periodicCheckTimer?.cancel();
+    _scheduledRefreshTimer?.cancel();
     _authStateController?.add(false);
     _log('All authentication tokens and cached data cleared');
   }
@@ -282,11 +290,11 @@ class ApiService {
   }
 
   void _startPeriodicTokenCheck() {
-    _refreshTimer?.cancel();
+    _periodicCheckTimer?.cancel();
 
     _checkAndRefreshTokens();
 
-    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (timer) async {
+    _periodicCheckTimer = Timer.periodic(const Duration(seconds: 30), (timer) async {
       if (_authStateController?.isClosed == true) {
         timer.cancel();
         return;
@@ -359,14 +367,14 @@ class ApiService {
   }
 
   void _scheduleTokenRefresh(int expiryTime) {
-    _refreshTimer?.cancel();
+    _scheduledRefreshTimer?.cancel();
 
     final now = DateTime.now().millisecondsSinceEpoch;
     final refreshTime = expiryTime - (5 * 60 * 1000);
     final delayMs = refreshTime - now;
 
     if (delayMs > 0 && delayMs < (24 * 60 * 60 * 1000)) {
-      _refreshTimer = Timer(Duration(milliseconds: delayMs), () {
+      _scheduledRefreshTimer = Timer(Duration(milliseconds: delayMs), () {
         _log('Scheduled token refresh triggered');
         _performBackgroundRefresh();
       });
@@ -655,9 +663,10 @@ class ApiService {
       }
       _tokenWaiters.clear();
 
-      if (!e.toString().contains('timeout') &&
-          !e.toString().contains('network') &&
-          !e.toString().contains('connection')) {
+      //only delete tokens when the server explicitly rejects the refresh token
+      //dont delete on network errors, timeouts, server errors (5xx), etc.
+      final errorStr = e.toString();
+      if (errorStr.contains('401') || errorStr.contains('403')) {
         await deleteTokens();
       }
 
@@ -1534,7 +1543,8 @@ class ApiService {
   }
 
   void dispose() {
-    _refreshTimer?.cancel();
+    _periodicCheckTimer?.cancel();
+    _scheduledRefreshTimer?.cancel();
     _authStateController?.close();
     _notificationController?.close();
   }

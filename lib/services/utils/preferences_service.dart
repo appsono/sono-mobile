@@ -129,7 +129,6 @@ class PreferencesService with ChangeNotifier {
         if (notify) {
           notifyListeners();
         }
-        debugPrint('PreferencesService: Set $key = $value');
       } else {
         debugPrint('PreferencesService: Failed to set $key');
       }

@@ -53,7 +53,7 @@ class GlobalPageHeader extends StatelessWidget implements PreferredSizeWidget {
                 pageTitle,
                 style: TextStyle(
                   fontFamily: 'VarelaRound',
-                  fontSize: AppTheme.responsiveFontSize(context, 22, min: 18),
+                  fontSize: AppTheme.responsiveFontSize(context, 22.0, min: 18.0),
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
@@ -97,7 +97,7 @@ class GlobalPageHeader extends StatelessWidget implements PreferredSizeWidget {
         color: AppTheme.surfaceDark,
         child: Icon(
           Icons.person_rounded,
-          size: AppTheme.responsiveIconSize(context, 24, min: 20),
+          size: AppTheme.responsiveIconSize(context, 24.0, min: 20.0),
           color: Colors.white70,
         ),
       );
@@ -143,7 +143,7 @@ class GlobalPageHeader extends StatelessWidget implements PreferredSizeWidget {
             child: Text(
               displayName.isNotEmpty ? displayName[0].toUpperCase() : 'U',
               style: TextStyle(
-                fontSize: AppTheme.responsiveFontSize(context, 20, min: 16),
+                fontSize: AppTheme.responsiveFontSize(context, 20.0, min: 16.0),
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
               ),

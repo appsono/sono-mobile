@@ -69,7 +69,7 @@ class _QueueViewState extends State<QueueView> {
                   fontSize: AppTheme.responsiveFontSize(
                     context,
                     AppTheme.fontTitle,
-                    min: 18,
+                    min: 18.0,
                   ),
                   fontWeight: FontWeight.bold,
                 ),
@@ -84,7 +84,7 @@ class _QueueViewState extends State<QueueView> {
                       size: AppTheme.responsiveIconSize(
                         context,
                         AppTheme.iconMd,
-                        min: 18,
+                        min: 18.0,
                       ),
                     ),
                     label: Text(
@@ -117,7 +117,7 @@ class _QueueViewState extends State<QueueView> {
                         size: AppTheme.responsiveIconSize(
                           context,
                           AppTheme.iconHero,
-                          min: 48,
+                          min: 48.0,
                         ),
                       ),
                       SizedBox(
@@ -133,7 +133,7 @@ class _QueueViewState extends State<QueueView> {
                           fontSize: AppTheme.responsiveFontSize(
                             context,
                             AppTheme.font,
-                            min: 14,
+                            min: 14.0,
                           ),
                         ),
                       ),
@@ -354,7 +354,7 @@ class _QueueViewState extends State<QueueView> {
                                           size: AppTheme.responsiveIconSize(
                                             context,
                                             AppTheme.iconSm,
-                                            min: 14,
+                                            min: 14.0,
                                           ),
                                         ),
                                         const SizedBox(width: 2),
@@ -365,8 +365,8 @@ class _QueueViewState extends State<QueueView> {
                                             fontSize:
                                                 AppTheme.responsiveFontSize(
                                                   context,
-                                                  11,
-                                                  min: 10,
+                                                  11.0,
+                                                  min: 10.0,
                                                 ),
                                             fontWeight: FontWeight.bold,
                                           ),

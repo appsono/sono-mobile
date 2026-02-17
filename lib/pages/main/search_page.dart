@@ -15,6 +15,7 @@ import 'package:sono/widgets/search/pages/filtered_search_results_page.dart';
 import 'package:sono/widgets/global/page_header.dart';
 import 'package:sono/utils/audio_filter_utils.dart';
 import 'package:sono/styles/app_theme.dart';
+import 'package:sono/widgets/global/content_constraint.dart';
 
 class SearchPage extends StatefulWidget {
   final VoidCallback? onMenuTap;
@@ -310,7 +311,7 @@ class _SearchPageState extends State<SearchPage>
               const SizedBox(height: AppTheme.spacingMd),
             ],
 
-            Expanded(child: _buildContent()),
+            Expanded(child: ContentConstraint(child: _buildContent())),
           ],
         ),
       ),

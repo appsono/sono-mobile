@@ -7,6 +7,7 @@ import 'package:sono/pages/main/settings/library_scrobbling_settings_page.dart';
 import 'package:sono/pages/main/settings/account_settings_page.dart';
 import 'package:sono/pages/main/settings/developer_settings_page.dart';
 import 'package:sono/pages/main/settings/about_settings_page.dart';
+import 'package:sono/widgets/global/content_constraint.dart';
 
 /// main settings page
 class SettingsPage extends StatelessWidget {
@@ -34,7 +35,7 @@ class SettingsPage extends StatelessWidget {
             isLoggedIn: isLoggedIn,
           ),
           Expanded(
-            child: ListView(
+            child: ContentConstraint(child: ListView(
               physics: const BouncingScrollPhysics(),
               padding: EdgeInsets.only(
                 top: 24,
@@ -134,7 +135,7 @@ class SettingsPage extends StatelessWidget {
                       ),
                 ),
               ],
-            ),
+            )),
           ),
         ],
       ),

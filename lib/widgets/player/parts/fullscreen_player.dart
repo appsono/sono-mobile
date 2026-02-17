@@ -558,8 +558,9 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
                         body: LayoutBuilder(
                           builder: (context, constraints) {
                             final isLandscape = constraints.maxWidth > constraints.maxHeight;
+                            final isWideScreen = constraints.maxWidth > 600;
 
-                            if (isLandscape) {
+                            if (isLandscape || isWideScreen) {
                               //landscape: side-by-side layout
                               return Padding(
                                 padding: const EdgeInsets.all(16),
@@ -1110,8 +1111,8 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
                           style: AppStyles.sonoPlayerTitle.copyWith(
                             fontSize: AppTheme.responsiveFontSize(
                               context,
-                              AppTheme.fontHeading - 2,
-                              min: 18,
+                              AppTheme.fontHeading - 2.0,
+                              min: 18.0,
                             ),
                             fontWeight: FontWeight.bold,
                           ),
@@ -1136,8 +1137,8 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
                         style: AppStyles.sonoPlayerTitle.copyWith(
                           fontSize: AppTheme.responsiveFontSize(
                             context,
-                            AppTheme.fontHeading - 2,
-                            min: 18,
+                            AppTheme.fontHeading - 2.0,
+                            min: 18.0,
                           ),
                           fontWeight: FontWeight.bold,
                         ),
@@ -1161,8 +1162,8 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
                         style: AppStyles.sonoPlayerArtist.copyWith(
                           fontSize: AppTheme.responsiveFontSize(
                             context,
-                            15,
-                            min: 13,
+                            15.0,
+                            min: 13.0,
                           ),
                           color: AppTheme.textSecondaryDark,
                         ),
@@ -1311,7 +1312,7 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
                 children: [
                   Icon(
                     Icons.info_outline,
-                    size: AppTheme.responsiveIconSize(context, 16, min: 14),
+                    size: AppTheme.responsiveIconSize(context, 16.0, min: 14.0),
                     color: AppTheme.brandPink,
                   ),
                   SizedBox(
@@ -1326,8 +1327,8 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
                       color: AppTheme.brandPink,
                       fontSize: AppTheme.responsiveFontSize(
                         context,
-                        13,
-                        min: 11,
+                        13.0,
+                        min: 11.0,
                       ),
                       fontWeight: FontWeight.w500,
                     ),
@@ -1504,7 +1505,7 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
                   isClient
                       ? AppTheme.textPrimaryDark.withValues(alpha: 0.3)
                       : AppTheme.textPrimaryDark,
-              size: AppTheme.responsiveIconSize(context, 40, min: 32),
+              size: AppTheme.responsiveIconSize(context, 40.0, min: 32.0),
             ),
           ),
         ),

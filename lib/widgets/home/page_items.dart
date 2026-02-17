@@ -24,60 +24,70 @@ class HomePageSongItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
+    final isDesktop = screenWidth > 900;
     final isLargeScreen = screenWidth > 600;
-    final responsiveSize = isLargeScreen
-        ? artworkSize.clamp(60.0, 90.0)
+    final responsiveSize = isDesktop
+        ? artworkSize.clamp(100.0, 160.0)
+        : isLargeScreen
+        ? artworkSize.clamp(80.0, 140.0)
         : AppTheme.responsiveArtworkSize(context, artworkSize);
-    final borderRadius = isLargeScreen ? 12.0 : 12.0.r;
+    final borderRadius = isLargeScreen ? 14.0 : 12.0.r;
     return InkWell(
       onTap: () => onSongTap(song),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(borderRadius),
-            child: QueryArtworkWidget(
-              id: song.id,
-              type: ArtworkType.AUDIO,
-              artworkWidth: responsiveSize,
-              artworkHeight: responsiveSize,
-              artworkFit: BoxFit.cover,
-              artworkBorder: BorderRadius.circular(borderRadius),
-              keepOldArtwork: true,
-              nullArtworkWidget: Container(
-                width: responsiveSize,
-                height: responsiveSize,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade800,
-                  borderRadius: BorderRadius.circular(borderRadius),
-                ),
-                child: Icon(
-                  Icons.music_note_rounded,
-                  color: Colors.white54,
-                  size: AppTheme.responsiveIconSize(context, 30, min: 24),
+      child: SizedBox(
+        width: responsiveSize,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(borderRadius),
+              child: QueryArtworkWidget(
+                id: song.id,
+                type: ArtworkType.AUDIO,
+                artworkWidth: responsiveSize,
+                artworkHeight: responsiveSize,
+                artworkFit: BoxFit.cover,
+                artworkBorder: BorderRadius.circular(borderRadius),
+                keepOldArtwork: true,
+                nullArtworkWidget: Container(
+                  width: responsiveSize,
+                  height: responsiveSize,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade800,
+                    borderRadius: BorderRadius.circular(borderRadius),
+                  ),
+                  child: Icon(
+                    Icons.music_note_rounded,
+                    color: Colors.white54,
+                    size: AppTheme.responsiveIconSize(context, 30.0, min: 24.0),
+                  ),
                 ),
               ),
             ),
-          ),
-          SizedBox(height: AppTheme.responsiveSpacing(context, 6)),
-          Text(
-            song.title,
-            style: AppStyles.sonoPlayerTitle.copyWith(
-              fontSize: AppTheme.responsiveFontSize(context, 12, min: 10),
+            SizedBox(height: AppTheme.responsiveSpacing(context, isLargeScreen ? 6.0 : 4.0)),
+            Flexible(
+              child: Text(
+                song.title,
+                style: AppStyles.sonoPlayerTitle.copyWith(
+                  fontSize: isLargeScreen ? 14.0 : AppTheme.responsiveFontSize(context, 12.0, min: 10.0),
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          Text(
-            ArtistStringUtils.getShortDisplay(song.artist ?? 'Unknown'),
-            style: AppStyles.sonoPlayerArtist.copyWith(
-              fontSize: AppTheme.responsiveFontSize(context, 10, min: 9),
+            Flexible(
+              child: Text(
+                ArtistStringUtils.getShortDisplay(song.artist ?? 'Unknown'),
+                style: AppStyles.sonoPlayerArtist.copyWith(
+                  fontSize: isLargeScreen ? 12.0 : AppTheme.responsiveFontSize(context, 10.0, min: 9.0),
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -98,11 +108,14 @@ class HomePageAlbumItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
+    final isDesktop = screenWidth > 900;
     final isLargeScreen = screenWidth > 600;
-    final responsiveSize = isLargeScreen
-        ? artworkSize.clamp(100.0, 130.0)
+    final responsiveSize = isDesktop
+        ? artworkSize.clamp(140.0, 200.0)
+        : isLargeScreen
+        ? artworkSize.clamp(120.0, 180.0)
         : AppTheme.responsiveArtworkSize(context, artworkSize);
-    final borderRadius = isLargeScreen ? 12.0 : 12.0.r;
+    final borderRadius = isLargeScreen ? 16.0 : 12.0.r;
     return InkWell(
       onTap:
           () => Navigator.push(
@@ -112,54 +125,61 @@ class HomePageAlbumItem extends StatelessWidget {
                   (context) => AlbumPage(album: album, audioQuery: audioQuery),
             ),
           ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(borderRadius),
-            child: QueryArtworkWidget(
-              id: album.id,
-              type: ArtworkType.ALBUM,
-              artworkWidth: responsiveSize,
-              artworkHeight: responsiveSize,
-              artworkFit: BoxFit.cover,
-              artworkBorder: BorderRadius.circular(borderRadius),
-              keepOldArtwork: true,
-              nullArtworkWidget: Container(
-                width: responsiveSize,
-                height: responsiveSize,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade800,
-                  borderRadius: BorderRadius.circular(borderRadius),
-                ),
-                child: Icon(
-                  Icons.album_rounded,
-                  color: Colors.white54,
-                  size: AppTheme.responsiveIconSize(context, 40, min: 32),
+      child: SizedBox(
+        width: responsiveSize,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(borderRadius),
+              child: QueryArtworkWidget(
+                id: album.id,
+                type: ArtworkType.ALBUM,
+                artworkWidth: responsiveSize,
+                artworkHeight: responsiveSize,
+                artworkFit: BoxFit.cover,
+                artworkBorder: BorderRadius.circular(borderRadius),
+                keepOldArtwork: true,
+                nullArtworkWidget: Container(
+                  width: responsiveSize,
+                  height: responsiveSize,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade800,
+                    borderRadius: BorderRadius.circular(borderRadius),
+                  ),
+                  child: Icon(
+                    Icons.album_rounded,
+                    color: Colors.white54,
+                    size: AppTheme.responsiveIconSize(context, 40.0, min: 32.0),
+                  ),
                 ),
               ),
             ),
-          ),
-          SizedBox(height: AppTheme.responsiveSpacing(context, 6)),
-          Text(
-            album.album,
-            style: AppStyles.sonoPlayerTitle.copyWith(
-              fontSize: AppTheme.responsiveFontSize(context, 12, min: 10),
+            SizedBox(height: AppTheme.responsiveSpacing(context, isLargeScreen ? 8.0 : 4.0)),
+            Flexible(
+              child: Text(
+                album.album,
+                style: AppStyles.sonoPlayerTitle.copyWith(
+                  fontSize: isLargeScreen ? 15.0 : AppTheme.responsiveFontSize(context, 12.0, min: 10.0),
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          AlbumArtistText(
-            albumId: album.id,
-            fallbackArtist: album.artist,
-            style: AppStyles.sonoPlayerArtist.copyWith(
-              fontSize: AppTheme.responsiveFontSize(context, 10, min: 9),
+            Flexible(
+              child: AlbumArtistText(
+                albumId: album.id,
+                fallbackArtist: album.artist,
+                style: AppStyles.sonoPlayerArtist.copyWith(
+                  fontSize: isLargeScreen ? 13.0 : AppTheme.responsiveFontSize(context, 10.0, min: 9.0),
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -180,9 +200,12 @@ class HomePageArtistItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
+    final isDesktop = screenWidth > 900;
     final isLargeScreen = screenWidth > 600;
-    final responsiveDiameter = isLargeScreen
-        ? diameter.clamp(80.0, 100.0)
+    final responsiveDiameter = isDesktop
+        ? diameter.clamp(110.0, 160.0)
+        : isLargeScreen
+        ? diameter.clamp(90.0, 140.0)
         : AppTheme.responsiveArtworkSize(context, diameter);
     return InkWell(
       onTap:
@@ -194,33 +217,35 @@ class HomePageArtistItem extends StatelessWidget {
                       ArtistPage(artist: artist, audioQuery: audioQuery),
             ),
           ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(
-            width: responsiveDiameter,
-            height: responsiveDiameter,
-            child: ArtistArtworkWidget(
-              artistName: artist.artist,
-              artistId: artist.id,
-              borderRadius: BorderRadius.circular(responsiveDiameter / 2),
-            ),
-          ),
-          SizedBox(height: AppTheme.responsiveSpacing(context, 8)),
-          SizedBox(
-            width: responsiveDiameter,
-            child: Text(
-              artist.artist,
-              style: AppStyles.sonoPlayerTitle.copyWith(
-                fontSize: AppTheme.responsiveFontSize(context, 12, min: 10),
+      child: SizedBox(
+        width: responsiveDiameter,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: responsiveDiameter,
+              height: responsiveDiameter,
+              child: ArtistArtworkWidget(
+                artistName: artist.artist,
+                artistId: artist.id,
+                borderRadius: BorderRadius.circular(responsiveDiameter / 2),
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
             ),
-          ),
-        ],
+            SizedBox(height: AppTheme.responsiveSpacing(context, isLargeScreen ? 8.0 : 6.0)),
+            Flexible(
+              child: Text(
+                artist.artist,
+                style: AppStyles.sonoPlayerTitle.copyWith(
+                  fontSize: isLargeScreen ? 14.0 : AppTheme.responsiveFontSize(context, 12.0, min: 10.0),
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

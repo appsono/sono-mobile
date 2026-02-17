@@ -1,5 +1,6 @@
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:sono/services/settings/library_settings_service.dart';
+import 'package:sono/utils/artist_string_utils.dart';
 
 class AudioFilterUtils {
   static Future<List<SongModel>> getFilteredSongs(
@@ -74,50 +75,61 @@ class AudioFilterUtils {
       return [];
     }
 
-    List<ArtistModel> allArtists = await audioQuery.queryArtists(
-      sortType: sortType,
-      orderType: orderType,
-      uriType: UriType.EXTERNAL,
-    );
+    // Split artist strings and count songs for each individual artist
+    Map<String, _ArtistInfo> artistsMap = {};
 
-    final Set<String> artistNamesFromSongs =
-        filteredSongs
-            .where((s) => s.artist != null)
-            .map((s) => s.artist!.toLowerCase().trim())
-            .toSet();
+    for (final song in filteredSongs) {
+      if (song.artist == null || song.artist!.isEmpty) continue;
 
-    List<ArtistModel> filteredArtists =
-        allArtists.where((artist) {
-          final artistNameLower = artist.artist.toLowerCase().trim();
+      // Split the artist string into individual artists
+      final individualArtists = ArtistStringUtils.splitArtists(song.artist!);
 
-          return artistNamesFromSongs.any((songArtist) {
-            if (songArtist == artistNameLower) return true;
+      for (final artistName in individualArtists) {
+        final key = artistName.toLowerCase().trim();
+        if (artistsMap.containsKey(key)) {
+          artistsMap[key]!.songCount++;
+          artistsMap[key]!.albumIds.add(song.albumId ?? 0);
+        } else {
+          artistsMap[key] = _ArtistInfo(
+            name: artistName.trim(),
+            songCount: 1,
+            albumIds: {song.albumId ?? 0},
+          );
+        }
+      }
+    }
 
-            final separators = [
-              ', ',
-              ' feat. ',
-              ' ft. ',
-              ' featuring ',
-              ' / ',
-              '/',
-              ' & ',
-              '&',
-              ' and ',
-              ' x ',
-              ' X ',
-            ];
-            for (final sep in separators) {
-              if (songArtist.startsWith('$artistNameLower$sep') ||
-                  songArtist.endsWith('$sep$artistNameLower') ||
-                  songArtist.contains('$sep$artistNameLower$sep')) {
-                return true;
-              }
-            }
-            return false;
-          });
-        }).toList();
+    // Create ArtistModel entries from the map
+    List<ArtistModel> artists = artistsMap.entries.map((entry) {
+      final info = entry.value;
+      return ArtistModel({
+        '_id': entry.key.hashCode,
+        'artist': info.name,
+        'number_of_tracks': info.songCount,
+        'number_of_albums': info.albumIds.length,
+      });
+    }).toList();
 
-    return filteredArtists;
+    // Sort artists
+    if (sortType != null) {
+      artists.sort((a, b) {
+        int comparison;
+        switch (sortType) {
+          case ArtistSortType.ARTIST:
+            comparison = a.artist.compareTo(b.artist);
+            break;
+          case ArtistSortType.NUM_OF_ALBUMS:
+            comparison = a.numberOfAlbums!.compareTo(b.numberOfAlbums!);
+            break;
+          case ArtistSortType.NUM_OF_TRACKS:
+            comparison = a.numberOfTracks!.compareTo(b.numberOfTracks!);
+            break;
+        }
+        return orderType == OrderType.DESC_OR_GREATER ? -comparison : comparison;
+      });
+    }
+
+    return artists;
   }
 
   static Future<List<PlaylistModel>> getFilteredPlaylists(
@@ -131,4 +143,16 @@ class AudioFilterUtils {
       uriType: UriType.EXTERNAL,
     );
   }
+}
+
+class _ArtistInfo {
+  final String name;
+  int songCount;
+  Set<int> albumIds;
+
+  _ArtistInfo({
+    required this.name,
+    required this.songCount,
+    required this.albumIds,
+  });
 }

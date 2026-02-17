@@ -10,6 +10,12 @@ enum ScreenSize {
 
   /// Standard screens: 360-600dp width (most modern phones)
   standard,
+
+  /// Tablet screens: 600-900dp width (tablets, small laptops)
+  tablet,
+
+  /// Desktop screens: > 900dp width (desktops, large tablets in landscape)
+  desktop,
 }
 
 /// Responsive breakpoints for screen size detection
@@ -22,11 +28,35 @@ class ResponsiveBreakpoints {
   /// Standard screen maximum width (600dp)
   static const double standardMax = 600.0;
 
-  /// Set screen size category based on current context
+  /// Tablet minimum width (600dp)
+  static const double tabletMin = 600.0;
+
+  /// Desktop minimum width (900dp)
+  static const double desktopMin = 900.0;
+
+  /// Get screen size category based on current context
   static ScreenSize getScreenSize(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
+    if (width >= desktopMin) return ScreenSize.desktop;
+    if (width >= tabletMin) return ScreenSize.tablet;
     if (width < smallMax) return ScreenSize.small;
     return ScreenSize.standard;
+  }
+
+  /// True for phone-sized screens (< 600dp)
+  static bool isCompact(BuildContext context) {
+    final size = getScreenSize(context);
+    return size == ScreenSize.small || size == ScreenSize.standard;
+  }
+
+  /// True for tablet-sized screens (600-900dp)
+  static bool isTablet(BuildContext context) {
+    return getScreenSize(context) == ScreenSize.tablet;
+  }
+
+  /// True for desktop-sized screens (> 900dp)
+  static bool isDesktop(BuildContext context) {
+    return getScreenSize(context) == ScreenSize.desktop;
   }
 }
 

@@ -932,9 +932,21 @@ class SonoPlayer extends BaseAudioHandler {
 
       if (_currentSpeed.value != speed) {
         _currentSpeed.value = speed;
-        await _primaryPlayer.setSpeed(speed);
-        if (_secondaryPlayer != null) {
-          await _secondaryPlayer!.setSpeed(speed);
+        //on Linux/MPV, only apply speed if its not default (1.0)
+        //MPV has compatibility issues with audio filters on certain file formats
+        if (!Platform.isLinux || speed != 1.0) {
+          try {
+            await _primaryPlayer.setSpeed(speed);
+            if (_secondaryPlayer != null) {
+              await _secondaryPlayer!.setSpeed(speed);
+            }
+          } catch (e) {
+            if (Platform.isLinux) {
+              debugPrint('Warning: setSpeed not supported on Linux/MPV, using default');
+              _currentSpeed.value = 1.0;
+            }
+            // Continue initialization even if setSpeed fails
+          }
         }
       }
 
@@ -1152,7 +1164,18 @@ class SonoPlayer extends BaseAudioHandler {
       //restore speed and pitch
       if (_currentSpeed.value != snapshot.playbackSpeed) {
         _currentSpeed.value = snapshot.playbackSpeed;
-        await _primaryPlayer.setSpeed(snapshot.playbackSpeed);
+        //on Linux/MPV, only apply speed if its not default (1.0)
+        if (!Platform.isLinux || snapshot.playbackSpeed != 1.0) {
+          try {
+            await _primaryPlayer.setSpeed(snapshot.playbackSpeed);
+          } catch (e) {
+            if (Platform.isLinux) {
+              debugPrint('Warning: setSpeed not supported during restore on Linux/MPV, using default');
+              _currentSpeed.value = 1.0;
+            }
+            //continue restoration even if setSpeed fails
+          }
+        }
       }
       if (_currentPitch.value != snapshot.playbackPitch) {
         _currentPitch.value = snapshot.playbackPitch;
@@ -1178,11 +1201,15 @@ class SonoPlayer extends BaseAudioHandler {
       //load the audio source
       final songUri = Uri.parse(currentSong.uri!);
       final AudioSource audioSource;
+
       if (songUri.scheme == 'content' || songUri.scheme == 'ipod-library') {
         //android content:// URIs or iOS ipod-library:// URIs
         audioSource = AudioSource.uri(songUri);
+      } else if (songUri.scheme == 'file' || songUri.path.startsWith('/')) {
+        //use Uri.file to ensure proper encoding of spaces and special characters
+        final path = songUri.scheme == 'file' ? songUri.toFilePath() : currentSong.uri!;
+        audioSource = AudioSource.uri(Uri.file(path));
       } else {
-        //file path
         audioSource = AudioSource.uri(Uri.file(currentSong.uri!));
       }
 
@@ -1677,8 +1704,24 @@ class SonoPlayer extends BaseAudioHandler {
   @override
   Future<void> setSpeed(double speed) async {
     final clampedSpeed = speed.clamp(0.25, 4.0);
-    await _primaryPlayer.setSpeed(clampedSpeed);
-    await _secondaryPlayer?.setSpeed(clampedSpeed);
+
+    //on Linux/MPV: only apply if not default to avoid compatibility issues
+    if (!Platform.isLinux || clampedSpeed != 1.0) {
+      try {
+        await _primaryPlayer.setSpeed(clampedSpeed);
+        await _secondaryPlayer?.setSpeed(clampedSpeed);
+      } catch (e) {
+        //MPV on Linux may not support setSpeed for certain file formats/configurations
+        if (Platform.isLinux) {
+          debugPrint('Warning: setSpeed($clampedSpeed) not supported on Linux/MPV');
+          //dont apply the speed change if it fails on Linux
+          return;
+        } else {
+          rethrow;
+        }
+      }
+    }
+
     _currentSpeed.value = clampedSpeed;
     await _playbackSettings.setSpeed(clampedSpeed);
     _broadcastState();
@@ -2180,14 +2223,17 @@ class SonoPlayer extends BaseAudioHandler {
         );
       }
 
-      final AudioSource audioSource;
       final songUri = Uri.parse(song.uri!);
+      final AudioSource audioSource;
 
       if (songUri.scheme == 'content' || songUri.scheme == 'ipod-library') {
         //android content:// URIs or iOS ipod-library:// URIs
         audioSource = AudioSource.uri(songUri);
+      } else if (songUri.scheme == 'file' || songUri.path.startsWith('/')) {
+        //use Uri.file to ensure proper encoding of spaces and special characters
+        final path = songUri.scheme == 'file' ? songUri.toFilePath() : song.uri!;
+        audioSource = AudioSource.uri(Uri.file(path));
       } else {
-        //file path
         audioSource = AudioSource.uri(Uri.file(song.uri!));
       }
 
@@ -2216,7 +2262,28 @@ class SonoPlayer extends BaseAudioHandler {
       await targetPlayer.setLoopMode(
         _repeatMode.value == RepeatMode.one ? LoopMode.one : LoopMode.off,
       );
-      await targetPlayer.setSpeed(_currentSpeed.value);
+
+      //apply speed => skip on Linux/MPV if default (1.0) to avoid compatibility issues
+      //only apply if user has changed it from default
+      if (Platform.isLinux) {
+        if (_currentSpeed.value != 1.0) {
+          try {
+            await targetPlayer.setSpeed(_currentSpeed.value);
+          } catch (e) {
+            debugPrint('Warning: setSpeed($_currentSpeed.value) not supported on Linux/MPV for this file');
+            //reset to default if it fails
+            _currentSpeed.value = 1.0;
+          }
+        }
+      } else {
+        //on other platforms => always apply speed
+        try {
+          await targetPlayer.setSpeed(_currentSpeed.value);
+        } catch (e) {
+          debugPrint('Warning: setSpeed failed: $e');
+        }
+      }
+
       //setPitch is only supported on android
       if (Platform.isAndroid) {
         await targetPlayer.setPitch(_currentPitch.value);
@@ -2257,6 +2324,29 @@ class SonoPlayer extends BaseAudioHandler {
           message.contains("unable to extract") ||
           message.contains("failed to load") ||
           message.contains("invalid source");
+
+      final isInvalidParameterError = message.contains("invalid parameter");
+
+      if (isInvalidParameterError && Platform.isLinux) {
+        if (kDebugMode) {
+          debugPrint("MPV invalid parameter error for '$safeTitle': ${e.message}");
+          debugPrint("This may be due to unsupported audio filters on Linux/MPV");
+        }
+
+        if (!isPreloading) {
+          _queueManager.removeSongById(song.id);
+          _updateQueueNotifier();
+
+          if (!_queueManager.isEmpty) {
+            Future.microtask(() => skipToNext());
+          } else {
+            _playerErrorMessage.value = 'Audio format not supported';
+            _setLifecycleState(PlayerLifecycleState.error);
+            Future.microtask(() => stop());
+          }
+        }
+        return;
+      }
 
       if (isSourceError) {
         if (kDebugMode) {
@@ -2343,6 +2433,25 @@ class SonoPlayer extends BaseAudioHandler {
     } else if (song.uri?.startsWith('ipod-library://') ?? false) {
       //iOS Apple Music library items => assume playable
       return true;
+    } else if (song.uri?.startsWith('file://') ?? false) {
+      //Linux/Desktop file:// URIs => extract path and check if file exists
+      try {
+        //try to parse as URI first
+        final uri = Uri.parse(song.uri!);
+        String path;
+        try {
+          path = uri.toFilePath();
+        } catch (e) {
+          //if toFilePath fails (e.g. due to fragments): manually extract path
+          path = Uri.decodeComponent(uri.path);
+        }
+        return await File(path).exists();
+      } catch (e) {
+        //if parsing fails entirely: try removing file:// prefix
+        final path = song.uri!.substring(7); // Remove "file://"
+        final decodedPath = Uri.decodeComponent(path);
+        return await File(decodedPath).exists();
+      }
     } else if (song.uri?.startsWith('/') ?? false) {
       return await File(song.uri!).exists();
     }
@@ -2660,7 +2769,7 @@ class SonoPlayer extends BaseAudioHandler {
   // PROCESSING STATE
   //============================================================================
 
-  void _handleProcessingStateChange(AudioPlayer player, ProcessingState state) {
+  Future<void> _handleProcessingStateChange(AudioPlayer player, ProcessingState state) async {
     if (player != _currentPlayer ||
         state != ProcessingState.completed ||
         _isCrossfading) {
@@ -2724,7 +2833,9 @@ class SonoPlayer extends BaseAudioHandler {
     //handle repeat/next
     try {
       if (_repeatMode.value == RepeatMode.one) {
-        _primaryPlayer.seek(Duration.zero);
+        await _primaryPlayer.seek(Duration.zero);
+        _position.value = Duration.zero;
+        _broadcastState();
         if (!_primaryPlayer.playing) {
           play();
         }

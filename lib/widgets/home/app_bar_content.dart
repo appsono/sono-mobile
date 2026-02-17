@@ -45,7 +45,7 @@ class HomeAppBarContent extends StatelessWidget implements PreferredSizeWidget {
       titleSpacing: 0,
       title: Padding(
         padding: EdgeInsets.symmetric(
-          horizontal: AppTheme.responsiveSpacing(context, 16),
+          horizontal: AppTheme.responsiveSpacing(context, 16.0),
         ),
         child: SizedBox(
           height: responsiveToolbarHeight,
@@ -58,7 +58,7 @@ class HomeAppBarContent extends StatelessWidget implements PreferredSizeWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   _buildProfileButton(context),
-                  SizedBox(width: AppTheme.responsiveSpacing(context, 12)),
+                  SizedBox(width: AppTheme.responsiveSpacing(context, 12.0)),
                   TimeBasedGreeting(userName: _userName),
                 ],
               ),
@@ -109,7 +109,7 @@ class HomeAppBarContent extends StatelessWidget implements PreferredSizeWidget {
         color: AppTheme.surfaceDark,
         child: Icon(
           Icons.person_rounded,
-          size: AppTheme.responsiveIconSize(context, 24, min: 20),
+          size: AppTheme.responsiveIconSize(context, 24.0, min: 20.0),
           color: Colors.white70,
         ),
       );
@@ -153,7 +153,7 @@ class HomeAppBarContent extends StatelessWidget implements PreferredSizeWidget {
         child: Text(
           displayName.isNotEmpty ? displayName[0].toUpperCase() : 'U',
           style: TextStyle(
-            fontSize: AppTheme.responsiveFontSize(context, 20, min: 16),
+            fontSize: AppTheme.responsiveFontSize(context, 20.0, min: 16.0),
             color: Colors.white,
             fontWeight: FontWeight.bold,
           ),
@@ -182,8 +182,8 @@ class _ActionButtonsPill extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: AppTheme.responsiveSpacing(context, 4),
-        vertical: AppTheme.responsiveSpacing(context, 4),
+        horizontal: AppTheme.responsiveSpacing(context, 4.0),
+        vertical: AppTheme.responsiveSpacing(context, 4.0),
       ),
       decoration: BoxDecoration(
         color: Colors.transparent,
@@ -244,7 +244,7 @@ class _PillActionButton extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(100),
           child: Padding(
-            padding: EdgeInsets.all(AppTheme.responsiveSpacing(context, 10)),
+            padding: EdgeInsets.all(AppTheme.responsiveSpacing(context, 10.0)),
             child: _buildIcon(context),
           ),
         ),
@@ -253,7 +253,7 @@ class _PillActionButton extends StatelessWidget {
   }
 
   Widget _buildIcon(BuildContext context) {
-    final iconSize = AppTheme.responsiveIconSize(context, 22, min: 20);
+    final iconSize = AppTheme.responsiveIconSize(context, 22.0, min: 20.0);
 
     //to load SVG if asset exists => otherwise use Material icon
     if (svgAsset != null) {

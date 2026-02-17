@@ -726,7 +726,7 @@ class _SonoBottomPlayerState extends State<SonoBottomPlayer>
                           size: AppTheme.responsiveIconSize(
                             context,
                             AppTheme.icon,
-                            min: 20,
+                            min: 20.0,
                           ),
                           color: AppTheme.brandPink,
                         );
@@ -761,7 +761,7 @@ class _SonoBottomPlayerState extends State<SonoBottomPlayer>
                 Text(
                   title ?? 'Unknown Title',
                   style: AppStyles.sonoPlayerTitle.copyWith(
-                    fontSize: AppTheme.responsiveFontSize(context, 15, min: 13),
+                    fontSize: AppTheme.responsiveFontSize(context, 15.0, min: 13.0),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -831,7 +831,7 @@ class _SonoBottomPlayerState extends State<SonoBottomPlayer>
                           size: AppTheme.responsiveIconSize(
                             context,
                             AppTheme.icon,
-                            min: 20,
+                            min: 20.0,
                           ),
                         ),
                       ),
@@ -939,7 +939,7 @@ class _SonoBottomPlayerState extends State<SonoBottomPlayer>
         child: Icon(
           isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
           color: AppTheme.textPrimaryDark,
-          size: AppTheme.responsiveIconSize(context, 28, min: 24),
+          size: AppTheme.responsiveIconSize(context, 28.0, min: 24.0),
         ),
       ),
     );
@@ -960,7 +960,7 @@ class _SonoBottomPlayerState extends State<SonoBottomPlayer>
         child: Icon(
           Icons.skip_next_rounded,
           color: AppTheme.textPrimaryDark,
-          size: AppTheme.responsiveIconSize(context, 28, min: 24),
+          size: AppTheme.responsiveIconSize(context, 28.0, min: 24.0),
         ),
       ),
     );
@@ -1092,8 +1092,8 @@ class _MiniPlayerContent extends StatelessWidget {
                                               fontSize:
                                                   AppTheme.responsiveFontSize(
                                                     context,
-                                                    15,
-                                                    min: 13,
+                                                    15.0,
+                                                    min: 13.0,
                                                   ),
                                             ),
                                         maxLines: 1,

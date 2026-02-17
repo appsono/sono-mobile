@@ -12,6 +12,7 @@ import 'package:sono/widgets/home/page_header_elements.dart';
 import 'package:sono/pages/library/all_items_page.dart';
 import 'package:sono/pages/info/announcements_changelog_page.dart';
 import 'package:sono/utils/audio_filter_utils.dart';
+import 'package:sono/widgets/global/content_constraint.dart';
 import 'package:sono_refresh/sono_refresh.dart';
 
 class HomePage extends StatefulWidget {
@@ -231,7 +232,7 @@ class HomePageState extends State<HomePage>
             colors: [AppTheme.backgroundDark, AppTheme.surfaceDark],
           ),
         ),
-        child: _buildHomepage(context),
+        child: ContentConstraint(child: _buildHomepage(context)),
       ),
     );
   }
@@ -412,6 +413,9 @@ class HomePageState extends State<HomePage>
 
   Widget _buildHomepage(BuildContext context) {
     const double appBarContentHeight = 70.0;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isDesktop = screenWidth > 900;
+    final isLargeScreen = screenWidth > 600;
 
     return SonoRefreshIndicator(
       onRefresh: refreshData,
@@ -492,7 +496,7 @@ class HomePageState extends State<HomePage>
             itemBuilder:
                 (ctx, item, listCtx, idx) => HomePageSongItem(
                   song: item,
-                  artworkSize: 70,
+                  artworkSize: isDesktop ? 140 : isLargeScreen ? 110 : 70,
                   onSongTap:
                       (s) => _handleSongTap(
                         s,
@@ -501,11 +505,11 @@ class HomePageState extends State<HomePage>
                         playbackContext: ": Recently Added",
                       ),
                 ),
-            itemWidth: 70,
-            listHeight: 125,
+            itemWidth: isDesktop ? 140 : isLargeScreen ? 110 : 70,
+            listHeight: isDesktop ? 210 : isLargeScreen ? 180 : 125,
             skeletonLoader: _buildHorizontalSkeletonLoader(
-              itemWidth: 70,
-              itemHeight: 125,
+              itemWidth: isDesktop ? 140 : isLargeScreen ? 110 : 70,
+              itemHeight: isDesktop ? 210 : isLargeScreen ? 180 : 125,
               itemCount: 6,
             ),
           ),
@@ -536,14 +540,14 @@ class HomePageState extends State<HomePage>
             itemBuilder:
                 (ctx, item, listCtx, idx) => HomePageAlbumItem(
                   album: item,
-                  artworkSize: 110,
+                  artworkSize: isDesktop ? 180 : isLargeScreen ? 150 : 110,
                   audioQuery: _audioQuery,
                 ),
-            itemWidth: 110,
-            listHeight: 165,
+            itemWidth: isDesktop ? 180 : isLargeScreen ? 150 : 110,
+            listHeight: isDesktop ? 260 : isLargeScreen ? 220 : 165,
             skeletonLoader: _buildHorizontalSkeletonLoader(
-              itemWidth: 110,
-              itemHeight: 165,
+              itemWidth: isDesktop ? 180 : isLargeScreen ? 150 : 110,
+              itemHeight: isDesktop ? 260 : isLargeScreen ? 220 : 165,
               itemCount: 4,
             ),
           ),
@@ -574,13 +578,13 @@ class HomePageState extends State<HomePage>
             itemBuilder:
                 (ctx, item, listCtx, idx) => HomePageArtistItem(
                   artist: item,
-                  diameter: 80,
+                  diameter: isDesktop ? 140 : isLargeScreen ? 110 : 80,
                   audioQuery: _audioQuery,
                 ),
-            itemWidth: 80,
-            listHeight: 130,
+            itemWidth: isDesktop ? 140 : isLargeScreen ? 110 : 80,
+            listHeight: isDesktop ? 210 : isLargeScreen ? 180 : 130,
             skeletonLoader: _buildCircularSkeletonLoader(
-              diameter: 80,
+              diameter: isDesktop ? 140 : isLargeScreen ? 110 : 80,
               itemCount: 5,
             ),
           ),

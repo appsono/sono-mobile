@@ -154,7 +154,7 @@ class _FilteredSearchResultsPageState extends State<FilteredSearchResultsPage> {
         sonoPlayer.playNewPlaylist(
           songs,
           index >= 0 ? index : 0,
-          context: 'Search Results',
+          context: ': Search Results',
         );
       },
     );

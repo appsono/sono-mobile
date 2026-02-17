@@ -32,6 +32,13 @@ class _LoadingPageState extends State<LoadingPage> {
   Future<void> _initializeApp() async {
     debugPrint('[LoadingPage] _initializeApp started');
 
+    //on desktop platforms: skip setup flow and mark as completed
+    final isDesktop = Platform.isLinux || Platform.isWindows || Platform.isMacOS;
+    if (isDesktop) {
+      debugPrint('[LoadingPage] Desktop platform detected, skipping setup flow');
+      await DeveloperSettingsService.instance.setSetupCompleted(true);
+    }
+
     //check if setup has been completed
     final setupCompleted =
         await DeveloperSettingsService.instance.getSetupCompleted();
@@ -40,7 +47,7 @@ class _LoadingPageState extends State<LoadingPage> {
     );
 
     if (!setupCompleted && mounted) {
-      //show setup flow for first-time users
+      //show setup flow for first-time users (mobile only)
       debugPrint('[LoadingPage] Navigating to SetupFlowPage');
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(

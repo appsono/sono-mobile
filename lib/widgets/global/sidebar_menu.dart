@@ -14,6 +14,16 @@ class Sidebar extends StatelessWidget {
   final String? currentRoute;
   final String? profilePictureUrl;
 
+  /// When true, shows main navigation items (Home, Search, Library, Settings)
+  /// Used for permanent sidebar on desktop-sized screens
+  final bool showNavItems;
+
+  /// Current tab index for highlighting nav items in permanent mode
+  final int currentTabIndex;
+
+  /// Callback when a nav tab is tapped in permanent mode
+  final ValueChanged<int>? onNavItemTap;
+
   const Sidebar({
     super.key,
     required this.userName,
@@ -25,6 +35,9 @@ class Sidebar extends StatelessWidget {
     this.onSettingsTap,
     this.onRecentsTap,
     this.onLogoutTap,
+    this.showNavItems = false,
+    this.currentTabIndex = 0,
+    this.onNavItemTap,
   });
 
   @override
@@ -89,6 +102,45 @@ class Sidebar extends StatelessWidget {
                 thickness: 0.8,
               ),
             ),
+            //navigation items (only in permanent sidebar mode)
+            if (showNavItems) ...[
+              _buildMenuItem(
+                icon: Icons.home_outlined,
+                activeIcon: Icons.home_rounded,
+                title: "Home",
+                onTap: () => onNavItemTap?.call(0),
+                isSelected: currentTabIndex == 0,
+              ),
+              _buildMenuItem(
+                icon: Icons.search_outlined,
+                activeIcon: Icons.search_rounded,
+                title: "Search",
+                onTap: () => onNavItemTap?.call(1),
+                isSelected: currentTabIndex == 1,
+              ),
+              _buildMenuItem(
+                icon: Icons.library_music_outlined,
+                activeIcon: Icons.library_music_rounded,
+                title: "Library",
+                onTap: () => onNavItemTap?.call(2),
+                isSelected: currentTabIndex == 2,
+              ),
+              _buildMenuItem(
+                icon: Icons.settings_outlined,
+                activeIcon: Icons.settings_rounded,
+                title: "Settings",
+                onTap: () => onNavItemTap?.call(3),
+                isSelected: currentTabIndex == 3,
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: Divider(
+                  color: Colors.white.withAlpha((255 * 0.1).round()),
+                  height: 20,
+                  thickness: 0.8,
+                ),
+              ),
+            ],
             //menu items
             Expanded(
               child: ListView(
@@ -100,12 +152,13 @@ class Sidebar extends StatelessWidget {
                     onTap: onWhatsNewTap,
                     isSelected: currentRoute == "Changelog",
                   ),
-                  _buildMenuItem(
-                    icon: Icons.settings_rounded,
-                    title: "Settings",
-                    onTap: onSettingsTap,
-                    isSelected: currentRoute == "Settings",
-                  ),
+                  if (!showNavItems)
+                    _buildMenuItem(
+                      icon: Icons.settings_rounded,
+                      title: "Settings",
+                      onTap: onSettingsTap,
+                      isSelected: currentRoute == "Settings",
+                    ),
                   _buildMenuItem(
                     icon: Icons.history_rounded,
                     title: "Recents",
@@ -149,6 +202,7 @@ class Sidebar extends StatelessWidget {
 
   Widget _buildMenuItem({
     required IconData icon,
+    IconData? activeIcon,
     required String title,
     VoidCallback? onTap,
     bool isDestructive = false,
@@ -191,7 +245,7 @@ class Sidebar extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             child: Row(
               children: [
-                Icon(icon, color: currentIconColor, size: 22),
+                Icon(isSelected && activeIcon != null ? activeIcon : icon, color: currentIconColor, size: 22),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Text(

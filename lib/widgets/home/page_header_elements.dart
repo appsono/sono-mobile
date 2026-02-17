@@ -17,7 +17,7 @@ class ShuffleCreatePlaylistButtons extends StatelessWidget {
     final isLargeScreen = screenWidth > 600;
 
     return Padding(
-      padding: EdgeInsets.all(AppTheme.responsiveSpacing(context, 16)),
+      padding: EdgeInsets.all(AppTheme.responsiveSpacing(context, 16.0)),
       child: Center(
         child: ConstrainedBox(
           constraints: BoxConstraints(
@@ -87,14 +87,14 @@ class _ActionButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(borderRadius),
         child: Container(
           padding: EdgeInsets.symmetric(
-            horizontal: isLargeScreen ? 16.0 : AppTheme.responsiveSpacing(context, 16),
-            vertical: isLargeScreen ? 14.0 : AppTheme.responsiveSpacing(context, 14),
+            horizontal: isLargeScreen ? 16.0 : AppTheme.responsiveSpacing(context, 16.0),
+            vertical: isLargeScreen ? 14.0 : AppTheme.responsiveSpacing(context, 14.0),
           ),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(borderRadius),
             border: Border.all(
               color: borderColor,
-              width: isLargeScreen ? 1.0 : AppTheme.responsiveDimension(context, 1),
+              width: isLargeScreen ? 1.0 : AppTheme.responsiveDimension(context, 1.0),
             ),
           ),
           child: Row(
@@ -103,15 +103,15 @@ class _ActionButton extends StatelessWidget {
               Icon(
                 icon,
                 color: foregroundColor,
-                size: isLargeScreen ? 20.0 : AppTheme.responsiveIconSize(context, 20, min: 18),
+                size: isLargeScreen ? 20.0 : AppTheme.responsiveIconSize(context, 20.0, min: 18.0),
               ),
-              SizedBox(width: isLargeScreen ? 10.0 : AppTheme.responsiveSpacing(context, 10)),
+              SizedBox(width: isLargeScreen ? 10.0 : AppTheme.responsiveSpacing(context, 10.0)),
               Expanded(
                 child: Text(
                   label,
                   style: TextStyle(
                     fontFamily: 'VarelaRound',
-                    fontSize: isLargeScreen ? 14.0 : AppTheme.responsiveFontSize(context, 14, min: 12),
+                    fontSize: isLargeScreen ? 14.0 : AppTheme.responsiveFontSize(context, 14.0, min: 12.0),
                     fontWeight: FontWeight.w600,
                     color: foregroundColor,
                   ),
