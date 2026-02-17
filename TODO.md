@@ -38,6 +38,6 @@ see on
 
 ## Long-term tasks
 
-- [ ] Add Tag Editor
+- [ ] Add Tag Editor (will be a downloadable extension. Task: #29)
 - [ ] Add Themes (for App, Player components etc.)
 - [ ] MAYBE add translations [weblate(?)]
