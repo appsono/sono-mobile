@@ -1065,19 +1065,6 @@ class SonoPlayer extends BaseAudioHandler {
   /// rebuilds the queue and seeks to saved position
   Future<void> restorePlaybackSnapshot() async {
     try {
-      //check if resume after reboot is enabled
-      final resumeEnabled =
-          await _playbackSettings.getResumeAfterRebootEnabled();
-      if (!resumeEnabled) {
-        if (kDebugMode) {
-          debugPrint(
-            '[Snapshot] Resume after reboot is disabled, skipping restore',
-          );
-        }
-        _isInitializing.value = false;
-        return;
-      }
-
       final jsonString = await _prefsService.getString(playbackSnapshotKey);
       if (jsonString == null || jsonString.isEmpty) {
         if (kDebugMode) {
