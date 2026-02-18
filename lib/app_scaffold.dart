@@ -323,43 +323,9 @@ class _AppScaffoldState extends State<AppScaffold>
         return;
       }
 
-      //attempt proactive token refresh on cold start
-      bool refreshSuccess = false;
-      try {
-        await _apiService.refreshOnAppStart();
-        refreshSuccess = true;
-        debugPrint(
-          '[AppScaffold] Token refresh on app start completed successfully',
-        );
-      } catch (e) {
-        debugPrint('[AppScaffold] App start token refresh failed: $e');
-
-        //check if its an auth error (invalid refresh token) vs network error
-        if (e.toString().contains('401') ||
-            e.toString().contains('Invalid') ||
-            e.toString().contains('expired reset token')) {
-          debugPrint('[AppScaffold] Refresh token is invalid, logging out');
-          await _apiService.deleteTokens();
-          return;
-        }
-
-        //for network errors => continue and try to use existing token if still valid
-        debugPrint(
-          '[AppScaffold] Network error during refresh, checking existing token validity',
-        );
-      }
-
-      final hasValidTokens = await _apiService.hasValidTokens();
-      debugPrint('[AppScaffold] Has valid tokens: $hasValidTokens');
-
-      if (!hasValidTokens && !refreshSuccess) {
-        //token is expired and refresh failed => likely a network issue
-        //try to fetch user anyway => will trigger another refresh attempt
-        debugPrint(
-          '[AppScaffold] Token expired but refresh failed, attempting to fetch user (will retry refresh)',
-        );
-      }
-
+      //fetch user => if access token is expired, _makeAuthenticatedRequest will
+      //automatically refresh it via 401 handling; if refresh token is also dead,
+      //it will emit false on authStateStream and trigger logout
       debugPrint('[AppScaffold] Fetching current user...');
       await _fetchCurrentUser();
     } catch (e) {

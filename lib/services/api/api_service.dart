@@ -27,13 +27,10 @@ class ApiService {
   static const String _apiModeIsProdKey = 'api_mode_is_prod_preference_v1';
   static const String _accessTokenKey = 'auth_access_token_v2';
   static const String _refreshTokenKey = 'auth_refresh_token_v2';
-  static const String _tokenExpiryKey = 'auth_token_expiry_v2';
   static const String _cachedUserDataKey = 'cached_user_data_v1';
 
   bool _isRefreshing = false;
   final List<Completer<String?>> _tokenWaiters = [];
-  Timer? _periodicCheckTimer;
-  Timer? _scheduledRefreshTimer;
   StreamController<bool>? _authStateController;
   StreamController<String>? _notificationController;
   FlutterLocalNotificationsPlugin? _flutterLocalNotificationsPlugin;
@@ -42,7 +39,6 @@ class ApiService {
     _authStateController = StreamController<bool>.broadcast();
     _notificationController = StreamController<String>.broadcast();
     _initializeNotifications();
-    _startPeriodicTokenCheck();
   }
 
   Stream<bool> get authStateStream => _authStateController!.stream;
@@ -154,12 +150,9 @@ class ApiService {
     await Future.wait([
       prefs.remove(_accessTokenKey),
       prefs.remove(_refreshTokenKey),
-      prefs.remove(_tokenExpiryKey),
       prefs.remove(_cachedUserDataKey),
     ]);
 
-    _periodicCheckTimer?.cancel();
-    _scheduledRefreshTimer?.cancel();
     _authStateController?.add(false);
     _log('All authentication tokens and cached data cleared');
   }
@@ -167,27 +160,17 @@ class ApiService {
   Future<void> _saveTokens(
     String accessToken,
     String refreshToken, {
-    int? expiresInSeconds,
+    int? expiresInSeconds, //kept for API compat but no longer used
   }) async {
     try {
       final prefs = await _prefs;
 
-      final expiryDuration = Duration(seconds: expiresInSeconds ?? (30 * 60));
-      final expiryTime =
-          DateTime.now().add(expiryDuration).millisecondsSinceEpoch;
-
       await Future.wait([
         prefs.setString(_accessTokenKey, accessToken),
         prefs.setString(_refreshTokenKey, refreshToken),
-        prefs.setInt(_tokenExpiryKey, expiryTime),
       ]);
 
-      _log(
-        'Tokens saved successfully. Expiry: ${DateTime.fromMillisecondsSinceEpoch(expiryTime)}',
-      );
-
-      _scheduleTokenRefresh(expiryTime);
-
+      _log('Tokens saved successfully');
       _authStateController?.add(true);
     } catch (e) {
       _logError('Error saving tokens', e);
@@ -200,189 +183,14 @@ class ApiService {
       final prefs = await _prefs;
       final accessToken = prefs.getString(_accessTokenKey);
       final refreshToken = prefs.getString(_refreshTokenKey);
-      final expiry = prefs.getInt(_tokenExpiryKey);
 
-      if (accessToken == null ||
-          accessToken.isEmpty ||
-          refreshToken == null ||
-          refreshToken.isEmpty) {
-        return false;
-      }
-
-      if (expiry == null) {
-        return false;
-      }
-
-      final now = DateTime.now().millisecondsSinceEpoch;
-      final bufferTime = 2 * 60 * 1000;
-
-      return now < (expiry - bufferTime);
+      return accessToken != null &&
+          accessToken.isNotEmpty &&
+          refreshToken != null &&
+          refreshToken.isNotEmpty;
     } catch (e) {
       _logError('Error checking token validity', e);
       return false;
-    }
-  }
-
-  /// Checks if tokens need refreshing on app start
-  /// Returns true if a refresh should be attempted
-  Future<bool> shouldRefreshOnStart() async {
-    try {
-      final prefs = await _prefs;
-      final accessToken = prefs.getString(_accessTokenKey);
-      final refreshToken = prefs.getString(_refreshTokenKey);
-      final expiry = prefs.getInt(_tokenExpiryKey);
-
-      //no tokens at all => skip refresh
-      if (accessToken == null ||
-          accessToken.isEmpty ||
-          refreshToken == null ||
-          refreshToken.isEmpty) {
-        return false;
-      }
-
-      //no expiry info => play it safe and refresh
-      if (expiry == null) {
-        _log('No expiry info found, will refresh on start');
-        return true;
-      }
-
-      final now = DateTime.now().millisecondsSinceEpoch;
-      final timeUntilExpiry = expiry - now;
-
-      //token expired or expiring within 5 minutes => refresh
-      const refreshThreshold = 5 * 60 * 1000; //5 minutes
-      if (timeUntilExpiry <= refreshThreshold) {
-        _log(
-          'Token expiring soon ($timeUntilExpiry ms), will refresh on start',
-        );
-        return true;
-      }
-
-      _log('Token still fresh, no need to refresh on start');
-      return false;
-    } catch (e) {
-      _logError('Error checking if refresh needed on start', e);
-      return false; //conservative: dont refresh on error
-    }
-  }
-
-  /// Attempts to refresh tokens on app start
-  /// Throws errors for caller to handle (distinguishes auth vs network errors)
-  Future<void> refreshOnAppStart() async {
-    if (_isRefreshing) {
-      _log('Refresh already in progress, skipping app start refresh');
-      return;
-    }
-
-    try {
-      if (!await shouldRefreshOnStart()) {
-        return;
-      }
-
-      _log('Performing app start token refresh...');
-      await _performBackgroundRefresh();
-      _log('App start token refresh completed successfully');
-    } catch (e) {
-      _logError('App start token refresh failed', e);
-      //rethrow so caller can distinguish between network vs auth errors
-      rethrow;
-    }
-  }
-
-  void _startPeriodicTokenCheck() {
-    _periodicCheckTimer?.cancel();
-
-    _checkAndRefreshTokens();
-
-    _periodicCheckTimer = Timer.periodic(const Duration(seconds: 30), (timer) async {
-      if (_authStateController?.isClosed == true) {
-        timer.cancel();
-        return;
-      }
-      await _checkAndRefreshTokens();
-    });
-  }
-
-  Future<void> _checkAndRefreshTokens() async {
-    try {
-      final prefs = await _prefs;
-      final refreshToken = prefs.getString(_refreshTokenKey);
-
-      //no refresh token at all => user is not logged in
-      if (refreshToken == null || refreshToken.isEmpty) {
-        _log('No refresh token found, user not logged in');
-        return;
-      }
-
-      final expiryTime = prefs.getInt(_tokenExpiryKey);
-      final now = DateTime.now().millisecondsSinceEpoch;
-
-      if (expiryTime == null) {
-        //no expiry info but have refresh token => try to refresh
-        _log('No expiry info found, attempting refresh');
-        await _performBackgroundRefresh();
-        return;
-      }
-
-      final timeUntilExpiry = expiryTime - now;
-      const refreshThreshold = 5 * 60 * 1000;
-
-      if (timeUntilExpiry <= 0) {
-        //token has expired => try to refresh (dont log out immediately!)
-        _log('Token has expired, attempting refresh');
-        await _performBackgroundRefresh();
-      } else if (timeUntilExpiry <= refreshThreshold) {
-        //token expires soon => preemptive refresh
-        _log('Token expires soon, performing preemptive refresh');
-        await _performBackgroundRefresh();
-      }
-    } catch (e) {
-      _logError('Error during token check', e);
-    }
-  }
-
-  Future<void> _performBackgroundRefresh() async {
-    if (_isRefreshing) {
-      _log('Refresh already in progress, skipping');
-      return;
-    }
-
-    try {
-      _log('Performing background token refresh...');
-      await refreshToken();
-      _log('Background token refresh successful');
-
-      _authStateController?.add(true);
-    } catch (e) {
-      _logError('Background token refresh failed', e);
-
-      if (e.toString().contains('No refresh token available') ||
-          e.toString().contains('401') ||
-          e.toString().contains('refresh token')) {
-        _log('Clearing invalid tokens');
-        await deleteTokens();
-        _authStateController?.add(false);
-      }
-    }
-  }
-
-  void _scheduleTokenRefresh(int expiryTime) {
-    _scheduledRefreshTimer?.cancel();
-
-    final now = DateTime.now().millisecondsSinceEpoch;
-    final refreshTime = expiryTime - (5 * 60 * 1000);
-    final delayMs = refreshTime - now;
-
-    if (delayMs > 0 && delayMs < (24 * 60 * 60 * 1000)) {
-      _scheduledRefreshTimer = Timer(Duration(milliseconds: delayMs), () {
-        _log('Scheduled token refresh triggered');
-        _performBackgroundRefresh();
-      });
-
-      final refreshDateTime = DateTime.fromMillisecondsSinceEpoch(refreshTime);
-      _log(
-        'Token refresh scheduled for: $refreshDateTime (in ${Duration(milliseconds: delayMs).inMinutes} minutes)',
-      );
     }
   }
 
@@ -393,17 +201,6 @@ class ApiService {
     Map<String, String> headers = {'Content-Type': contentType};
 
     if (isAuthenticated) {
-      //check if need to refresh
-      //BUT dont refresh if a refresh is already in progress => avoid deadlock
-      if (!await hasValidTokens() && !_isRefreshing) {
-        try {
-          await refreshToken();
-        } catch (e) {
-          _logError('Failed to refresh token in _getHeaders', e);
-          //let the request proceed => it will fail with 401 if token is truly invalid
-        }
-      }
-
       String? token = await getAccessToken();
       if (token != null) {
         headers['Authorization'] = 'Bearer $token';
@@ -485,6 +282,11 @@ class ApiService {
             } catch (e) {
               return response;
             }
+          } else {
+            //no refresh token available => user is truly unauthenticated
+            _log('Got 401 with no refresh token available, forcing logout');
+            await deleteTokens();
+            _authStateController?.add(false);
           }
         }
 
@@ -628,12 +430,6 @@ class ApiService {
           expiresInSeconds: responseBody['expires_in'],
         );
 
-        final prefs = await _prefs;
-        final newExpiryTime = prefs.getInt(_tokenExpiryKey);
-        if (newExpiryTime != null) {
-          _scheduleTokenRefresh(newExpiryTime);
-        }
-
         for (final waiter in _tokenWaiters) {
           if (!waiter.isCompleted) {
             waiter.complete(newAccessToken);
@@ -668,6 +464,7 @@ class ApiService {
       final errorStr = e.toString();
       if (errorStr.contains('401') || errorStr.contains('403')) {
         await deleteTokens();
+        _authStateController?.add(false);
       }
 
       throw Exception('Could not refresh token: $e');
@@ -1312,7 +1109,7 @@ class ApiService {
 
   Future<void> forceTokenRefresh() async {
     _log('Manual token refresh triggered');
-    await _performBackgroundRefresh();
+    await refreshToken();
   }
 
   //============= PASSWORD RESET =============
@@ -1543,8 +1340,6 @@ class ApiService {
   }
 
   void dispose() {
-    _periodicCheckTimer?.cancel();
-    _scheduledRefreshTimer?.cancel();
     _authStateController?.close();
     _notificationController?.close();
   }
