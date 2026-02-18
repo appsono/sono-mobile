@@ -1,5 +1,6 @@
 // ignore_for_file: undefined_hidden_name
 
+import 'dart:async';
 import 'dart:ui';
 import 'dart:ui' as ui;
 
@@ -22,6 +23,7 @@ import 'package:sono/widgets/player/parts/queue_view.dart';
 import 'package:sono/widgets/player/parts/lyrics_view.dart';
 import 'package:sono/services/sas/sas_manager.dart';
 import 'package:provider/provider.dart';
+import 'package:sono/services/servers/server_service.dart';
 import 'package:sono/utils/artist_navigation.dart';
 import 'package:sono/utils/artist_string_utils.dart';
 import 'package:sono/widgets/library/artist_artwork_widget.dart';
@@ -148,6 +150,9 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
   bool _swipeInitiatedChange = false; //true when song change was triggered by swipe
   int? _pendingSwipePage; //page index from onPageChanged while finger is down
 
+  Timer? _remoteStarredRefreshTimer;
+  static const Duration _remoteStarredRefreshInterval = Duration(seconds: 5);
+
   bool _isDraggingSeekBar = false;
   double? _draggedPosition;
 
@@ -159,6 +164,19 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
   //debounce for skip buttons
   DateTime? _lastSkipTime;
   static const Duration _skipDebounceMs = Duration(milliseconds: 300);
+
+  void _startRemoteStarredRefresh() {
+    if (_remoteStarredRefreshTimer?.isActive ?? false) return;
+    _remoteStarredRefreshTimer = Timer.periodic(
+      _remoteStarredRefreshInterval,
+      (_) => _loadFavoriteStatus(),
+    );
+  }
+
+  void _stopRemoteStarredRefresh() {
+    _remoteStarredRefreshTimer?.cancel();
+    _remoteStarredRefreshTimer = null;
+  }
 
   void _onPageScroll() {
     if (_pageController.hasClients) {
@@ -243,6 +261,7 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
     if (_isControllerListenerAttached) {
       _pageController.removeListener(_onPageScroll);
     }
+    _remoteStarredRefreshTimer?.cancel();
     _pageNotifier.dispose();
     _trackInfoSwitchController.dispose();
     _sonoPlayer.currentSong.removeListener(_onSongChanged);
@@ -326,6 +345,24 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
     final song = _sonoPlayer.currentSong.value;
     if (song == null) return;
 
+    if (song.isRemote) {
+      //use the starred value baked into the SongModel from when the song was loaded;
+      //if a protocol is available, refresh from the server for accuracy
+      bool isStarred = song.remoteStarred;
+      final protocol = MusicServerService.instance.activeProtocol;
+      final remoteSongId = song.remoteSongId;
+      if (protocol != null && remoteSongId != null) {
+        final remoteSong = await protocol.getSong(remoteSongId);
+        if (remoteSong != null) isStarred = remoteSong.starred;
+      }
+      if (mounted) {
+        setState(() => _isCurrentSongFavorite = isStarred);
+        _startRemoteStarredRefresh();
+      }
+      return;
+    }
+
+    _stopRemoteStarredRefresh();
     final favoritesService = context.read<FavoritesService>();
     final isFavorite = await favoritesService.isSongFavorite(song.id);
     if (mounted) {
@@ -346,11 +383,24 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
     });
 
     try {
-      final favoritesService = context.read<FavoritesService>();
-      if (newFavoriteState) {
-        await favoritesService.addSongToFavorites(song.id);
+      if (song.isRemote) {
+        //remote song: star/unstar via server protocol
+        final protocol = MusicServerService.instance.activeProtocol;
+        final remoteSongId = song.remoteSongId;
+        if (protocol == null || remoteSongId == null) return;
+
+        if (newFavoriteState) {
+          await protocol.star(id: remoteSongId);
+        } else {
+          await protocol.unstar(id: remoteSongId);
+        }
       } else {
-        await favoritesService.removeSongFromFavorites(song.id);
+        final favoritesService = context.read<FavoritesService>();
+        if (newFavoriteState) {
+          await favoritesService.addSongToFavorites(song.id);
+        } else {
+          await favoritesService.removeSongFromFavorites(song.id);
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -643,7 +693,47 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
     _currentArtworkId = currentSong.id;
     _cachedBlurredBackground = Positioned.fill(
       child: RepaintBoundary(
-        child: FutureBuilder<Uint8List?>(
+        child: currentSong.isRemote && currentSong.remoteArtworkUrl != null
+          ? Builder(builder: (context) {
+              return AnimatedOpacity(
+                opacity: 1.0,
+                duration: const Duration(milliseconds: 750),
+                curve: Curves.easeIn,
+                child: Stack(
+                  children: [
+                    Image.network(
+                      currentSong.remoteArtworkUrl!,
+                      fit: BoxFit.cover,
+                      height: double.infinity,
+                      width: double.infinity,
+                      alignment: Alignment.center,
+                      filterQuality: FilterQuality.low,
+                      errorBuilder: (_, _, _) =>
+                          Container(color: AppTheme.backgroundDark),
+                    ),
+                    Positioned.fill(
+                      child: Container(
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Color.fromRGBO(10, 0, 5, 0.4),
+                              Color.fromRGBO(60, 0, 30, 0.95),
+                            ],
+                          ),
+                        ),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
+                          child: Container(color: Colors.transparent),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            })
+          : FutureBuilder<Uint8List?>(
           future: ArtworkCacheService.instance.getArtwork(
             currentSong.id,
             size: 250,
@@ -978,32 +1068,45 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(AppTheme.radiusXl),
-                child: FutureBuilder<Uint8List?>(
-                  future: _getOrCacheArtworkFuture(song.id),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.done &&
-                        snapshot.hasData &&
-                        snapshot.data != null) {
-                      final cacheSize =
-                          (400 * MediaQuery.of(context).devicePixelRatio)
-                              .round();
-                      return Image.memory(
-                        snapshot.data!,
+                child: song.isRemote && song.remoteArtworkUrl != null
+                    ? Image.network(
+                        song.remoteArtworkUrl!,
                         width: double.infinity,
                         height: double.infinity,
                         fit: BoxFit.cover,
                         gaplessPlayback: true,
-                        cacheWidth: cacheSize,
-                        cacheHeight: cacheSize,
-                        filterQuality:
-                            MediaQuery.of(context).devicePixelRatio > 2
-                                ? FilterQuality.high
-                                : FilterQuality.medium,
-                      );
-                    }
-                    return _buildArtworkPlaceholder();
-                  },
-                ),
+                        errorBuilder: (_, _, _) => _buildArtworkPlaceholder(),
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return _buildArtworkPlaceholder();
+                        },
+                      )
+                    : FutureBuilder<Uint8List?>(
+                        future: _getOrCacheArtworkFuture(song.id),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.done &&
+                              snapshot.hasData &&
+                              snapshot.data != null) {
+                            final cacheSize =
+                                (400 * MediaQuery.of(context).devicePixelRatio)
+                                    .round();
+                            return Image.memory(
+                              snapshot.data!,
+                              width: double.infinity,
+                              height: double.infinity,
+                              fit: BoxFit.cover,
+                              gaplessPlayback: true,
+                              cacheWidth: cacheSize,
+                              cacheHeight: cacheSize,
+                              filterQuality:
+                                  MediaQuery.of(context).devicePixelRatio > 2
+                                      ? FilterQuality.high
+                                      : FilterQuality.medium,
+                            );
+                          }
+                          return _buildArtworkPlaceholder();
+                        },
+                      ),
               ),
             ),
           ),

@@ -15,6 +15,7 @@ import 'package:sono/services/sas/sas_manager.dart';
 import 'package:sono/services/playlist/playlist_service.dart';
 import 'package:sono/services/artists/artist_fetch_progress_service.dart';
 import 'package:sono/services/utils/favorites_service.dart';
+import 'package:sono/services/servers/server_service.dart';
 import 'package:sono/widgets/player/sono_player.dart';
 import 'package:sono/styles/app_theme.dart';
 import 'pages/loading_page.dart';
@@ -98,7 +99,11 @@ void main() async {
 
   //run independent initializations
   debugPrint('[Init] Starting EnvConfig + Firebase initialization...');
-  await Future.wait([EnvConfig.initialize(), _initializeFirebase()]);
+  await Future.wait([
+    EnvConfig.initialize(),
+    _initializeFirebase(),
+    MusicServerService.instance.loadServers(),
+  ]);
   debugPrint(
     '[Init] Firebase available: ${FirebaseAvailability.instance.isAvailable}',
   );
@@ -111,6 +116,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => PlaylistService()),
         ChangeNotifierProvider(create: (_) => FavoritesService()),
         ChangeNotifierProvider.value(value: ArtistFetchProgressService()),
+        ChangeNotifierProvider.value(value: MusicServerService.instance),
       ],
       child: const Sono(),
     ),

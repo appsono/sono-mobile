@@ -2153,7 +2153,8 @@ class SonoPlayer extends BaseAudioHandler {
       }
 
       //verify song is playable (only for local files => not preloading)
-      if (!isPreloading && _playbackMode == _PlaybackMode.local) {
+      final isRemoteUrl = song.uri?.startsWith('http') == true;
+      if (!isPreloading && _playbackMode == _PlaybackMode.local && !isRemoteUrl) {
         final isPlayable = await _isSongPlayable(song);
         if (!isPlayable) {
           if (kDebugMode) {
@@ -2213,7 +2214,10 @@ class SonoPlayer extends BaseAudioHandler {
       final songUri = Uri.parse(song.uri!);
       final AudioSource audioSource;
 
-      if (songUri.scheme == 'content' || songUri.scheme == 'ipod-library') {
+      if (songUri.scheme == 'http' || songUri.scheme == 'https') {
+        //remote stream URL (e.g. from music server)
+        audioSource = AudioSource.uri(songUri);
+      } else if (songUri.scheme == 'content' || songUri.scheme == 'ipod-library') {
         //android content:// URIs or iOS ipod-library:// URIs
         audioSource = AudioSource.uri(songUri);
       } else if (songUri.scheme == 'file' || songUri.path.startsWith('/')) {
@@ -2874,7 +2878,7 @@ class SonoPlayer extends BaseAudioHandler {
     try {
       final futures = await Future.wait([
         _favoritesService.isSongFavorite(song.id),
-        _getAlbumArtUri(song.id),
+        _getAlbumArtUri(song),
       ]);
 
       final isFavorite = futures[0] as bool;
@@ -2893,7 +2897,20 @@ class SonoPlayer extends BaseAudioHandler {
     }
   }
 
-  Future<Uri?> _getAlbumArtUri(int songId) async {
+  Future<Uri?> _getAlbumArtUri(SongModel song) async {
+    final songId = song.id;
+
+    //for remote songs, use the stored cover art URL
+    if (song.isRemote) {
+      final remoteUrl = song.remoteArtworkUrl;
+      if (remoteUrl != null) {
+        final uri = Uri.parse(remoteUrl);
+        _artworkCache.setArtwork(songId, uri);
+        return uri;
+      }
+      return null;
+    }
+
     //check cache first
     final cached = _artworkCache.getArtwork(songId);
     if (cached != null) return cached;
@@ -3254,15 +3271,31 @@ extension SongModelDurationExtension on SongModel {
     return Duration(milliseconds: duration ?? 0);
   }
 
+  /// Whether this is a remote server song (synthetic negative ID)
+  bool get isRemote => id < 0;
+
+  /// Remote cover art URL stored when converting from RemoteSong
+  String? get remoteArtworkUrl => getMap['remote_artwork_url'] as String?;
+
+  /// Original remote song ID (Subsonic ID) for API calls like star/unstar
+  String? get remoteSongId => getMap['remote_song_id']?.toString();
+
+  /// Server ID this remote song belongs to
+  int? get remoteServerId => getMap['remote_server_id'] as int?;
+
+  /// Whether this remote song is starred on the server (from last loaded data)
+  bool get remoteStarred => getMap['remote_starred'] as bool? ?? false;
+
   MediaItem toMediaItem() {
     return MediaItem(
-      id: uri!,
+      id: uri ?? data,
       album: album ?? "Unknown Album",
       title: title,
       artist: artist ?? "Unknown Artist",
       duration:
           durationMsDuration() != Duration.zero ? durationMsDuration() : null,
       extras: <String, dynamic>{'songId': id},
+      artUri: remoteArtworkUrl != null ? Uri.parse(remoteArtworkUrl!) : null,
     );
   }
 }

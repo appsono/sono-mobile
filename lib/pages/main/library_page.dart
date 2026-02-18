@@ -2,6 +2,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:sono/pages/library/all_items_page.dart';
+import 'package:sono/pages/servers/library_page.dart';
+import 'package:sono/services/servers/server_service.dart';
 import 'package:sono/services/utils/favorites_service.dart';
 import 'package:sono/services/playlist/playlist_service.dart';
 import 'package:sono/styles/text.dart';
@@ -66,7 +68,23 @@ class _LibraryPageState extends State<LibraryPage>
   Widget build(BuildContext context) {
     super.build(context);
 
+    final serverService = context.watch<MusicServerService>();
+
     final List<_LibraryCategory> categories = [
+      if (serverService.hasActiveServer)
+        _LibraryCategory(
+          title: serverService.activeServer!.name,
+          icon: Icons.cloud_rounded,
+          color: Colors.teal.shade300,
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const ServerLibraryPage(),
+              ),
+            );
+          },
+        ),
       _LibraryCategory(
         title: "Playlists",
         icon: Icons.queue_music_rounded,

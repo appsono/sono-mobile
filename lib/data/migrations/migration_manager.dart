@@ -9,10 +9,11 @@ import 'migration_v6.dart';
 import 'migration_v7.dart';
 import 'migration_v8.dart';
 import 'migration_v9.dart';
+import 'migration_v10.dart';
 
 class MigrationManager {
   ///current database version
-  static const int currentVersion = 9;
+  static const int currentVersion = 10;
 
   ///runs database migrations from oldVersion to newVersion
   static Future<void> migrate(
@@ -68,6 +69,9 @@ class MigrationManager {
         break;
       case 9:
         await MigrationV9.migrate(db);
+        break;
+      case 10:
+        await MigrationV10.migrate(db);
         break;
       default:
         debugPrint('SonoDatabase: No migration found for version $version');

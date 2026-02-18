@@ -61,6 +61,7 @@ class SonoDatabaseHelper {
     await db.delete('song_metadata');
     await db.delete('artist_metadata');
     await db.delete('artists');
+    await db.delete('music_servers');
 
     debugPrint('SonoDatabase: All data cleared');
   }

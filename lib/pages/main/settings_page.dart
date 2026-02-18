@@ -7,6 +7,7 @@ import 'package:sono/pages/main/settings/library_scrobbling_settings_page.dart';
 import 'package:sono/pages/main/settings/account_settings_page.dart';
 import 'package:sono/pages/main/settings/developer_settings_page.dart';
 import 'package:sono/pages/main/settings/about_settings_page.dart';
+import 'package:sono/pages/main/settings/servers_settings_page.dart';
 import 'package:sono/widgets/global/content_constraint.dart';
 
 /// main settings page
@@ -85,6 +86,21 @@ class SettingsPage extends StatelessWidget {
                           builder:
                               (context) =>
                                   const LibraryScrobblingSettingsPage(),
+                        ),
+                      ),
+                ),
+                const SizedBox(height: 5),
+                _buildSettingsCard(
+                  context,
+                  icon: Icons.dns_rounded,
+                  title: 'Music Servers',
+                  subtitle: 'Navidrome, Airsonic, Gonic, and more',
+                  onTap:
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) => const ServersSettingsPage(),
                         ),
                       ),
                 ),

@@ -816,26 +816,41 @@ class _SonoBottomPlayerState extends State<SonoBottomPlayer>
                       context,
                       AppTheme.artworkSm,
                     ),
-                    child: QueryArtworkWidget(
-                      id: currentSong.id,
-                      type: ArtworkType.AUDIO,
-                      size: 150,
-                      quality: 100,
-                      keepOldArtwork: true,
-                      artworkBorder: BorderRadius.circular(AppTheme.radiusXl),
-                      nullArtworkWidget: Container(
-                        color: AppTheme.elevatedSurfaceDark,
-                        child: Icon(
-                          Icons.music_note_rounded,
-                          color: AppTheme.textPrimaryDark,
-                          size: AppTheme.responsiveIconSize(
-                            context,
-                            AppTheme.icon,
-                            min: 20.0,
+                    child: currentSong.isRemote && currentSong.remoteArtworkUrl != null
+                        ? Image.network(
+                            currentSong.remoteArtworkUrl!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, _, _) => Container(
+                              color: AppTheme.elevatedSurfaceDark,
+                              child: Icon(
+                                Icons.music_note_rounded,
+                                color: AppTheme.textPrimaryDark,
+                                size: AppTheme.responsiveIconSize(
+                                  context, AppTheme.icon, min: 20.0,
+                                ),
+                              ),
+                            ),
+                          )
+                        : QueryArtworkWidget(
+                            id: currentSong.id,
+                            type: ArtworkType.AUDIO,
+                            size: 150,
+                            quality: 100,
+                            keepOldArtwork: true,
+                            artworkBorder: BorderRadius.circular(AppTheme.radiusXl),
+                            nullArtworkWidget: Container(
+                              color: AppTheme.elevatedSurfaceDark,
+                              child: Icon(
+                                Icons.music_note_rounded,
+                                color: AppTheme.textPrimaryDark,
+                                size: AppTheme.responsiveIconSize(
+                                  context,
+                                  AppTheme.icon,
+                                  min: 20.0,
+                                ),
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                    ),
                   ),
                 ),
               ),

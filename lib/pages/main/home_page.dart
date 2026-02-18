@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:sono/data/models/remote_models.dart';
+import 'package:sono/pages/servers/album_page.dart';
+import 'package:sono/pages/servers/library_page.dart';
+import 'package:sono/services/servers/server_service.dart';
 import 'package:sono/styles/app_theme.dart';
 import 'package:sono/styles/text.dart';
 import 'package:sono/widgets/player/sono_player.dart';
@@ -13,6 +17,7 @@ import 'package:sono/pages/library/all_items_page.dart';
 import 'package:sono/pages/info/announcements_changelog_page.dart';
 import 'package:sono/utils/audio_filter_utils.dart';
 import 'package:sono/widgets/global/content_constraint.dart';
+import 'package:sono/widgets/servers/remote_artwork.dart';
 import 'package:sono_refresh/sono_refresh.dart';
 
 class HomePage extends StatefulWidget {
@@ -56,6 +61,10 @@ class HomePageState extends State<HomePage>
   List<SongModel> _paginatedSongs = [];
   bool _isLoadingAllSongs = true;
 
+  List<RemoteAlbum>? _externalAlbums;
+  bool _isLoadingExternalAlbums = false;
+  int? _lastActiveServerId;
+
   @override
   bool get wantKeepAlive => true;
 
@@ -64,6 +73,37 @@ class HomePageState extends State<HomePage>
     super.initState();
     if (widget.hasPermission) {
       _initializeDataFutures();
+    }
+    MusicServerService.instance.addListener(_onServerChanged);
+    _loadExternalAlbums();
+  }
+
+  @override
+  void dispose() {
+    MusicServerService.instance.removeListener(_onServerChanged);
+    super.dispose();
+  }
+
+  void _onServerChanged() {
+    final currentId = MusicServerService.instance.activeServer?.id;
+    if (currentId != _lastActiveServerId) {
+      _lastActiveServerId = currentId;
+      _loadExternalAlbums();
+    }
+  }
+
+  Future<void> _loadExternalAlbums() async {
+    final protocol = MusicServerService.instance.activeProtocol;
+    if (protocol == null) {
+      if (mounted) setState(() { _externalAlbums = null; _isLoadingExternalAlbums = false; });
+      return;
+    }
+    if (mounted) setState(() => _isLoadingExternalAlbums = true);
+    try {
+      final albums = await protocol.getAlbumList(type: 'newest', count: 20);
+      if (mounted) setState(() { _externalAlbums = albums; _isLoadingExternalAlbums = false; });
+    } catch (_) {
+      if (mounted) setState(() { _externalAlbums = []; _isLoadingExternalAlbums = false; });
     }
   }
 
@@ -167,6 +207,8 @@ class HomePageState extends State<HomePage>
       _allSongs = allSongs;
       _paginatedSongs = allSongs.toList();
     });
+
+    _loadExternalAlbums();
   }
 
   void _handleShuffleAll() async {
@@ -551,6 +593,8 @@ class HomePageState extends State<HomePage>
               itemCount: 4,
             ),
           ),
+          if (_isLoadingExternalAlbums || (_externalAlbums?.isNotEmpty ?? false))
+            _buildExternalAlbumsSection(context, isDesktop, isLargeScreen),
           _buildSection<ArtistModel>(
             context: context,
             title: "Artists",
@@ -658,6 +702,142 @@ class HomePageState extends State<HomePage>
               ),
         );
       }, childCount: _paginatedSongs.length),
+    );
+  }
+
+  Widget _buildExternalAlbumsSection(BuildContext context, bool isDesktop, bool isLargeScreen) {
+    final itemWidth = isDesktop ? 180.0 : isLargeScreen ? 150.0 : 110.0;
+    final listHeight = isDesktop ? 260.0 : isLargeScreen ? 220.0 : 165.0;
+    final protocol = MusicServerService.instance.activeProtocol;
+
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: AppTheme.spacingSm + 2),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: AppTheme.spacing),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'External Albums',
+                    style: AppStyles.sonoButtonText.copyWith(
+                      fontSize: AppTheme.fontSubtitle,
+                    ),
+                  ),
+                  InkWell(
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const ServerLibraryPage()),
+                    ),
+                    borderRadius: BorderRadius.circular(AppTheme.radius),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppTheme.spacingSm,
+                        vertical: 4,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'See All',
+                            style: TextStyle(
+                              fontSize: AppTheme.fontSm,
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.textSecondaryDark,
+                              fontFamily: 'VarelaRound',
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Icon(
+                            Icons.arrow_forward_rounded,
+                            size: 16,
+                            color: AppTheme.textSecondaryDark,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: AppTheme.spacingMd),
+            SizedBox(
+              height: listHeight,
+              child: _isLoadingExternalAlbums
+                  ? _buildHorizontalSkeletonLoader(
+                      itemWidth: itemWidth,
+                      itemHeight: listHeight,
+                      itemCount: 4,
+                    )
+                  : ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: _externalAlbums!.length,
+                      padding: EdgeInsets.symmetric(horizontal: AppTheme.spacing),
+                      physics: const BouncingScrollPhysics(),
+                      itemBuilder: (ctx, index) {
+                        final album = _externalAlbums![index];
+                        return Padding(
+                          padding: EdgeInsets.only(right: AppTheme.spacing),
+                          child: SizedBox(
+                            width: itemWidth,
+                            child: GestureDetector(
+                              onTap: protocol == null
+                                  ? null
+                                  : () => Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => RemoteAlbumPage(
+                                            album: album,
+                                            protocol: protocol,
+                                          ),
+                                        ),
+                                      ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(AppTheme.radius),
+                                    child: protocol == null
+                                        ? SizedBox(width: itemWidth, height: itemWidth)
+                                        : RemoteArtwork(
+                                            coverArtId: album.coverArtId,
+                                            protocol: protocol,
+                                            size: itemWidth,
+                                            borderRadius: BorderRadius.circular(AppTheme.radius),
+                                          ),
+                                  ),
+                                  SizedBox(height: AppTheme.spacingSm),
+                                  Text(
+                                    album.name,
+                                    style: AppStyles.sonoPlayerTitle.copyWith(
+                                      fontSize: isDesktop ? 14 : 12,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  if (album.artistName != null)
+                                    Text(
+                                      album.artistName!,
+                                      style: AppStyles.sonoPlayerArtist.copyWith(
+                                        fontSize: isDesktop ? 12 : 10,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
