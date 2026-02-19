@@ -414,13 +414,13 @@ class _LibraryPageState extends State<LibraryPage>
     //responsive column count based on screen width
     int crossAxisCount = 2; //default
     if (screenWidth > 1200) {
-      crossAxisCount = 6; //large tablets/desktops
+      crossAxisCount = 5; //large tablets/desktops
     } else if (screenWidth > 900) {
-      crossAxisCount = 5; //medium tablets
+      crossAxisCount = 4; //medium tablets
     } else if (screenWidth > 700) {
-      crossAxisCount = 4; //small tablets
+      crossAxisCount = 3; //small tablets
     } else if (screenWidth > 500) {
-      crossAxisCount = 3; //large phones in landscape
+      crossAxisCount = 2; //large phones in landscape
     }
 
     return GridView.builder(
@@ -429,7 +429,7 @@ class _LibraryPageState extends State<LibraryPage>
         crossAxisCount: crossAxisCount,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
-        childAspectRatio: 1.2,
+        childAspectRatio: 1.0,
       ),
       itemCount: categories.length,
       itemBuilder: (context, index) {

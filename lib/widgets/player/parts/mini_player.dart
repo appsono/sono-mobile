@@ -290,71 +290,74 @@ class _SonoBottomPlayerState extends State<SonoBottomPlayer>
   }
 
   Widget _buildDismissalUI(double screenWidth, bool isLargeScreen) {
+    final isDesktop = screenWidth > 900;
     return SlideTransition(
       position: _dismissalSlideAnimation,
-      child: Container(
-        height: 60,
-        margin: EdgeInsets.fromLTRB(
-          isLargeScreen ? (screenWidth - 600) / 2 + 16 : 16,
-          0,
-          isLargeScreen ? (screenWidth - 600) / 2 + 16 : 16,
-          16,
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        decoration: BoxDecoration(
-          color: AppTheme.elevatedSurfaceDark,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: AppTheme.brandPink.withAlpha(128),
-            width: 1.5,
-          ),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              Icons.check_circle_rounded,
-              color: AppTheme.brandPink,
-              size: 24,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'Player dismissed',
-                style: TextStyle(
-                  color: AppTheme.textPrimaryDark,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: isDesktop ? 900.0 : 600.0),
+            child: Container(
+              height: 60,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              decoration: BoxDecoration(
+                color: AppTheme.elevatedSurfaceDark,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppTheme.brandPink.withAlpha(128),
+                  width: 1.5,
                 ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: _undoDismissal,
-                borderRadius: BorderRadius.circular(8),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.check_circle_rounded,
                     color: AppTheme.brandPink,
-                    borderRadius: BorderRadius.circular(8),
+                    size: 24,
                   ),
-                  child: Text(
-                    'UNDO',
-                    style: TextStyle(
-                      color: AppTheme.textPrimaryDark,
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.5,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Player dismissed',
+                      style: TextStyle(
+                        color: AppTheme.textPrimaryDark,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
-                ),
+                  const SizedBox(width: 12),
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: _undoDismissal,
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppTheme.brandPink,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          'UNDO',
+                          style: TextStyle(
+                            color: AppTheme.textPrimaryDark,
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -374,22 +377,27 @@ class _SonoBottomPlayerState extends State<SonoBottomPlayer>
         }
 
         if (!_isDismissed) _slideController.forward();
+        final isDesktop = screenWidth > 900;
+        final playerHeight = isDesktop
+            ? 80.0
+            : AppTheme.responsiveDimension(context, AppTheme.miniPlayerHeight);
         return SlideTransition(
           position: _slideAnimation,
           child: GestureDetector(
             onTap: _openFullscreenPlayer,
-            child: Container(
-              height: AppTheme.responsiveDimension(
-                context,
-                AppTheme.miniPlayerHeight,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: isDesktop ? 900.0 : 600.0,
+                  ),
+                  child: SizedBox(
+                    height: playerHeight,
+                    child: _buildClientContent(),
+                  ),
+                ),
               ),
-              margin: EdgeInsets.fromLTRB(
-                isLargeScreen ? (screenWidth - 600) / 2 + 12 : 12,
-                0,
-                isLargeScreen ? (screenWidth - 600) / 2 + 12 : 12,
-                12,
-              ),
-              child: _buildClientContent(),
             ),
           ),
         );
@@ -434,6 +442,13 @@ class _SonoBottomPlayerState extends State<SonoBottomPlayer>
 
                 //normal player state
                 if (!_isDismissed) _slideController.forward();
+                final isDesktop = screenWidth > 900;
+                final playerHeight = isDesktop
+                    ? 80.0
+                    : AppTheme.responsiveDimension(
+                        context,
+                        AppTheme.miniPlayerHeight,
+                      );
                 return SlideTransition(
                   position: _slideAnimation,
                   child: GestureDetector(
@@ -463,24 +478,25 @@ class _SonoBottomPlayerState extends State<SonoBottomPlayer>
                         _dismissPlayerWithUndo();
                       }
                     },
-                    child: Container(
-                      height: AppTheme.responsiveDimension(
-                        context,
-                        AppTheme.miniPlayerHeight,
-                      ),
-                      margin: EdgeInsets.fromLTRB(
-                        isLargeScreen ? (screenWidth - 600) / 2 + 12 : 12,
-                        0,
-                        isLargeScreen ? (screenWidth - 600) / 2 + 12 : 12,
-                        12,
-                      ),
-                      child: _MiniPlayerContent(
-                        currentSong: currentSong,
-                        songSwitchController: _songSwitchController,
-                        slideInAnimation: _slideInAnimation,
-                        fadeAnimation: _fadeAnimation,
-                        buildArtwork: () => _buildArtwork(currentSong),
-                        buildControls: _buildControls,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: isDesktop ? 900.0 : 600.0,
+                          ),
+                          child: SizedBox(
+                            height: playerHeight,
+                            child: _MiniPlayerContent(
+                              currentSong: currentSong,
+                              songSwitchController: _songSwitchController,
+                              slideInAnimation: _slideInAnimation,
+                              fadeAnimation: _fadeAnimation,
+                              buildArtwork: () => _buildArtwork(currentSong),
+                              buildControls: _buildControls,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -498,53 +514,56 @@ class _SonoBottomPlayerState extends State<SonoBottomPlayer>
     bool isLargeScreen,
     String errorMessage,
   ) {
+    final isDesktop = screenWidth > 900;
+    final playerHeight = isDesktop
+        ? 80.0
+        : AppTheme.responsiveDimension(context, AppTheme.miniPlayerHeight);
     return SlideTransition(
       position: _slideAnimation,
-      child: Container(
-        height: AppTheme.responsiveDimension(
-          context,
-          AppTheme.miniPlayerHeight,
-        ),
-        margin: EdgeInsets.fromLTRB(
-          isLargeScreen ? (screenWidth - 600) / 2 + 12 : 12,
-          0,
-          isLargeScreen ? (screenWidth - 600) / 2 + 12 : 12,
-          12,
-        ),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.errorContainer,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Row(
-            children: [
-              Icon(
-                Icons.error_outline_rounded,
-                color: Theme.of(context).colorScheme.error,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: isDesktop ? 900.0 : 600.0),
+            child: Container(
+              height: playerHeight,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.errorContainer,
+                borderRadius: BorderRadius.circular(12),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  errorMessage,
-                  style: AppStyles.sonoPlayerTitle.copyWith(
-                    color: Theme.of(context).colorScheme.onErrorContainer,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.error_outline_rounded,
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        errorMessage,
+                        style: AppStyles.sonoPlayerTitle.copyWith(
+                          color: Theme.of(context).colorScheme.onErrorContainer,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        Icons.close_rounded,
+                        color: Theme.of(context).colorScheme.onErrorContainer,
+                      ),
+                      onPressed: () {
+                        //clear error message
+                        SonoPlayer().playerErrorMessage.value = null;
+                      },
+                    ),
+                  ],
                 ),
               ),
-              IconButton(
-                icon: Icon(
-                  Icons.close_rounded,
-                  color: Theme.of(context).colorScheme.onErrorContainer,
-                ),
-                onPressed: () {
-                  //clear error message
-                  SonoPlayer().playerErrorMessage.value = null;
-                },
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -1080,10 +1099,12 @@ class _MiniPlayerContent extends StatelessWidget {
                                   : 1.0,
                           child: Padding(
                             padding: EdgeInsets.all(
-                              AppTheme.responsiveSpacing(
-                                context,
-                                AppTheme.spacingXs,
-                              ),
+                              MediaQuery.of(context).size.width > 900
+                                  ? AppTheme.spacingXs
+                                  : AppTheme.responsiveSpacing(
+                                      context,
+                                      AppTheme.spacingXs,
+                                    ),
                             ),
                             child: Row(
                               children: [

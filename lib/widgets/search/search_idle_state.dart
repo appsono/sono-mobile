@@ -30,67 +30,69 @@ class SearchIdleState extends StatelessWidget {
       return _buildEmptyState();
     }
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppTheme.spacing),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.history_rounded,
-                size: 20,
-                color: Colors.white.withValues(alpha: 0.7),
-              ),
-              const SizedBox(width: AppTheme.spacingSm),
-              const Text(
-                'Recent Searches',
-                style: TextStyle(
-                  fontSize: AppTheme.fontSubtitle,
-                  fontWeight: FontWeight.w600,
-                  fontFamily: 'VarelaRound',
-                  color: Colors.white,
+    return Align(
+      alignment: Alignment.topLeft,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(AppTheme.spacing),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.history_rounded,
+                  size: 20,
+                  color: Colors.white.withValues(alpha: 0.7),
                 ),
-              ),
-              const Spacer(),
-              if (onClearAll != null)
-                InkWell(
-                  onTap: onClearAll,
-                  borderRadius: BorderRadius.circular(AppTheme.radius),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppTheme.spacingSm,
-                      vertical: 4,
-                    ),
-                    child: Text(
-                      'Clear All',
-                      style: TextStyle(
-                        fontSize: AppTheme.fontSm,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.brandPink,
-                        fontFamily: 'VarelaRound',
+                const SizedBox(width: AppTheme.spacingSm),
+                const Text(
+                  'Recent Searches',
+                  style: TextStyle(
+                    fontSize: AppTheme.fontSubtitle,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'VarelaRound',
+                    color: Colors.white,
+                  ),
+                ),
+                const Spacer(),
+                if (onClearAll != null)
+                  InkWell(
+                    onTap: onClearAll,
+                    borderRadius: BorderRadius.circular(AppTheme.radius),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppTheme.spacingSm,
+                        vertical: 4,
+                      ),
+                      child: Text(
+                        'Clear All',
+                        style: TextStyle(
+                          fontSize: AppTheme.fontSm,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.brandPink,
+                          fontFamily: 'VarelaRound',
+                        ),
                       ),
                     ),
                   ),
-                ),
-            ],
-          ),
+              ],
+            ),
 
-          const SizedBox(height: AppTheme.spacingMd),
+            const SizedBox(height: AppTheme.spacingMd),
 
-          Wrap(
-            spacing: AppTheme.spacingSm,
-            runSpacing: AppTheme.spacingSm,
-            children:
-                recentSearches.map((search) {
-                  return RecentSearchChip(
-                    search: search,
-                    onTap: () => onRecentSearchTap(search),
-                    onDelete: () => onRecentSearchDelete(search),
-                  );
-                }).toList(),
-          ),
-        ],
+            Wrap(
+              spacing: AppTheme.spacingSm,
+              runSpacing: AppTheme.spacingSm,
+              children: recentSearches.map((search) {
+                return RecentSearchChip(
+                  search: search,
+                  onTap: () => onRecentSearchTap(search),
+                  onDelete: () => onRecentSearchDelete(search),
+                );
+              }).toList(),
+            ),
+          ],
+        ),
       ),
     );
   }

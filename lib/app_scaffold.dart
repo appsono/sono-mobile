@@ -10,6 +10,9 @@ import 'package:device_info_plus/device_info_plus.dart';
 
 //pages
 import 'package:sono/pages/info/announcements_changelog_page.dart';
+import 'package:sono/utils/audio_filter_utils.dart';
+import 'package:sono/widgets/player/sono_player.dart';
+import 'package:on_audio_query/on_audio_query.dart';
 import 'package:sono/pages/main/home_page.dart';
 import 'package:sono/pages/main/library_page.dart';
 import 'package:sono/pages/auth/login_page.dart';
@@ -51,6 +54,7 @@ class _AppScaffoldState extends State<AppScaffold>
     with SidebarMixin, WidgetsBindingObserver {
   int _currentIndex = 0;
   int? _pressedIndex;
+  bool _isRailExpanded = false;
   String? _activeNonTabRoute;
   late List<Widget> _screens;
   String _displayAppVersion = ' ';
@@ -60,6 +64,7 @@ class _AppScaffoldState extends State<AppScaffold>
   Timer? _periodicUpdateCheckTimer;
 
   final ApiService _apiService = ApiService();
+  final OnAudioQuery _audioQuery = OnAudioQuery();
   bool _isLoggedIn = false;
   Map<String, dynamic>? _currentUser;
   String _sidebarUserName = 'Guest';
@@ -1529,6 +1534,24 @@ Tap "Read Full Terms" below to view the complete Terms of Service.
     );
   }
 
+  Future<void> _handleShuffleAll() async {
+    if (!_hasPermission) return;
+    final songs = await AudioFilterUtils.getFilteredSongs(_audioQuery);
+    if (songs.isNotEmpty) {
+      songs.shuffle();
+      SonoPlayer().playNewPlaylist(songs, 0, context: ": All Songs");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Shuffling all songs...'),
+            backgroundColor: AppTheme.brandPink,
+            duration: const Duration(seconds: 1),
+          ),
+        );
+      }
+    }
+  }
+
   String? _getRouteNameForSidebar({bool fromPop = false}) {
     if (fromPop) {
       if (_currentIndex == 3) return "Settings";
@@ -1586,11 +1609,44 @@ Tap "Read Full Terms" below to view the complete Terms of Service.
     );
   }
 
-  /// Tablet layout: NavigationRail on the left + page content
+  /// Tablet layout: collapsible sidebar or NavigationRail on the left + page content
   Widget _buildTabletLayout() {
     return Row(
       children: [
-        _buildNavigationRail(),
+        _isRailExpanded
+            ? SizedBox(
+                width: 256,
+                child: Sidebar(
+                  userName: _sidebarUserName,
+                  appVersion: _displayAppVersion,
+                  currentRoute: _getRouteNameForSidebar(),
+                  profilePictureUrl: _profilePictureUrl,
+                  showNavItems: true,
+                  currentTabIndex: _currentIndex,
+                  onNavItemTap: _onItemTapped,
+                  onCollapseTap: () => setState(() => _isRailExpanded = false),
+                  onProfileTap: () {
+                    if (_isLoggedIn) {
+                      _navigateToProfilePage();
+                    } else {
+                      _navigateToLoginPage();
+                    }
+                  },
+                  onWhatsNewTap: _navigateToChangelog,
+                  onSettingsTap: () => _onItemTapped(3),
+                  onRecentsTap: _navigateToRecents,
+                  onShuffleAllTap: _handleShuffleAll,
+                  onCreatePlaylistTap: _showCreatePlaylistSheet,
+                  onLogoutTap: () {
+                    if (_isLoggedIn) {
+                      _handleLogout();
+                    } else {
+                      _navigateToLoginPage();
+                    }
+                  },
+                ),
+              )
+            : _buildNavigationRail(),
         Expanded(child: _buildPageContent(bottomPadding: 0)),
       ],
     );
@@ -1620,6 +1676,8 @@ Tap "Read Full Terms" below to view the complete Terms of Service.
             onWhatsNewTap: _navigateToChangelog,
             onSettingsTap: () => _onItemTapped(3),
             onRecentsTap: _navigateToRecents,
+            onShuffleAllTap: _handleShuffleAll,
+            onCreatePlaylistTap: _showCreatePlaylistSheet,
             onLogoutTap: () {
               if (_isLoggedIn) {
                 _handleLogout();
@@ -1653,6 +1711,14 @@ Tap "Read Full Terms" below to view the complete Terms of Service.
         _navigateToTabAndCloseSidebar(3);
       },
       onRecentsTap: _navigateToRecents,
+      onShuffleAllTap: () {
+        closeSidebar();
+        _handleShuffleAll();
+      },
+      onCreatePlaylistTap: () {
+        closeSidebar();
+        _showCreatePlaylistSheet();
+      },
       onLogoutTap: () {
         if (_isLoggedIn) {
           _handleLogout();
@@ -1665,6 +1731,7 @@ Tap "Read Full Terms" below to view the complete Terms of Service.
 
   /// NavigationRail for tablet-sized screens
   Widget _buildNavigationRail() {
+    final dimColor = Colors.white.withAlpha(153);
     return Container(
       color: const Color(0xFF1A1A1A),
       child: SafeArea(
@@ -1675,18 +1742,40 @@ Tap "Read Full Terms" below to view the complete Terms of Service.
           labelType: NavigationRailLabelType.selected,
           indicatorColor: AppTheme.brandPink.withAlpha(30),
           selectedIconTheme: const IconThemeData(color: Colors.white, size: 24),
-          unselectedIconTheme: IconThemeData(
-            color: Colors.white.withAlpha(153),
-            size: 24,
-          ),
+          unselectedIconTheme: IconThemeData(color: dimColor, size: 24),
           selectedLabelTextStyle: const TextStyle(
             color: Colors.white,
             fontSize: 11,
             fontWeight: FontWeight.w600,
           ),
-          unselectedLabelTextStyle: TextStyle(
-            color: Colors.white.withAlpha(153),
-            fontSize: 11,
+          unselectedLabelTextStyle: TextStyle(color: dimColor, fontSize: 11),
+          leading: Tooltip(
+            message: 'Expand sidebar',
+            child: IconButton(
+              icon: Icon(Icons.menu_rounded, color: dimColor),
+              onPressed: () => setState(() => _isRailExpanded = true),
+            ),
+          ),
+          trailing: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
+                child: Divider(
+                  color: Colors.white.withAlpha((255 * 0.1).round()),
+                  thickness: 0.8,
+                  height: 12,
+                ),
+              ),
+              _buildRailActionButton(icon: Icons.new_releases_rounded, tooltip: 'Changelog', onTap: _navigateToChangelog),
+              _buildRailActionButton(icon: Icons.history_rounded, tooltip: 'Recents', onTap: _navigateToRecents),
+              const SizedBox(height: 8),
+              _buildRailActionButton(
+                icon: Icons.logout_rounded,
+                tooltip: _isLoggedIn ? 'Logout' : 'Login',
+                onTap: () => _isLoggedIn ? _handleLogout() : _navigateToLoginPage(),
+                color: Colors.red.shade400,
+              ),
+            ],
           ),
           destinations: const [
             NavigationRailDestination(
@@ -1711,6 +1800,21 @@ Tap "Read Full Terms" below to view the complete Terms of Service.
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildRailActionButton({
+    required IconData icon,
+    required String tooltip,
+    required VoidCallback onTap,
+    Color? color,
+  }) {
+    return Tooltip(
+      message: tooltip,
+      child: IconButton(
+        icon: Icon(icon, color: color ?? Colors.white.withAlpha(153), size: 24),
+        onPressed: onTap,
       ),
     );
   }

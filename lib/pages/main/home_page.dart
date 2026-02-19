@@ -461,7 +461,7 @@ class HomePageState extends State<HomePage>
 
     return SonoRefreshIndicator(
       onRefresh: refreshData,
-      edgeOffset: appBarContentHeight,
+      edgeOffset: isDesktop ? 0 : appBarContentHeight,
       logo: Image.asset(
         'assets/images/logos/favicon-white.png',
         width: 28,
@@ -473,7 +473,7 @@ class HomePageState extends State<HomePage>
       child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: <Widget>[
-          SliverAppBar(
+          if (!isDesktop) SliverAppBar(
             pinned: true,
             floating: false,
             automaticallyImplyLeading: false,
@@ -505,12 +505,13 @@ class HomePageState extends State<HomePage>
               },
             ),
           ),
-          SliverToBoxAdapter(
+          if (!isDesktop) SliverToBoxAdapter(
             child: ShuffleCreatePlaylistButtons(
               onShuffleAll: _handleShuffleAll,
               onCreatePlaylist: widget.onCreatePlaylist ?? () {},
             ),
           ),
+          if (isDesktop) const SliverToBoxAdapter(child: SizedBox(height: 8)),
           _buildSection<SongModel>(
             context: context,
             title: "Recently Added",

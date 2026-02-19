@@ -1,13 +1,15 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'dart:ui';
-import 'package:sono/styles/text.dart';
+import 'package:sono/widgets/global/time_based_greeting.dart';
 
 class Sidebar extends StatelessWidget {
   final VoidCallback? onProfileTap;
   final VoidCallback? onWhatsNewTap;
   final VoidCallback? onSettingsTap;
   final VoidCallback? onRecentsTap;
+  final VoidCallback? onShuffleAllTap;
+  final VoidCallback? onCreatePlaylistTap;
   final VoidCallback? onLogoutTap;
   final String userName;
   final String appVersion;
@@ -24,6 +26,9 @@ class Sidebar extends StatelessWidget {
   /// Callback when a nav tab is tapped in permanent mode
   final ValueChanged<int>? onNavItemTap;
 
+  /// When provided, shows a collapse/arrow button in the header
+  final VoidCallback? onCollapseTap;
+
   const Sidebar({
     super.key,
     required this.userName,
@@ -34,10 +39,13 @@ class Sidebar extends StatelessWidget {
     this.onWhatsNewTap,
     this.onSettingsTap,
     this.onRecentsTap,
+    this.onShuffleAllTap,
+    this.onCreatePlaylistTap,
     this.onLogoutTap,
     this.showNavItems = false,
     this.currentTabIndex = 0,
     this.onNavItemTap,
+    this.onCollapseTap,
   });
 
   @override
@@ -74,22 +82,28 @@ class Sidebar extends StatelessWidget {
                     ),
                     const SizedBox(width: 16),
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            userName,
-                            style: AppStyles.sonoButtonText.copyWith(
-                              fontSize: 17,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.5,
+                      child: showNavItems
+                          ? TimeBasedGreeting(userName: userName)
+                          : Text(
+                              userName,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
-                          ),
-                        ],
-                      ),
                     ),
+                    if (onCollapseTap != null)
+                      IconButton(
+                        icon: const Icon(Icons.chevron_left_rounded),
+                        color: Colors.white38,
+                        iconSize: 22,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        onPressed: onCollapseTap,
+                        tooltip: 'Collapse sidebar',
+                      ),
                   ],
                 ),
               ),
@@ -165,6 +179,17 @@ class Sidebar extends StatelessWidget {
                     onTap: onRecentsTap,
                     isSelected: currentRoute == "Recents",
                   ),
+                  if (showNavItems)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
+                      child: Column(
+                        children: [
+                          _buildActionButton(icon: Icons.shuffle_rounded, label: 'Shuffle all', isDark: true, onTap: onShuffleAllTap),
+                          const SizedBox(height: 8),
+                          _buildActionButton(icon: Icons.add_rounded, label: 'Create Playlist', isDark: false, onTap: onCreatePlaylistTap),
+                        ],
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -256,6 +281,51 @@ class Sidebar extends StatelessWidget {
                       fontWeight: currentFontWeight,
                     ),
                   ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required bool isDark,
+    VoidCallback? onTap,
+  }) {
+    final backgroundColor = isDark ? const Color(0xFF2A2A2A) : Colors.white;
+    final foregroundColor = isDark ? Colors.white : const Color(0xFF1A1A1A);
+    final borderColor = isDark ? Colors.white.withAlpha(25) : Colors.transparent;
+
+    return SizedBox(
+      width: double.infinity,
+      child: Material(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(8.0),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(8.0),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8.0),
+              border: Border.all(color: borderColor, width: 1.0),
+            ),
+            child: Row(
+              children: [
+                Icon(icon, color: foregroundColor, size: 20),
+                const SizedBox(width: 10),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontFamily: 'VarelaRound',
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: foregroundColor,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),

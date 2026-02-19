@@ -38,6 +38,15 @@
       }
     },
     {
+      "name": "Flutter (Linux)",
+      "request": "launch",
+      "type": "dart",
+      "deviceId": "linux",
+      "env": {
+        "FLUTTER_BUILD_JOBS": "2"
+      }
+    },
+    {
       "name": "Dart",
       "request": "launch",
       "type": "dart",

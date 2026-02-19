@@ -47,8 +47,10 @@ class GlobalPageHeader extends StatelessWidget implements PreferredSizeWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              _buildProfileButton(context),
-              SizedBox(width: AppTheme.responsiveSpacing(context, 12)),
+              if (MediaQuery.of(context).size.width <= 900) ...[
+                _buildProfileButton(context),
+                SizedBox(width: AppTheme.responsiveSpacing(context, 12)),
+              ],
               Text(
                 pageTitle,
                 style: TextStyle(

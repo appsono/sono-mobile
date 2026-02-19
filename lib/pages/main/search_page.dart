@@ -311,7 +311,12 @@ class _SearchPageState extends State<SearchPage>
               const SizedBox(height: AppTheme.spacingMd),
             ],
 
-            Expanded(child: ContentConstraint(child: _buildContent())),
+            Expanded(
+              child: SafeArea(
+                top: false,
+                child: ContentConstraint(child: _buildContent()),
+              ),
+            ),
           ],
         ),
       ),
