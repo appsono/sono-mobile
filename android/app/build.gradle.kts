@@ -107,6 +107,7 @@ afterEvaluate {
     android.applicationVariants.configureEach {
         val flavorName = productFlavors.firstOrNull()?.name ?: return@configureEach
         val hasConfig = file("src/$flavorName/google-services.json").exists() ||
+            file("src/main/google-services.json").exists() ||
             file("google-services.json").exists()
         if (!hasConfig) {
             val variantName = name.replaceFirstChar { it.uppercase() }
