@@ -1,0 +1,186 @@
+name: Nightly Linux Build
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  check-changes:
+    name: Check for changes
+    runs-on: ubuntu-latest
+    outputs:
+      should_build: ${{ steps.check.outputs.should_build }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: nightly
+          fetch-depth: 2
+
+      - name: Check for changes in last 24 hours
+        id: check
+        run: |
+          LAST_COMMIT=$(git log -1 --format=%ct)
+          NOW=$(date +%s)
+          DIFF=$((NOW - LAST_COMMIT))
+          if [ $DIFF -lt 86400 ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "should_build=true" >> $GITHUB_OUTPUT
+            echo "Changes detected or manual trigger, will build"
+          else
+            echo "should_build=false" >> $GITHUB_OUTPUT
+            echo "No changes in last 24 hours, skipping build"
+          fi
+
+  build-nightly-linux:
+    name: Build Nightly Linux AppImage
+    needs: check-changes
+    if: needs.check-changes.outputs.should_build == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'schedule' && 'nightly' || github.ref }}
+
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y \
+            clang cmake ninja-build pkg-config \
+            libgtk-3-dev liblzma-dev libstdc++-12-dev
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'beta'
+          cache: true
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Create .env file
+        run: |
+          cat > .env << EOF
+          API_BASE_URL=${{ secrets.API_BASE_URL }}
+          CDN_BASE_URL=${{ secrets.CDN_BASE_URL }}
+          UPDATE_API_URL=${{ secrets.UPDATE_API_URL }}
+          ARTIST_PROFILE_API_URL=${{ secrets.ARTIST_PROFILE_API_URL }}
+          LASTFM_API_KEY=${{ secrets.LASTFM_API_KEY }}
+          LASTFM_SHARED_SECRET=${{ secrets.LASTFM_SHARED_SECRET }}
+          FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_APP_ID_ANDROID=${{ secrets.FIREBASE_APP_ID_ANDROID }}
+          FIREBASE_APP_ID_WEB=${{ secrets.FIREBASE_APP_ID_WEB }}
+          FIREBASE_API_KEY_ANDROID=${{ secrets.FIREBASE_API_KEY_ANDROID }}
+          FIREBASE_API_KEY_WEB=${{ secrets.FIREBASE_API_KEY_WEB }}
+          FIREBASE_MESSAGING_SENDER_ID=${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+          FIREBASE_MESSAGING_SENDER_ID_WEB=${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+          FIREBASE_AUTH_DOMAIN=${{ secrets.FIREBASE_AUTH_DOMAIN }}
+          FIREBASE_STORAGE_BUCKET=${{ secrets.FIREBASE_STORAGE_BUCKET }}
+          ENABLE_CLOUD_FEATURES=true
+          ENABLE_SAS=true
+          DEBUG_MODE=false
+          EOF
+
+      - name: Generate nightly version
+        id: version
+        run: |
+          BASE_VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //' | cut -d'-' -f1)
+          DATE=$(date +%Y%m%d)
+          VERSION="${BASE_VERSION}-nightly.${DATE}"
+          VERSION_CODE=$(date +%Y%m%d%H)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "version_code=$VERSION_CODE" >> $GITHUB_OUTPUT
+          echo "Nightly version: $VERSION ($VERSION_CODE)"
+
+      - name: Build Linux
+        run: |
+          flutter build linux --release \
+            --build-name=${{ steps.version.outputs.version }} \
+            --build-number=${{ steps.version.outputs.version_code }}
+
+      - name: Download appimagetool
+        run: |
+          wget -q -O /tmp/appimagetool \
+            "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage"
+          chmod +x /tmp/appimagetool
+
+      - name: Create AppDir
+        run: |
+          BUILD_DIR="build/linux/x64/release/bundle"
+          APPDIR="build/Sono.AppDir"
+
+          mkdir -p "$APPDIR/usr/bin"
+          mkdir -p "$APPDIR/usr/share/applications"
+          mkdir -p "$APPDIR/usr/share/icons/hicolor/256x256/apps"
+
+          cp -r "$BUILD_DIR"/* "$APPDIR/usr/bin/"
+
+          cp assets/icon/ic_launcher_nightly.png "$APPDIR/sono.png"
+          cp assets/icon/ic_launcher_nightly.png "$APPDIR/usr/share/icons/hicolor/256x256/apps/sono.png"
+
+          printf '[Desktop Entry]\nName=Sono (Nightly)\nExec=sono\nIcon=sono\nType=Application\nCategories=AudioVideo;Audio;Music;Player;\nComment=Local music player\n' \
+            > "$APPDIR/sono.desktop"
+          cp "$APPDIR/sono.desktop" "$APPDIR/usr/share/applications/sono.desktop"
+
+          printf '#!/usr/bin/env bash\nSELF_DIR="$(dirname "$(readlink -f "$0")")"\nexport LD_LIBRARY_PATH="$SELF_DIR/usr/bin/lib:${LD_LIBRARY_PATH:-}"\nexec "$SELF_DIR/usr/bin/sono" "$@"\n' \
+            > "$APPDIR/AppRun"
+          chmod +x "$APPDIR/AppRun"
+
+      - name: Package AppImage
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          ARCH=x86_64 APPIMAGE_EXTRACT_AND_RUN=1 /tmp/appimagetool \
+            build/Sono.AppDir \
+            "sono-nightly-v${VERSION}-x86_64.AppImage"
+
+      - name: Upload AppImage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sono-linux-nightly-${{ steps.version.outputs.version }}
+          path: sono-nightly-v${{ steps.version.outputs.version }}-x86_64.AppImage
+          retention-days: 7
+
+      - name: Create Nightly Pre-release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: nightly-linux-${{ steps.version.outputs.version }}
+          name: Nightly Linux ${{ steps.version.outputs.version }}
+          files: sono-nightly-v${{ steps.version.outputs.version }}-x86_64.AppImage
+          prerelease: true
+          generate_release_notes: false
+          body: |
+            Automated nightly Linux build from commit ${{ github.sha }}
+
+            **Warning:** This is an unstable nightly build. Use at your own risk.
+
+            Build: ${{ steps.version.outputs.version }} (code: ${{ steps.version.outputs.version_code }})
+
+            **Installation:** Make the AppImage executable and run it:
+            ```
+            chmod +x sono-nightly-v${{ steps.version.outputs.version }}-x86_64.AppImage
+            ./sono-nightly-v${{ steps.version.outputs.version }}-x86_64.AppImage
+            ```
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  cleanup-old-nightlies:
+    name: Cleanup old nightly Linux releases
+    needs: build-nightly-linux
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Delete old nightly Linux releases
+        uses: dev-drprasad/delete-older-releases@v0.3.2
+        with:
+          keep_latest: 7
+          delete_tag_pattern: nightly-linux-
+          delete_prerelease_only: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
