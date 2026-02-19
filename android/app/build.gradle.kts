@@ -106,11 +106,17 @@ android {
 afterEvaluate {
     android.applicationVariants.configureEach {
         val flavorName = productFlavors.firstOrNull()?.name ?: return@configureEach
-        val hasConfig = file("src/$flavorName/google-services.json").exists() ||
-            file("src/main/google-services.json").exists() ||
-            file("google-services.json").exists()
+        val mainGoogleServices = file("src/main/google-services.json")
+        val flavorGoogleServices = file("src/$flavorName/google-services.json")
+
+        if (mainGoogleServices.exists() && !flavorGoogleServices.exists()) {
+            flavorGoogleServices.parentFile.mkdirs()
+            mainGoogleServices.copyTo(flavorGoogleServices)
+        }
+
+        val variantName = name.replaceFirstChar { it.uppercase() }
+        val hasConfig = flavorGoogleServices.exists() || file("google-services.json").exists()
         if (!hasConfig) {
-            val variantName = name.replaceFirstChar { it.uppercase() }
             tasks.findByName("process${variantName}GoogleServices")?.enabled = false
             logger.warn("Firebase disabled for variant '$name'; google-services.json not found")
         }
