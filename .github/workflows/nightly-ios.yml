@@ -1,0 +1,154 @@
+name: Nightly iOS Build
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  check-changes:
+    name: Check for changes
+    runs-on: ubuntu-latest
+    outputs:
+      should_build: ${{ steps.check.outputs.should_build }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: nightly
+          fetch-depth: 2
+
+      - name: Check for changes in last 24 hours
+        id: check
+        run: |
+          LAST_COMMIT=$(git log -1 --format=%ct)
+          NOW=$(date +%s)
+          DIFF=$((NOW - LAST_COMMIT))
+          if [ $DIFF -lt 86400 ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "should_build=true" >> $GITHUB_OUTPUT
+            echo "Changes detected or manual trigger, will build"
+          else
+            echo "should_build=false" >> $GITHUB_OUTPUT
+            echo "No changes in last 24 hours, skipping build"
+          fi
+
+  build-nightly-ios:
+    name: Build Nightly iOS IPA
+    needs: check-changes
+    if: needs.check-changes.outputs.should_build == 'true'
+    runs-on: macos-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'schedule' && 'nightly' || github.ref }}
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'beta'
+          cache: true
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Create .env file
+        run: |
+          cat > .env << EOF
+          API_BASE_URL=${{ secrets.API_BASE_URL }}
+          CDN_BASE_URL=${{ secrets.CDN_BASE_URL }}
+          UPDATE_API_URL=${{ secrets.UPDATE_API_URL }}
+          ARTIST_PROFILE_API_URL=${{ secrets.ARTIST_PROFILE_API_URL }}
+          LASTFM_API_KEY=${{ secrets.LASTFM_API_KEY }}
+          LASTFM_SHARED_SECRET=${{ secrets.LASTFM_SHARED_SECRET }}
+          FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_APP_ID_ANDROID=${{ secrets.FIREBASE_APP_ID_ANDROID }}
+          FIREBASE_APP_ID_WEB=${{ secrets.FIREBASE_APP_ID_WEB }}
+          FIREBASE_API_KEY_ANDROID=${{ secrets.FIREBASE_API_KEY_ANDROID }}
+          FIREBASE_API_KEY_WEB=${{ secrets.FIREBASE_API_KEY_WEB }}
+          FIREBASE_MESSAGING_SENDER_ID=${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+          FIREBASE_MESSAGING_SENDER_ID_WEB=${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+          FIREBASE_AUTH_DOMAIN=${{ secrets.FIREBASE_AUTH_DOMAIN }}
+          FIREBASE_STORAGE_BUCKET=${{ secrets.FIREBASE_STORAGE_BUCKET }}
+          ENABLE_CLOUD_FEATURES=true
+          ENABLE_SAS=true
+          DEBUG_MODE=false
+          EOF
+
+      - name: Generate nightly version
+        id: version
+        run: |
+          BASE_VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //' | cut -d'-' -f1)
+          DATE=$(date +%Y%m%d)
+          VERSION="${BASE_VERSION}-nightly.${DATE}"
+          VERSION_CODE=$(date +%Y%m%d%H)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "version_code=$VERSION_CODE" >> $GITHUB_OUTPUT
+          echo "Nightly version: $VERSION ($VERSION_CODE)"
+
+      - name: Install CocoaPods
+        run: |
+          cd ios
+          pod install
+
+      - name: Build iOS (unsigned)
+        run: |
+          flutter build ios --release --no-codesign \
+            --build-name=${{ steps.version.outputs.version }} \
+            --build-number=${{ steps.version.outputs.version_code }}
+
+      - name: Package unsigned IPA
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          APP_PATH="build/ios/iphoneos/Runner.app"
+          mkdir -p Payload
+          cp -r "$APP_PATH" Payload/
+          zip -r "sono-nightly-v${VERSION}-unsigned.ipa" Payload
+          rm -rf Payload
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sono-ios-nightly-${{ steps.version.outputs.version }}
+          path: sono-nightly-v${{ steps.version.outputs.version }}-unsigned.ipa
+          retention-days: 7
+
+      - name: Create Nightly Pre-release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: nightly-ios-${{ steps.version.outputs.version }}
+          name: Nightly iOS ${{ steps.version.outputs.version }}
+          files: sono-nightly-v${{ steps.version.outputs.version }}-unsigned.ipa
+          prerelease: true
+          generate_release_notes: false
+          body: |
+            Automated nightly iOS build from commit ${{ github.sha }}
+
+            **Warning:** This is an unstable nightly build. Use at your own risk.
+
+            Build: ${{ steps.version.outputs.version }} (code: ${{ steps.version.outputs.version_code }})
+
+            **Note:** This IPA is unsigned. Install via AltStore, Sideloadly, or a similar sideloading tool.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  cleanup-old-nightlies:
+    name: Cleanup old nightly iOS releases
+    needs: build-nightly-ios
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Delete old nightly iOS releases
+        uses: dev-drprasad/delete-older-releases@v0.3.2
+        with:
+          keep_latest: 7
+          delete_tag_pattern: nightly-ios-
+          delete_prerelease_only: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
