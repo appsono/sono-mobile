@@ -378,9 +378,13 @@ class _SonoBottomPlayerState extends State<SonoBottomPlayer>
 
         if (!_isDismissed) _slideController.forward();
         final isDesktop = screenWidth > 900;
-        final playerHeight = isDesktop
-            ? 80.0
-            : AppTheme.responsiveDimension(context, AppTheme.miniPlayerHeight);
+        final playerHeight =
+            isDesktop
+                ? 80.0
+                : AppTheme.responsiveDimension(
+                  context,
+                  AppTheme.miniPlayerHeight,
+                );
         return SlideTransition(
           position: _slideAnimation,
           child: GestureDetector(
@@ -443,12 +447,13 @@ class _SonoBottomPlayerState extends State<SonoBottomPlayer>
                 //normal player state
                 if (!_isDismissed) _slideController.forward();
                 final isDesktop = screenWidth > 900;
-                final playerHeight = isDesktop
-                    ? 80.0
-                    : AppTheme.responsiveDimension(
-                        context,
-                        AppTheme.miniPlayerHeight,
-                      );
+                final playerHeight =
+                    isDesktop
+                        ? 80.0
+                        : AppTheme.responsiveDimension(
+                          context,
+                          AppTheme.miniPlayerHeight,
+                        );
                 return SlideTransition(
                   position: _slideAnimation,
                   child: GestureDetector(
@@ -515,9 +520,10 @@ class _SonoBottomPlayerState extends State<SonoBottomPlayer>
     String errorMessage,
   ) {
     final isDesktop = screenWidth > 900;
-    final playerHeight = isDesktop
-        ? 80.0
-        : AppTheme.responsiveDimension(context, AppTheme.miniPlayerHeight);
+    final playerHeight =
+        isDesktop
+            ? 80.0
+            : AppTheme.responsiveDimension(context, AppTheme.miniPlayerHeight);
     return SlideTransition(
       position: _slideAnimation,
       child: Padding(
@@ -780,7 +786,11 @@ class _SonoBottomPlayerState extends State<SonoBottomPlayer>
                 Text(
                   title ?? 'Unknown Title',
                   style: AppStyles.sonoPlayerTitle.copyWith(
-                    fontSize: AppTheme.responsiveFontSize(context, 15.0, min: 13.0),
+                    fontSize: AppTheme.responsiveFontSize(
+                      context,
+                      15.0,
+                      min: 13.0,
+                    ),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -835,41 +845,48 @@ class _SonoBottomPlayerState extends State<SonoBottomPlayer>
                       context,
                       AppTheme.artworkSm,
                     ),
-                    child: currentSong.isRemote && currentSong.remoteArtworkUrl != null
-                        ? Image.network(
-                            currentSong.remoteArtworkUrl!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, _, _) => Container(
-                              color: AppTheme.elevatedSurfaceDark,
-                              child: Icon(
-                                Icons.music_note_rounded,
-                                color: AppTheme.textPrimaryDark,
-                                size: AppTheme.responsiveIconSize(
-                                  context, AppTheme.icon, min: 20.0,
+                    child:
+                        currentSong.isRemote &&
+                                currentSong.remoteArtworkUrl != null
+                            ? Image.network(
+                              currentSong.remoteArtworkUrl!,
+                              fit: BoxFit.cover,
+                              errorBuilder:
+                                  (_, _, _) => Container(
+                                    color: AppTheme.elevatedSurfaceDark,
+                                    child: Icon(
+                                      Icons.music_note_rounded,
+                                      color: AppTheme.textPrimaryDark,
+                                      size: AppTheme.responsiveIconSize(
+                                        context,
+                                        AppTheme.icon,
+                                        min: 20.0,
+                                      ),
+                                    ),
+                                  ),
+                            )
+                            : QueryArtworkWidget(
+                              id: currentSong.id,
+                              type: ArtworkType.AUDIO,
+                              size: 150,
+                              quality: 100,
+                              keepOldArtwork: true,
+                              artworkBorder: BorderRadius.circular(
+                                AppTheme.radiusXl,
+                              ),
+                              nullArtworkWidget: Container(
+                                color: AppTheme.elevatedSurfaceDark,
+                                child: Icon(
+                                  Icons.music_note_rounded,
+                                  color: AppTheme.textPrimaryDark,
+                                  size: AppTheme.responsiveIconSize(
+                                    context,
+                                    AppTheme.icon,
+                                    min: 20.0,
+                                  ),
                                 ),
                               ),
                             ),
-                          )
-                        : QueryArtworkWidget(
-                            id: currentSong.id,
-                            type: ArtworkType.AUDIO,
-                            size: 150,
-                            quality: 100,
-                            keepOldArtwork: true,
-                            artworkBorder: BorderRadius.circular(AppTheme.radiusXl),
-                            nullArtworkWidget: Container(
-                              color: AppTheme.elevatedSurfaceDark,
-                              child: Icon(
-                                Icons.music_note_rounded,
-                                color: AppTheme.textPrimaryDark,
-                                size: AppTheme.responsiveIconSize(
-                                  context,
-                                  AppTheme.icon,
-                                  min: 20.0,
-                                ),
-                              ),
-                            ),
-                          ),
                   ),
                 ),
               ),
@@ -1102,9 +1119,9 @@ class _MiniPlayerContent extends StatelessWidget {
                               MediaQuery.of(context).size.width > 900
                                   ? AppTheme.spacingXs
                                   : AppTheme.responsiveSpacing(
-                                      context,
-                                      AppTheme.spacingXs,
-                                    ),
+                                    context,
+                                    AppTheme.spacingXs,
+                                  ),
                             ),
                             child: Row(
                               children: [

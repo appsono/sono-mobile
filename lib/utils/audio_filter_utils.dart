@@ -100,15 +100,16 @@ class AudioFilterUtils {
     }
 
     // Create ArtistModel entries from the map
-    List<ArtistModel> artists = artistsMap.entries.map((entry) {
-      final info = entry.value;
-      return ArtistModel({
-        '_id': entry.key.hashCode,
-        'artist': info.name,
-        'number_of_tracks': info.songCount,
-        'number_of_albums': info.albumIds.length,
-      });
-    }).toList();
+    List<ArtistModel> artists =
+        artistsMap.entries.map((entry) {
+          final info = entry.value;
+          return ArtistModel({
+            '_id': entry.key.hashCode,
+            'artist': info.name,
+            'number_of_tracks': info.songCount,
+            'number_of_albums': info.albumIds.length,
+          });
+        }).toList();
 
     // Sort artists
     if (sortType != null) {
@@ -125,7 +126,9 @@ class AudioFilterUtils {
             comparison = a.numberOfTracks!.compareTo(b.numberOfTracks!);
             break;
         }
-        return orderType == OrderType.DESC_OR_GREATER ? -comparison : comparison;
+        return orderType == OrderType.DESC_OR_GREATER
+            ? -comparison
+            : comparison;
       });
     }
 

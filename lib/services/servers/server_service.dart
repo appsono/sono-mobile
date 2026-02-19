@@ -74,12 +74,16 @@ class MusicServerService with ChangeNotifier {
     notifyListeners();
 
     //ping concurrently
-    await Future.wait(_servers.map((s) async {
-      final protocol = createProtocol(s);
-      final error = await protocol.ping();
-      _reachability[s.id!] =
-          error == null ? ServerReachability.reachable : ServerReachability.unreachable;
-    }));
+    await Future.wait(
+      _servers.map((s) async {
+        final protocol = createProtocol(s);
+        final error = await protocol.ping();
+        _reachability[s.id!] =
+            error == null
+                ? ServerReachability.reachable
+                : ServerReachability.unreachable;
+      }),
+    );
 
     notifyListeners();
   }
@@ -155,9 +159,10 @@ class MusicServerService with ChangeNotifier {
       );
 
       //update local state
-      _servers = _servers.map((s) {
-        return s.copyWith(isActive: s.id == serverId);
-      }).toList();
+      _servers =
+          _servers.map((s) {
+            return s.copyWith(isActive: s.id == serverId);
+          }).toList();
 
       _activeServer = server.copyWith(isActive: true);
       _activeProtocol = protocol;

@@ -26,11 +26,12 @@ class HomePageSongItem extends StatelessWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth > 900;
     final isLargeScreen = screenWidth > 600;
-    final responsiveSize = isDesktop
-        ? artworkSize.clamp(100.0, 160.0)
-        : isLargeScreen
-        ? artworkSize.clamp(80.0, 140.0)
-        : AppTheme.responsiveArtworkSize(context, artworkSize);
+    final responsiveSize =
+        isDesktop
+            ? artworkSize.clamp(100.0, 160.0)
+            : isLargeScreen
+            ? artworkSize.clamp(80.0, 140.0)
+            : AppTheme.responsiveArtworkSize(context, artworkSize);
     final borderRadius = isLargeScreen ? 14.0 : 12.0.r;
     return InkWell(
       onTap: () => onSongTap(song),
@@ -65,12 +66,24 @@ class HomePageSongItem extends StatelessWidget {
                 ),
               ),
             ),
-            SizedBox(height: AppTheme.responsiveSpacing(context, isLargeScreen ? 6.0 : 4.0)),
+            SizedBox(
+              height: AppTheme.responsiveSpacing(
+                context,
+                isLargeScreen ? 6.0 : 4.0,
+              ),
+            ),
             Flexible(
               child: Text(
                 song.title,
                 style: AppStyles.sonoPlayerTitle.copyWith(
-                  fontSize: isLargeScreen ? 14.0 : AppTheme.responsiveFontSize(context, 12.0, min: 10.0),
+                  fontSize:
+                      isLargeScreen
+                          ? 14.0
+                          : AppTheme.responsiveFontSize(
+                            context,
+                            12.0,
+                            min: 10.0,
+                          ),
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -80,7 +93,14 @@ class HomePageSongItem extends StatelessWidget {
               child: Text(
                 ArtistStringUtils.getShortDisplay(song.artist ?? 'Unknown'),
                 style: AppStyles.sonoPlayerArtist.copyWith(
-                  fontSize: isLargeScreen ? 12.0 : AppTheme.responsiveFontSize(context, 10.0, min: 9.0),
+                  fontSize:
+                      isLargeScreen
+                          ? 12.0
+                          : AppTheme.responsiveFontSize(
+                            context,
+                            10.0,
+                            min: 9.0,
+                          ),
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -110,11 +130,12 @@ class HomePageAlbumItem extends StatelessWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth > 900;
     final isLargeScreen = screenWidth > 600;
-    final responsiveSize = isDesktop
-        ? artworkSize.clamp(140.0, 200.0)
-        : isLargeScreen
-        ? artworkSize.clamp(120.0, 180.0)
-        : AppTheme.responsiveArtworkSize(context, artworkSize);
+    final responsiveSize =
+        isDesktop
+            ? artworkSize.clamp(140.0, 200.0)
+            : isLargeScreen
+            ? artworkSize.clamp(120.0, 180.0)
+            : AppTheme.responsiveArtworkSize(context, artworkSize);
     final borderRadius = isLargeScreen ? 16.0 : 12.0.r;
     return InkWell(
       onTap:
@@ -156,12 +177,24 @@ class HomePageAlbumItem extends StatelessWidget {
                 ),
               ),
             ),
-            SizedBox(height: AppTheme.responsiveSpacing(context, isLargeScreen ? 8.0 : 4.0)),
+            SizedBox(
+              height: AppTheme.responsiveSpacing(
+                context,
+                isLargeScreen ? 8.0 : 4.0,
+              ),
+            ),
             Flexible(
               child: Text(
                 album.album,
                 style: AppStyles.sonoPlayerTitle.copyWith(
-                  fontSize: isLargeScreen ? 15.0 : AppTheme.responsiveFontSize(context, 12.0, min: 10.0),
+                  fontSize:
+                      isLargeScreen
+                          ? 15.0
+                          : AppTheme.responsiveFontSize(
+                            context,
+                            12.0,
+                            min: 10.0,
+                          ),
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -172,7 +205,14 @@ class HomePageAlbumItem extends StatelessWidget {
                 albumId: album.id,
                 fallbackArtist: album.artist,
                 style: AppStyles.sonoPlayerArtist.copyWith(
-                  fontSize: isLargeScreen ? 13.0 : AppTheme.responsiveFontSize(context, 10.0, min: 9.0),
+                  fontSize:
+                      isLargeScreen
+                          ? 13.0
+                          : AppTheme.responsiveFontSize(
+                            context,
+                            10.0,
+                            min: 9.0,
+                          ),
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -202,11 +242,12 @@ class HomePageArtistItem extends StatelessWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth > 900;
     final isLargeScreen = screenWidth > 600;
-    final responsiveDiameter = isDesktop
-        ? diameter.clamp(110.0, 160.0)
-        : isLargeScreen
-        ? diameter.clamp(90.0, 140.0)
-        : AppTheme.responsiveArtworkSize(context, diameter);
+    final responsiveDiameter =
+        isDesktop
+            ? diameter.clamp(110.0, 160.0)
+            : isLargeScreen
+            ? diameter.clamp(90.0, 140.0)
+            : AppTheme.responsiveArtworkSize(context, diameter);
     return InkWell(
       onTap:
           () => Navigator.push(
@@ -232,12 +273,24 @@ class HomePageArtistItem extends StatelessWidget {
                 borderRadius: BorderRadius.circular(responsiveDiameter / 2),
               ),
             ),
-            SizedBox(height: AppTheme.responsiveSpacing(context, isLargeScreen ? 8.0 : 6.0)),
+            SizedBox(
+              height: AppTheme.responsiveSpacing(
+                context,
+                isLargeScreen ? 8.0 : 6.0,
+              ),
+            ),
             Flexible(
               child: Text(
                 artist.artist,
                 style: AppStyles.sonoPlayerTitle.copyWith(
-                  fontSize: isLargeScreen ? 14.0 : AppTheme.responsiveFontSize(context, 12.0, min: 10.0),
+                  fontSize:
+                      isLargeScreen
+                          ? 14.0
+                          : AppTheme.responsiveFontSize(
+                            context,
+                            12.0,
+                            min: 10.0,
+                          ),
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,

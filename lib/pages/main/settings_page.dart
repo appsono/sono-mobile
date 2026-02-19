@@ -36,122 +36,123 @@ class SettingsPage extends StatelessWidget {
             isLoggedIn: isLoggedIn,
           ),
           Expanded(
-            child: ContentConstraint(child: ListView(
-              physics: const BouncingScrollPhysics(),
-              padding: EdgeInsets.only(
-                top: 24,
-                left: 16,
-                right: 16,
-                bottom: MediaQuery.of(context).padding.bottom + 80,
-              ),
-              children: [
-                _buildSettingsCard(
-                  context,
-                  icon: Icons.palette_rounded,
-                  title: 'General',
-                  subtitle: 'Theme, appearance, auto-update',
-                  onTap:
-                      () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const GeneralSettingsPage(),
-                        ),
-                      ),
+            child: ContentConstraint(
+              child: ListView(
+                physics: const BouncingScrollPhysics(),
+                padding: EdgeInsets.only(
+                  top: 24,
+                  left: 16,
+                  right: 16,
+                  bottom: MediaQuery.of(context).padding.bottom + 80,
                 ),
-                const SizedBox(height: 5),
-                _buildSettingsCard(
-                  context,
-                  icon: Icons.music_note_rounded,
-                  title: 'Playback & Audio',
-                  subtitle: 'Speed, pitch, crossfade, equalizer',
-                  onTap:
-                      () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder:
-                              (context) => const PlaybackAudioSettingsPage(),
-                        ),
-                      ),
-                ),
-                const SizedBox(height: 5),
-                _buildSettingsCard(
-                  context,
-                  icon: Icons.library_music_rounded,
-                  title: 'Library & Scrobbling',
-                  subtitle: 'Excluded folders, Last.fm scrobbling',
-                  onTap:
-                      () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder:
-                              (context) =>
-                                  const LibraryScrobblingSettingsPage(),
-                        ),
-                      ),
-                ),
-                const SizedBox(height: 5),
-                _buildSettingsCard(
-                  context,
-                  icon: Icons.dns_rounded,
-                  title: 'Music Servers',
-                  subtitle: 'Navidrome, Airsonic, Gonic, and more',
-                  onTap:
-                      () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder:
-                              (context) => const ServersSettingsPage(),
-                        ),
-                      ),
-                ),
-                const SizedBox(height: 5),
-                if (isLoggedIn)
+                children: [
                   _buildSettingsCard(
                     context,
-                    icon: Icons.person_rounded,
-                    title: 'Account',
-                    subtitle: 'Password, privacy, Export Data',
+                    icon: Icons.palette_rounded,
+                    title: 'General',
+                    subtitle: 'Theme, appearance, auto-update',
+                    onTap:
+                        () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const GeneralSettingsPage(),
+                          ),
+                        ),
+                  ),
+                  const SizedBox(height: 5),
+                  _buildSettingsCard(
+                    context,
+                    icon: Icons.music_note_rounded,
+                    title: 'Playback & Audio',
+                    subtitle: 'Speed, pitch, crossfade, equalizer',
                     onTap:
                         () => Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder:
-                                (context) => AccountSettingsPage(
-                                  currentUser: currentUser,
-                                ),
+                                (context) => const PlaybackAudioSettingsPage(),
                           ),
                         ),
                   ),
-                if (isLoggedIn) const SizedBox(height: 5),
-                _buildSettingsCard(
-                  context,
-                  icon: Icons.code_rounded,
-                  title: 'Developer',
-                  subtitle: 'Analytics, API, cache, database',
-                  onTap:
-                      () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const DeveloperSettingsPage(),
+                  const SizedBox(height: 5),
+                  _buildSettingsCard(
+                    context,
+                    icon: Icons.library_music_rounded,
+                    title: 'Library & Scrobbling',
+                    subtitle: 'Excluded folders, Last.fm scrobbling',
+                    onTap:
+                        () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) =>
+                                    const LibraryScrobblingSettingsPage(),
+                          ),
                         ),
-                      ),
-                ),
-                const SizedBox(height: 25),
-                _buildSettingsCard(
-                  context,
-                  icon: Icons.info_rounded,
-                  title: 'About',
-                  subtitle: 'Version, credits, links',
-                  onTap:
-                      () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const AboutSettingsPage(),
+                  ),
+                  const SizedBox(height: 5),
+                  _buildSettingsCard(
+                    context,
+                    icon: Icons.dns_rounded,
+                    title: 'Music Servers',
+                    subtitle: 'Navidrome, Airsonic, Gonic, and more',
+                    onTap:
+                        () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ServersSettingsPage(),
+                          ),
                         ),
-                      ),
-                ),
-              ],
-            )),
+                  ),
+                  const SizedBox(height: 5),
+                  if (isLoggedIn)
+                    _buildSettingsCard(
+                      context,
+                      icon: Icons.person_rounded,
+                      title: 'Account',
+                      subtitle: 'Password, privacy, Export Data',
+                      onTap:
+                          () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder:
+                                  (context) => AccountSettingsPage(
+                                    currentUser: currentUser,
+                                  ),
+                            ),
+                          ),
+                    ),
+                  if (isLoggedIn) const SizedBox(height: 5),
+                  _buildSettingsCard(
+                    context,
+                    icon: Icons.code_rounded,
+                    title: 'Developer',
+                    subtitle: 'Analytics, API, cache, database',
+                    onTap:
+                        () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const DeveloperSettingsPage(),
+                          ),
+                        ),
+                  ),
+                  const SizedBox(height: 25),
+                  _buildSettingsCard(
+                    context,
+                    icon: Icons.info_rounded,
+                    title: 'About',
+                    subtitle: 'Version, credits, links',
+                    onTap:
+                        () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const AboutSettingsPage(),
+                          ),
+                        ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
       ),

@@ -199,9 +199,7 @@ class MediaStoreSyncService {
   ) async {
     //skip on iOS
     if (!Platform.isAndroid) {
-      debugPrint(
-        'MediaStoreSyncService: Skipping MediaStore sync on iOS',
-      );
+      debugPrint('MediaStoreSyncService: Skipping MediaStore sync on iOS');
       return true; //return success since MediaStore doesnt exist on iOS
     }
 
@@ -260,9 +258,7 @@ class MediaStoreSyncService {
   Future<bool> retrySyncPlaylist(int playlistId) async {
     //skip on iOS
     if (!Platform.isAndroid) {
-      debugPrint(
-        'MediaStoreSyncService: Skipping retry sync on iOS',
-      );
+      debugPrint('MediaStoreSyncService: Skipping retry sync on iOS');
       return true; //return success since MediaStore doesnt exist on iOS
     }
 

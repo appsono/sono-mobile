@@ -44,8 +44,12 @@ class _ServerLibraryPageState extends State<ServerLibraryPage> {
     try {
       //run all three independently so an empty album list doesnt block artists
       final results = await Future.wait([
-        _protocol.getAlbumList(type: 'newest', count: 20).catchError((_) => <RemoteAlbum>[]),
-        _protocol.getAlbumList(type: 'random', count: 20).catchError((_) => <RemoteAlbum>[]),
+        _protocol
+            .getAlbumList(type: 'newest', count: 20)
+            .catchError((_) => <RemoteAlbum>[]),
+        _protocol
+            .getAlbumList(type: 'random', count: 20)
+            .catchError((_) => <RemoteAlbum>[]),
         _protocol.getArtists(),
       ]);
 
@@ -83,8 +87,10 @@ class _ServerLibraryPageState extends State<ServerLibraryPage> {
           backgroundColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_rounded,
-                color: AppTheme.textPrimaryDark),
+            icon: const Icon(
+              Icons.arrow_back_rounded,
+              color: AppTheme.textPrimaryDark,
+            ),
             onPressed: () => Navigator.of(context).pop(),
           ),
           title: Text(
@@ -98,36 +104,38 @@ class _ServerLibraryPageState extends State<ServerLibraryPage> {
           ),
           actions: [
             IconButton(
-              icon: const Icon(Icons.search_rounded,
-                  color: AppTheme.textPrimaryDark),
+              icon: const Icon(
+                Icons.search_rounded,
+                color: AppTheme.textPrimaryDark,
+              ),
               onPressed: () => _showSearch(context),
             ),
           ],
         ),
-        body: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : _error != null
+        body:
+            _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _error != null
                 ? _buildError()
                 : RefreshIndicator(
-                    onRefresh: _loadData,
-                    child: ListView(
-                      physics: const BouncingScrollPhysics(
-                          parent: AlwaysScrollableScrollPhysics()),
-                      padding: EdgeInsets.only(
-                        bottom: MediaQuery.of(context).padding.bottom + 100,
-                      ),
-                      children: [
-                        if (_recentAlbums != null &&
-                            _recentAlbums!.isNotEmpty)
-                          _buildSection('Recently Added', _recentAlbums!),
-                        if (_randomAlbums != null &&
-                            _randomAlbums!.isNotEmpty)
-                          _buildSection('Random Albums', _randomAlbums!),
-                        if (_artists != null && _artists!.isNotEmpty)
-                          _buildArtistsSection(),
-                      ],
+                  onRefresh: _loadData,
+                  child: ListView(
+                    physics: const BouncingScrollPhysics(
+                      parent: AlwaysScrollableScrollPhysics(),
                     ),
+                    padding: EdgeInsets.only(
+                      bottom: MediaQuery.of(context).padding.bottom + 100,
+                    ),
+                    children: [
+                      if (_recentAlbums != null && _recentAlbums!.isNotEmpty)
+                        _buildSection('Recently Added', _recentAlbums!),
+                      if (_randomAlbums != null && _randomAlbums!.isNotEmpty)
+                        _buildSection('Random Albums', _randomAlbums!),
+                      if (_artists != null && _artists!.isNotEmpty)
+                        _buildArtistsSection(),
+                    ],
                   ),
+                ),
       ),
     );
   }
@@ -139,8 +147,11 @@ class _ServerLibraryPageState extends State<ServerLibraryPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline_rounded,
-                size: 48, color: AppTheme.textTertiaryDark),
+            const Icon(
+              Icons.error_outline_rounded,
+              size: 48,
+              color: AppTheme.textTertiaryDark,
+            ),
             const SizedBox(height: 16),
             const Text(
               'Failed to load library',
@@ -165,8 +176,10 @@ class _ServerLibraryPageState extends State<ServerLibraryPage> {
             const SizedBox(height: 16),
             TextButton(
               onPressed: _loadData,
-              child: const Text('Retry',
-                  style: TextStyle(fontFamily: AppTheme.fontFamily)),
+              child: const Text(
+                'Retry',
+                style: TextStyle(fontFamily: AppTheme.fontFamily),
+              ),
             ),
           ],
         ),
@@ -198,8 +211,7 @@ class _ServerLibraryPageState extends State<ServerLibraryPage> {
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
-            padding:
-                const EdgeInsets.symmetric(horizontal: AppTheme.spacing),
+            padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing),
             itemCount: albums.length,
             itemBuilder: (context, index) {
               final album = albums[index];
@@ -213,13 +225,14 @@ class _ServerLibraryPageState extends State<ServerLibraryPage> {
 
   Widget _buildAlbumCard(RemoteAlbum album) {
     return GestureDetector(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) =>
-              RemoteAlbumPage(album: album, protocol: _protocol),
-        ),
-      ),
+      onTap:
+          () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder:
+                  (_) => RemoteAlbumPage(album: album, protocol: _protocol),
+            ),
+          ),
       child: Padding(
         padding: const EdgeInsets.only(right: AppTheme.spacing),
         child: SizedBox(
@@ -301,23 +314,24 @@ class _ServerLibraryPageState extends State<ServerLibraryPage> {
                   ),
                 ),
               ),
-              title: Text(
-                artist.name,
-                style: AppStyles.sonoListItemTitle,
-              ),
+              title: Text(artist.name, style: AppStyles.sonoListItemTitle),
               subtitle: Text(
                 '${artist.albumCount} album${artist.albumCount == 1 ? '' : 's'}',
                 style: AppStyles.sonoListItemSubtitle.copyWith(
                   fontSize: AppTheme.fontSm,
                 ),
               ),
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => RemoteArtistPage(
-                      artist: artist, protocol: _protocol),
-                ),
-              ),
+              onTap:
+                  () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder:
+                          (_) => RemoteArtistPage(
+                            artist: artist,
+                            protocol: _protocol,
+                          ),
+                    ),
+                  ),
             );
           },
         ),
@@ -326,10 +340,7 @@ class _ServerLibraryPageState extends State<ServerLibraryPage> {
   }
 
   void _showSearch(BuildContext context) {
-    showSearch(
-      context: context,
-      delegate: _RemoteSearchDelegate(_protocol),
-    );
+    showSearch(context: context, delegate: _RemoteSearchDelegate(_protocol));
   }
 }
 
@@ -337,13 +348,13 @@ class _RemoteSearchDelegate extends SearchDelegate<String?> {
   final MusicServerProtocol _protocol;
 
   _RemoteSearchDelegate(this._protocol)
-      : super(
-          searchFieldLabel: 'Search server...',
-          searchFieldStyle: const TextStyle(
-            color: AppTheme.textPrimaryDark,
-            fontFamily: AppTheme.fontFamily,
-          ),
-        );
+    : super(
+        searchFieldLabel: 'Search server...',
+        searchFieldStyle: const TextStyle(
+          color: AppTheme.textPrimaryDark,
+          fontFamily: AppTheme.fontFamily,
+        ),
+      );
 
   @override
   ThemeData appBarTheme(BuildContext context) {
@@ -373,8 +384,10 @@ class _RemoteSearchDelegate extends SearchDelegate<String?> {
     return [
       if (query.isNotEmpty)
         IconButton(
-          icon: const Icon(Icons.clear_rounded,
-              color: AppTheme.textPrimaryDark),
+          icon: const Icon(
+            Icons.clear_rounded,
+            color: AppTheme.textPrimaryDark,
+          ),
           onPressed: () => query = '',
         ),
     ];
@@ -383,8 +396,10 @@ class _RemoteSearchDelegate extends SearchDelegate<String?> {
   @override
   Widget? buildLeading(BuildContext context) {
     return IconButton(
-      icon: const Icon(Icons.arrow_back_rounded,
-          color: AppTheme.textPrimaryDark),
+      icon: const Icon(
+        Icons.arrow_back_rounded,
+        color: AppTheme.textPrimaryDark,
+      ),
       onPressed: () => close(context, null),
     );
   }
@@ -434,108 +449,120 @@ class _RemoteSearchDelegate extends SearchDelegate<String?> {
           children: [
             if (result.artists.isNotEmpty) ...[
               _sectionHeader('Artists'),
-              ...result.artists.map((a) => ListTile(
-                    leading: ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
-                      child: SizedBox(
-                        width: 40,
-                        height: 40,
-                        child: RemoteArtwork(
-                          coverArtId: a.coverArtId,
-                          protocol: _protocol,
-                          size: 40,
-                          borderRadius: BorderRadius.circular(20),
-                          fallbackIcon: Icons.person_rounded,
-                        ),
+              ...result.artists.map(
+                (a) => ListTile(
+                  leading: ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: SizedBox(
+                      width: 40,
+                      height: 40,
+                      child: RemoteArtwork(
+                        coverArtId: a.coverArtId,
+                        protocol: _protocol,
+                        size: 40,
+                        borderRadius: BorderRadius.circular(20),
+                        fallbackIcon: Icons.person_rounded,
                       ),
                     ),
-                    title: Text(a.name,
-                        style: AppStyles.sonoListItemTitle),
-                    onTap: () {
-                      close(context, null);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => RemoteArtistPage(
-                              artist: a, protocol: _protocol),
-                        ),
-                      );
-                    },
-                  )),
+                  ),
+                  title: Text(a.name, style: AppStyles.sonoListItemTitle),
+                  onTap: () {
+                    close(context, null);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder:
+                            (_) => RemoteArtistPage(
+                              artist: a,
+                              protocol: _protocol,
+                            ),
+                      ),
+                    );
+                  },
+                ),
+              ),
             ],
             if (result.albums.isNotEmpty) ...[
               _sectionHeader('Albums'),
-              ...result.albums.map((a) => ListTile(
-                    leading: ClipRRect(
-                      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                      child: SizedBox(
-                        width: 40,
-                        height: 40,
-                        child: RemoteArtwork(
-                          coverArtId: a.coverArtId,
-                          protocol: _protocol,
-                          size: 40,
-                          borderRadius:
-                              BorderRadius.circular(AppTheme.radiusSm),
-                        ),
+              ...result.albums.map(
+                (a) => ListTile(
+                  leading: ClipRRect(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                    child: SizedBox(
+                      width: 40,
+                      height: 40,
+                      child: RemoteArtwork(
+                        coverArtId: a.coverArtId,
+                        protocol: _protocol,
+                        size: 40,
+                        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                       ),
                     ),
-                    title: Text(a.name,
-                        style: AppStyles.sonoListItemTitle),
-                    subtitle: a.artistName != null
-                        ? Text(a.artistName!,
-                            style: AppStyles.sonoListItemSubtitle)
-                        : null,
-                    onTap: () {
-                      close(context, null);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => RemoteAlbumPage(
-                              album: a, protocol: _protocol),
-                        ),
-                      );
-                    },
-                  )),
+                  ),
+                  title: Text(a.name, style: AppStyles.sonoListItemTitle),
+                  subtitle:
+                      a.artistName != null
+                          ? Text(
+                            a.artistName!,
+                            style: AppStyles.sonoListItemSubtitle,
+                          )
+                          : null,
+                  onTap: () {
+                    close(context, null);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder:
+                            (_) =>
+                                RemoteAlbumPage(album: a, protocol: _protocol),
+                      ),
+                    );
+                  },
+                ),
+              ),
             ],
             if (result.songs.isNotEmpty) ...[
               _sectionHeader('Songs'),
-              ...result.songs.map((s) => ListTile(
-                    leading: ClipRRect(
-                      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                      child: SizedBox(
-                        width: 40,
-                        height: 40,
-                        child: RemoteArtwork(
-                          coverArtId: s.coverArtId,
-                          protocol: _protocol,
-                          size: 40,
-                          borderRadius:
-                              BorderRadius.circular(AppTheme.radiusSm),
-                        ),
+              ...result.songs.map(
+                (s) => ListTile(
+                  leading: ClipRRect(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                    child: SizedBox(
+                      width: 40,
+                      height: 40,
+                      child: RemoteArtwork(
+                        coverArtId: s.coverArtId,
+                        protocol: _protocol,
+                        size: 40,
+                        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                       ),
                     ),
-                    title: Text(s.title,
-                        style: AppStyles.sonoListItemTitle),
-                    subtitle: Text(
-                        '${s.artist ?? 'Unknown'} \u2022 ${s.album ?? ''}',
-                        style: AppStyles.sonoListItemSubtitle),
-                    onTap: () {
-                      close(context, null);
-                      final songModel =
-                          s.toSongModel(
-                            _protocol.getStreamUrl(s.id),
-                            coverArtUrl: s.coverArtId != null
-                                ? _protocol.getCoverArtUrl(s.coverArtId!, size: 600)
-                                : null,
-                          );
-                      SonoPlayer().playNewPlaylist(
-                        [songModel],
-                        0,
-                        context: 'Server search: ${s.title}',
-                      );
-                    },
-                  )),
+                  ),
+                  title: Text(s.title, style: AppStyles.sonoListItemTitle),
+                  subtitle: Text(
+                    '${s.artist ?? 'Unknown'} \u2022 ${s.album ?? ''}',
+                    style: AppStyles.sonoListItemSubtitle,
+                  ),
+                  onTap: () {
+                    close(context, null);
+                    final songModel = s.toSongModel(
+                      _protocol.getStreamUrl(s.id),
+                      coverArtUrl:
+                          s.coverArtId != null
+                              ? _protocol.getCoverArtUrl(
+                                s.coverArtId!,
+                                size: 600,
+                              )
+                              : null,
+                    );
+                    SonoPlayer().playNewPlaylist(
+                      [songModel],
+                      0,
+                      context: 'Server search: ${s.title}',
+                    );
+                  },
+                ),
+              ),
             ],
           ],
         );
@@ -562,7 +589,11 @@ class _RemoteSearchDelegate extends SearchDelegate<String?> {
   Widget _sectionHeader(String title) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(
-          AppTheme.spacing, AppTheme.spacing, AppTheme.spacing, 4),
+        AppTheme.spacing,
+        AppTheme.spacing,
+        AppTheme.spacing,
+        4,
+      ),
       child: Text(
         title.toUpperCase(),
         style: const TextStyle(

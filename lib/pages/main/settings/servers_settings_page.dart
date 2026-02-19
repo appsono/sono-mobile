@@ -144,9 +144,10 @@ class ServersSettingsPage extends StatelessWidget {
               color: Colors.white.withAlpha((0.05 * 255).round()),
               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
               border: Border.all(
-                color: isActive
-                    ? AppTheme.success.withAlpha((0.5 * 255).round())
-                    : Colors.white.withAlpha((0.1 * 255).round()),
+                color:
+                    isActive
+                        ? AppTheme.success.withAlpha((0.5 * 255).round())
+                        : Colors.white.withAlpha((0.1 * 255).round()),
                 width: isActive ? 1.0 : 0.5,
               ),
             ),
@@ -156,16 +157,18 @@ class ServersSettingsPage extends StatelessWidget {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: isActive
-                        ? AppTheme.success.withAlpha((0.15 * 255).round())
-                        : Colors.white.withAlpha((0.1 * 255).round()),
+                    color:
+                        isActive
+                            ? AppTheme.success.withAlpha((0.15 * 255).round())
+                            : Colors.white.withAlpha((0.1 * 255).round()),
                     borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                   ),
                   child: Icon(
                     isActive ? Icons.cloud_done_rounded : Icons.dns_rounded,
-                    color: isActive
-                        ? AppTheme.success
-                        : Colors.white.withAlpha((0.7 * 255).round()),
+                    color:
+                        isActive
+                            ? AppTheme.success
+                            : Colors.white.withAlpha((0.7 * 255).round()),
                     size: 20,
                   ),
                 ),
@@ -200,7 +203,9 @@ class ServersSettingsPage extends StatelessWidget {
                           Text(
                             '${server.type.name.toUpperCase()} \u2022 ${server.username}',
                             style: TextStyle(
-                              color: Colors.white.withAlpha((0.4 * 255).round()),
+                              color: Colors.white.withAlpha(
+                                (0.4 * 255).round(),
+                              ),
                               fontSize: 12,
                               fontFamily: 'VarelaRound',
                             ),
@@ -215,8 +220,10 @@ class ServersSettingsPage extends StatelessWidget {
                 const SizedBox(width: 8),
                 if (isActive)
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: AppTheme.success.withAlpha((0.15 * 255).round()),
                       borderRadius: BorderRadius.circular(AppTheme.radiusSm),
@@ -278,33 +285,38 @@ class ServersSettingsPage extends StatelessWidget {
   ) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.backgroundDark,
-        title: const Text(
-          'Remove Server',
-          style: TextStyle(color: Colors.white, fontFamily: 'VarelaRound'),
-        ),
-        content: Text(
-          'Remove "${server.name}"? This will not delete any data on the server.',
-          style: TextStyle(
-            color: Colors.white.withAlpha((0.8 * 255).round()),
-            fontFamily: 'VarelaRound',
+      builder:
+          (context) => AlertDialog(
+            backgroundColor: AppTheme.backgroundDark,
+            title: const Text(
+              'Remove Server',
+              style: TextStyle(color: Colors.white, fontFamily: 'VarelaRound'),
+            ),
+            content: Text(
+              'Remove "${server.name}"? This will not delete any data on the server.',
+              style: TextStyle(
+                color: Colors.white.withAlpha((0.8 * 255).round()),
+                fontFamily: 'VarelaRound',
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text(
+                  'Cancel',
+                  style: TextStyle(fontFamily: 'VarelaRound'),
+                ),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: TextButton.styleFrom(foregroundColor: AppTheme.error),
+                child: const Text(
+                  'Remove',
+                  style: TextStyle(fontFamily: 'VarelaRound'),
+                ),
+              ),
+            ],
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child:
-                const Text('Cancel', style: TextStyle(fontFamily: 'VarelaRound')),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: AppTheme.error),
-            child:
-                const Text('Remove', style: TextStyle(fontFamily: 'VarelaRound')),
-          ),
-        ],
-      ),
     );
 
     if (confirmed == true && context.mounted) {
@@ -315,12 +327,17 @@ class ServersSettingsPage extends StatelessWidget {
     }
   }
 
-  void _showSnackBar(BuildContext context, String message,
-      {bool isError = false}) {
+  void _showSnackBar(
+    BuildContext context,
+    String message, {
+    bool isError = false,
+  }) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content:
-            Text(message, style: const TextStyle(fontFamily: 'VarelaRound')),
+        content: Text(
+          message,
+          style: const TextStyle(fontFamily: 'VarelaRound'),
+        ),
         backgroundColor: isError ? AppTheme.error : AppTheme.success,
         behavior: SnackBarBehavior.floating,
       ),

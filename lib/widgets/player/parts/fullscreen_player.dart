@@ -147,7 +147,8 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
 
   bool _ignoreSwipe = false;
   bool _isUserSwiping = false; //track if finger is down on artwork
-  bool _swipeInitiatedChange = false; //true when song change was triggered by swipe
+  bool _swipeInitiatedChange =
+      false; //true when song change was triggered by swipe
   int? _pendingSwipePage; //page index from onPageChanged while finger is down
 
   Timer? _remoteStarredRefreshTimer;
@@ -604,7 +605,8 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
                         ),
                         body: LayoutBuilder(
                           builder: (context, constraints) {
-                            final isLandscape = constraints.maxWidth > constraints.maxHeight;
+                            final isLandscape =
+                                constraints.maxWidth > constraints.maxHeight;
                             final isWideScreen = constraints.maxWidth > 600;
 
                             if (isLandscape || isWideScreen) {
@@ -617,9 +619,11 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
                                     Expanded(
                                       flex: 4,
                                       child: Center(
-                                        child: _sonoPlayer.isSASStream && currentSong == null
-                                            ? _buildSASArtwork()
-                                            : _buildSwipeableArtworkLandscape(),
+                                        child:
+                                            _sonoPlayer.isSASStream &&
+                                                    currentSong == null
+                                                ? _buildSASArtwork()
+                                                : _buildSwipeableArtworkLandscape(),
                                       ),
                                     ),
                                     const SizedBox(width: 24),
@@ -627,7 +631,8 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
                                     Expanded(
                                       flex: 6,
                                       child: Column(
-                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
                                         children: [
                                           const Spacer(),
                                           _buildTrackInfo(currentSong),
@@ -647,10 +652,14 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
                             //portrait: original vertical layout
                             return Padding(
                               padding: EdgeInsets.symmetric(
-                                horizontal: AppTheme.responsiveSpacing(context, AppTheme.spacingXl),
+                                horizontal: AppTheme.responsiveSpacing(
+                                  context,
+                                  AppTheme.spacingXl,
+                                ),
                               ),
                               child: Column(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   const Spacer(flex: 1),
                                   //show SAS artwork or swipeable local playlist artwork
@@ -659,9 +668,19 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
                                       : _buildSwipeableArtwork(),
                                   const Spacer(flex: 2),
                                   _buildTrackInfo(currentSong),
-                                  SizedBox(height: AppTheme.responsiveSpacing(context, AppTheme.spacing)),
+                                  SizedBox(
+                                    height: AppTheme.responsiveSpacing(
+                                      context,
+                                      AppTheme.spacing,
+                                    ),
+                                  ),
                                   _buildSeekbar(),
-                                  SizedBox(height: AppTheme.responsiveSpacing(context, AppTheme.spacing)),
+                                  SizedBox(
+                                    height: AppTheme.responsiveSpacing(
+                                      context,
+                                      AppTheme.spacing,
+                                    ),
+                                  ),
                                   _buildPlaybackControls(),
                                   const Spacer(flex: 1),
                                 ],
@@ -693,102 +712,112 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
     _currentArtworkId = currentSong.id;
     _cachedBlurredBackground = Positioned.fill(
       child: RepaintBoundary(
-        child: currentSong.isRemote && currentSong.remoteArtworkUrl != null
-          ? Builder(builder: (context) {
-              return AnimatedOpacity(
-                opacity: 1.0,
-                duration: const Duration(milliseconds: 750),
-                curve: Curves.easeIn,
-                child: Stack(
-                  children: [
-                    Image.network(
-                      currentSong.remoteArtworkUrl!,
-                      fit: BoxFit.cover,
-                      height: double.infinity,
-                      width: double.infinity,
-                      alignment: Alignment.center,
-                      filterQuality: FilterQuality.low,
-                      errorBuilder: (_, _, _) =>
-                          Container(color: AppTheme.backgroundDark),
-                    ),
-                    Positioned.fill(
-                      child: Container(
-                        decoration: const BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Color.fromRGBO(10, 0, 5, 0.4),
-                              Color.fromRGBO(60, 0, 30, 0.95),
-                            ],
+        child:
+            currentSong.isRemote && currentSong.remoteArtworkUrl != null
+                ? Builder(
+                  builder: (context) {
+                    return AnimatedOpacity(
+                      opacity: 1.0,
+                      duration: const Duration(milliseconds: 750),
+                      curve: Curves.easeIn,
+                      child: Stack(
+                        children: [
+                          Image.network(
+                            currentSong.remoteArtworkUrl!,
+                            fit: BoxFit.cover,
+                            height: double.infinity,
+                            width: double.infinity,
+                            alignment: Alignment.center,
+                            filterQuality: FilterQuality.low,
+                            errorBuilder:
+                                (_, _, _) =>
+                                    Container(color: AppTheme.backgroundDark),
                           ),
-                        ),
-                        child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
-                          child: Container(color: Colors.transparent),
-                        ),
+                          Positioned.fill(
+                            child: Container(
+                              decoration: const BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    Color.fromRGBO(10, 0, 5, 0.4),
+                                    Color.fromRGBO(60, 0, 30, 0.95),
+                                  ],
+                                ),
+                              ),
+                              child: BackdropFilter(
+                                filter: ImageFilter.blur(
+                                  sigmaX: 15.0,
+                                  sigmaY: 15.0,
+                                ),
+                                child: Container(color: Colors.transparent),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
-                ),
-              );
-            })
-          : FutureBuilder<Uint8List?>(
-          future: ArtworkCacheService.instance.getArtwork(
-            currentSong.id,
-            size: 250,
-          ),
-          builder: (context, snapshot) {
-            final hasArtwork =
-                snapshot.connectionState == ConnectionState.done &&
-                snapshot.hasData &&
-                snapshot.data != null;
-
-            Widget imageWidget =
-                hasArtwork
-                    ? Image.memory(
-                      snapshot.data!,
-                      fit: BoxFit.cover,
-                      height: double.infinity,
-                      width: double.infinity,
-                      alignment: Alignment.center,
-                      gaplessPlayback: true,
-                      filterQuality: FilterQuality.low,
-                      cacheWidth: 250,
-                      cacheHeight: 250,
-                    )
-                    : Container(color: AppTheme.backgroundDark);
-
-            return AnimatedOpacity(
-              opacity: hasArtwork ? 1.0 : 0.0,
-              duration: const Duration(milliseconds: 750),
-              curve: Curves.easeIn,
-              child: Stack(
-                children: [
-                  imageWidget,
-                  Positioned.fill(
-                    child: Container(
-                      decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Color.fromRGBO(10, 0, 5, 0.4),
-                            Color.fromRGBO(60, 0, 30, 0.95),
-                          ],
-                        ),
-                      ),
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
-                        child: Container(color: Colors.transparent),
-                      ),
-                    ),
+                    );
+                  },
+                )
+                : FutureBuilder<Uint8List?>(
+                  future: ArtworkCacheService.instance.getArtwork(
+                    currentSong.id,
+                    size: 250,
                   ),
-                ],
-              ),
-            );
-          },
-        ),
+                  builder: (context, snapshot) {
+                    final hasArtwork =
+                        snapshot.connectionState == ConnectionState.done &&
+                        snapshot.hasData &&
+                        snapshot.data != null;
+
+                    Widget imageWidget =
+                        hasArtwork
+                            ? Image.memory(
+                              snapshot.data!,
+                              fit: BoxFit.cover,
+                              height: double.infinity,
+                              width: double.infinity,
+                              alignment: Alignment.center,
+                              gaplessPlayback: true,
+                              filterQuality: FilterQuality.low,
+                              cacheWidth: 250,
+                              cacheHeight: 250,
+                            )
+                            : Container(color: AppTheme.backgroundDark);
+
+                    return AnimatedOpacity(
+                      opacity: hasArtwork ? 1.0 : 0.0,
+                      duration: const Duration(milliseconds: 750),
+                      curve: Curves.easeIn,
+                      child: Stack(
+                        children: [
+                          imageWidget,
+                          Positioned.fill(
+                            child: Container(
+                              decoration: const BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    Color.fromRGBO(10, 0, 5, 0.4),
+                                    Color.fromRGBO(60, 0, 30, 0.95),
+                                  ],
+                                ),
+                              ),
+                              child: BackdropFilter(
+                                filter: ImageFilter.blur(
+                                  sigmaX: 15.0,
+                                  sigmaY: 15.0,
+                                ),
+                                child: Container(color: Colors.transparent),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
       ),
     );
     return _cachedBlurredBackground!;
@@ -1041,8 +1070,6 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
     }
   }
 
-
-
   Widget _buildArtworkPageItem(SongModel song) {
     return RepaintBoundary(
       child: Center(
@@ -1068,45 +1095,50 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(AppTheme.radiusXl),
-                child: song.isRemote && song.remoteArtworkUrl != null
-                    ? Image.network(
-                        song.remoteArtworkUrl!,
-                        width: double.infinity,
-                        height: double.infinity,
-                        fit: BoxFit.cover,
-                        gaplessPlayback: true,
-                        errorBuilder: (_, _, _) => _buildArtworkPlaceholder(),
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) return child;
-                          return _buildArtworkPlaceholder();
-                        },
-                      )
-                    : FutureBuilder<Uint8List?>(
-                        future: _getOrCacheArtworkFuture(song.id),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.done &&
-                              snapshot.hasData &&
-                              snapshot.data != null) {
-                            final cacheSize =
-                                (400 * MediaQuery.of(context).devicePixelRatio)
-                                    .round();
-                            return Image.memory(
-                              snapshot.data!,
-                              width: double.infinity,
-                              height: double.infinity,
-                              fit: BoxFit.cover,
-                              gaplessPlayback: true,
-                              cacheWidth: cacheSize,
-                              cacheHeight: cacheSize,
-                              filterQuality:
-                                  MediaQuery.of(context).devicePixelRatio > 2
-                                      ? FilterQuality.high
-                                      : FilterQuality.medium,
-                            );
-                          }
-                          return _buildArtworkPlaceholder();
-                        },
-                      ),
+                child:
+                    song.isRemote && song.remoteArtworkUrl != null
+                        ? Image.network(
+                          song.remoteArtworkUrl!,
+                          width: double.infinity,
+                          height: double.infinity,
+                          fit: BoxFit.cover,
+                          gaplessPlayback: true,
+                          errorBuilder: (_, _, _) => _buildArtworkPlaceholder(),
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return _buildArtworkPlaceholder();
+                          },
+                        )
+                        : FutureBuilder<Uint8List?>(
+                          future: _getOrCacheArtworkFuture(song.id),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState ==
+                                    ConnectionState.done &&
+                                snapshot.hasData &&
+                                snapshot.data != null) {
+                              final cacheSize =
+                                  (400 *
+                                          MediaQuery.of(
+                                            context,
+                                          ).devicePixelRatio)
+                                      .round();
+                              return Image.memory(
+                                snapshot.data!,
+                                width: double.infinity,
+                                height: double.infinity,
+                                fit: BoxFit.cover,
+                                gaplessPlayback: true,
+                                cacheWidth: cacheSize,
+                                cacheHeight: cacheSize,
+                                filterQuality:
+                                    MediaQuery.of(context).devicePixelRatio > 2
+                                        ? FilterQuality.high
+                                        : FilterQuality.medium,
+                              );
+                            }
+                            return _buildArtworkPlaceholder();
+                          },
+                        ),
               ),
             ),
           ),
@@ -2031,7 +2063,9 @@ class _SongCreditsViewState extends State<SongCreditsView> {
                     navigator.pop();
                     //use the parent fullscreen player context for navigation
                     if (song.artist != null) {
-                      final primaryArtist = ArtistStringUtils.getPrimaryArtist(song.artist!);
+                      final primaryArtist = ArtistStringUtils.getPrimaryArtist(
+                        song.artist!,
+                      );
                       ArtistNavigation.navigateToArtistByName(
                         navigator.context,
                         primaryArtist,
@@ -2068,7 +2102,6 @@ class _SongCreditsViewState extends State<SongCreditsView> {
       ),
     );
   }
-
 }
 
 Widget _buildInfoTile({required String label, required String value}) {

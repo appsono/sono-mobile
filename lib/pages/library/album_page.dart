@@ -1025,9 +1025,7 @@ class _AlbumPageState extends State<AlbumPage> {
                   Expanded(
                     child: Text(
                       ArtistStringUtils.getShortDisplay(
-                        _albumArtist ??
-                            widget.album.artist ??
-                            'Unknown Artist',
+                        _albumArtist ?? widget.album.artist ?? 'Unknown Artist',
                       ),
                       style: AppStyles.sonoPlayerArtist.copyWith(
                         fontSize: 16,
@@ -1085,10 +1083,7 @@ class _AlbumPageState extends State<AlbumPage> {
             decoration: BoxDecoration(
               color: AppTheme.elevatedSurfaceDark,
               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-              border: Border.all(
-                color: const Color(0xFF3d3d3d),
-                width: 1,
-              ),
+              border: Border.all(color: const Color(0xFF3d3d3d), width: 1),
             ),
             child: Row(
               children: [
@@ -1138,10 +1133,7 @@ class _AlbumPageState extends State<AlbumPage> {
             decoration: BoxDecoration(
               color: AppTheme.elevatedSurfaceDark,
               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-              border: Border.all(
-                color: const Color(0xFF3d3d3d),
-                width: 1,
-              ),
+              border: Border.all(color: const Color(0xFF3d3d3d), width: 1),
             ),
             child: IconButton(
               icon: const Icon(
@@ -1174,8 +1166,7 @@ class _AlbumPageState extends State<AlbumPage> {
               return ValueListenableBuilder<String?>(
                 valueListenable: SonoPlayer().playbackContext,
                 builder: (context, playbackContext, _) {
-                  final expectedContext =
-                      "Album: ${widget.album.album}";
+                  final expectedContext = "Album: ${widget.album.album}";
                   final isAlbumPlaying =
                       playbackContext == expectedContext &&
                       (_loadedSongs?.any(
@@ -1187,9 +1178,7 @@ class _AlbumPageState extends State<AlbumPage> {
                     height: 48,
                     decoration: BoxDecoration(
                       color: AppTheme.brandPink,
-                      borderRadius: BorderRadius.circular(
-                        AppTheme.radiusMd,
-                      ),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                     ),
                     child: ValueListenableBuilder<bool>(
                       valueListenable: SonoPlayer().isPlaying,
@@ -1203,20 +1192,17 @@ class _AlbumPageState extends State<AlbumPage> {
                           ),
                           iconSize: 24,
                           onPressed:
-                              _loadedSongs != null &&
-                                      _loadedSongs!.isNotEmpty
+                              _loadedSongs != null && _loadedSongs!.isNotEmpty
                                   ? () {
                                     if (isAlbumPlaying && isPlaying) {
                                       SonoPlayer().pause();
-                                    } else if (isAlbumPlaying &&
-                                        !isPlaying) {
+                                    } else if (isAlbumPlaying && !isPlaying) {
                                       SonoPlayer().play();
                                     } else {
                                       SonoPlayer().playNewPlaylist(
                                         _loadedSongs!,
                                         0,
-                                        context:
-                                            "Album: ${widget.album.album}",
+                                        context: "Album: ${widget.album.album}",
                                       );
                                     }
                                   }
@@ -1241,10 +1227,7 @@ class _AlbumPageState extends State<AlbumPage> {
         if (snapshot.connectionState == ConnectionState.waiting &&
             _loadedSongs == null) {
           return Column(
-            children: List.generate(
-              8,
-              (index) => _buildSongListSkeleton(),
-            ),
+            children: List.generate(8, (index) => _buildSongListSkeleton()),
           );
         } else if (_loadedSongs != null) {
           if (_loadedSongs!.isEmpty) {
@@ -1340,7 +1323,10 @@ class _AlbumPageState extends State<AlbumPage> {
     return LayoutBuilder(
       builder: (context, constraints) {
         //scale left panel based on available width
-        final leftPanelWidth = (constraints.maxWidth * 0.35).clamp(320.0, 480.0);
+        final leftPanelWidth = (constraints.maxWidth * 0.35).clamp(
+          320.0,
+          480.0,
+        );
 
         return Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1350,18 +1336,14 @@ class _AlbumPageState extends State<AlbumPage> {
               width: leftPanelWidth,
               child: ListView(
                 padding: const EdgeInsets.only(bottom: 120),
-                children: [
-                  _buildAlbumInfoSection(isWide: true),
-                ],
+                children: [_buildAlbumInfoSection(isWide: true)],
               ),
             ),
             //right side: song list
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.only(top: 8.0, bottom: 120),
-                children: [
-                  _buildSongListSection(),
-                ],
+                children: [_buildSongListSection()],
               ),
             ),
           ],

@@ -221,8 +221,9 @@ class _SetupFlowPageState extends State<SetupFlowPage>
           _currentPage == 6 ||
           _currentPage == 7) {
         //auto-skip All Files Access, Alarms, Battery, Install Updates on iOS
-        WidgetsBinding.instance
-            .addPostFrameCallback((_) => _navigateToPage(_currentPage + 1));
+        WidgetsBinding.instance.addPostFrameCallback(
+          (_) => _navigateToPage(_currentPage + 1),
+        );
         return const Center(child: CircularProgressIndicator());
       }
     }

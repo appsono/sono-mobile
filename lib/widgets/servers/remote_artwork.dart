@@ -38,8 +38,8 @@ class RemoteArtwork extends StatelessWidget {
         height: size,
         fit: BoxFit.cover,
         placeholder: (context, url) => _buildFallback(radius, clip: false),
-        errorWidget: (context, url, error) =>
-            _buildFallback(radius, clip: false),
+        errorWidget:
+            (context, url, error) => _buildFallback(radius, clip: false),
       ),
     );
   }

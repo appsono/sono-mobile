@@ -123,9 +123,9 @@ class ApiService {
 
       final InitializationSettings initializationSettings =
           InitializationSettings(
-        android: initializationSettingsAndroid,
-        linux: initializationSettingsLinux,
-      );
+            android: initializationSettingsAndroid,
+            linux: initializationSettingsLinux,
+          );
 
       await _flutterLocalNotificationsPlugin?.initialize(
         initializationSettings,

@@ -1195,10 +1195,7 @@ class _PlaylistDetailsPageState extends State<PlaylistDetailsPage> {
             decoration: BoxDecoration(
               color: AppTheme.elevatedSurfaceDark,
               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-              border: Border.all(
-                color: const Color(0xFF3d3d3d),
-                width: 1,
-              ),
+              border: Border.all(color: const Color(0xFF3d3d3d), width: 1),
             ),
             child: Row(
               children: [
@@ -1218,9 +1215,7 @@ class _PlaylistDetailsPageState extends State<PlaylistDetailsPage> {
                     setState(() => _isReorderMode = !_isReorderMode);
                   },
                   tooltip:
-                      _isReorderMode
-                          ? 'Exit reorder mode'
-                          : 'Reorder songs',
+                      _isReorderMode ? 'Exit reorder mode' : 'Reorder songs',
                 ),
 
                 //Three-dot menu button
@@ -1244,10 +1239,7 @@ class _PlaylistDetailsPageState extends State<PlaylistDetailsPage> {
             decoration: BoxDecoration(
               color: AppTheme.elevatedSurfaceDark,
               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-              border: Border.all(
-                color: const Color(0xFF3d3d3d),
-                width: 1,
-              ),
+              border: Border.all(color: const Color(0xFF3d3d3d), width: 1),
             ),
             child: IconButton(
               icon: const Icon(
@@ -1264,8 +1256,7 @@ class _PlaylistDetailsPageState extends State<PlaylistDetailsPage> {
                         SonoPlayer().playNewPlaylist(
                           shuffledSongs,
                           0,
-                          context:
-                              "Playlist: ${_currentPlaylist.name}",
+                          context: "Playlist: ${_currentPlaylist.name}",
                         );
                       }
                       : null,
@@ -1281,8 +1272,7 @@ class _PlaylistDetailsPageState extends State<PlaylistDetailsPage> {
               return ValueListenableBuilder<String?>(
                 valueListenable: SonoPlayer().playbackContext,
                 builder: (context, playbackContext, _) {
-                  final expectedContext =
-                      "Playlist: ${_currentPlaylist.name}";
+                  final expectedContext = "Playlist: ${_currentPlaylist.name}";
                   final isPlaylistPlaying =
                       playbackContext == expectedContext &&
                       (_loadedSongs?.any(
@@ -1294,9 +1284,7 @@ class _PlaylistDetailsPageState extends State<PlaylistDetailsPage> {
                     height: 48,
                     decoration: BoxDecoration(
                       color: AppTheme.brandPink,
-                      borderRadius: BorderRadius.circular(
-                        AppTheme.radiusMd,
-                      ),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                     ),
                     child: ValueListenableBuilder<bool>(
                       valueListenable: SonoPlayer().isPlaying,
@@ -1310,11 +1298,9 @@ class _PlaylistDetailsPageState extends State<PlaylistDetailsPage> {
                           ),
                           iconSize: 24,
                           onPressed:
-                              _loadedSongs != null &&
-                                      _loadedSongs!.isNotEmpty
+                              _loadedSongs != null && _loadedSongs!.isNotEmpty
                                   ? () {
-                                    if (isPlaylistPlaying &&
-                                        isPlaying) {
+                                    if (isPlaylistPlaying && isPlaying) {
                                       SonoPlayer().pause();
                                     } else if (isPlaylistPlaying &&
                                         !isPlaying) {
@@ -1374,7 +1360,10 @@ class _PlaylistDetailsPageState extends State<PlaylistDetailsPage> {
     return LayoutBuilder(
       builder: (context, constraints) {
         //scale left panel based on available width
-        final leftPanelWidth = (constraints.maxWidth * 0.35).clamp(320.0, 480.0);
+        final leftPanelWidth = (constraints.maxWidth * 0.35).clamp(
+          320.0,
+          480.0,
+        );
 
         return Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1384,18 +1373,14 @@ class _PlaylistDetailsPageState extends State<PlaylistDetailsPage> {
               width: leftPanelWidth,
               child: ListView(
                 padding: const EdgeInsets.only(bottom: 120),
-                children: [
-                  _buildPlaylistInfoSection(isWide: true),
-                ],
+                children: [_buildPlaylistInfoSection(isWide: true)],
               ),
             ),
             //right side: song list
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.only(top: 8.0, bottom: 120),
-                children: [
-                  _buildSongsList(),
-                ],
+                children: [_buildSongsList()],
               ),
             ),
           ],

@@ -33,9 +33,12 @@ class _LoadingPageState extends State<LoadingPage> {
     debugPrint('[LoadingPage] _initializeApp started');
 
     //on desktop platforms: skip setup flow and mark as completed
-    final isDesktop = Platform.isLinux || Platform.isWindows || Platform.isMacOS;
+    final isDesktop =
+        Platform.isLinux || Platform.isWindows || Platform.isMacOS;
     if (isDesktop) {
-      debugPrint('[LoadingPage] Desktop platform detected, skipping setup flow');
+      debugPrint(
+        '[LoadingPage] Desktop platform detected, skipping setup flow',
+      );
       await DeveloperSettingsService.instance.setSetupCompleted(true);
     }
 

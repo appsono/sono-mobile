@@ -942,7 +942,9 @@ class SonoPlayer extends BaseAudioHandler {
             }
           } catch (e) {
             if (Platform.isLinux) {
-              debugPrint('Warning: setSpeed not supported on Linux/MPV, using default');
+              debugPrint(
+                'Warning: setSpeed not supported on Linux/MPV, using default',
+              );
               _currentSpeed.value = 1.0;
             }
             // Continue initialization even if setSpeed fails
@@ -1033,7 +1035,6 @@ class SonoPlayer extends BaseAudioHandler {
 
       final jsonString = jsonEncode(snapshot.toJson());
       await _prefsService.setString(playbackSnapshotKey, jsonString);
-      
     } catch (e) {
       if (kDebugMode) {
         debugPrint('[Snapshot] Save failed: $e');
@@ -1151,7 +1152,9 @@ class SonoPlayer extends BaseAudioHandler {
             await _primaryPlayer.setSpeed(snapshot.playbackSpeed);
           } catch (e) {
             if (Platform.isLinux) {
-              debugPrint('Warning: setSpeed not supported during restore on Linux/MPV, using default');
+              debugPrint(
+                'Warning: setSpeed not supported during restore on Linux/MPV, using default',
+              );
               _currentSpeed.value = 1.0;
             }
             //continue restoration even if setSpeed fails
@@ -1188,7 +1191,8 @@ class SonoPlayer extends BaseAudioHandler {
         audioSource = AudioSource.uri(songUri);
       } else if (songUri.scheme == 'file' || songUri.path.startsWith('/')) {
         //use Uri.file to ensure proper encoding of spaces and special characters
-        final path = songUri.scheme == 'file' ? songUri.toFilePath() : currentSong.uri!;
+        final path =
+            songUri.scheme == 'file' ? songUri.toFilePath() : currentSong.uri!;
         audioSource = AudioSource.uri(Uri.file(path));
       } else {
         audioSource = AudioSource.uri(Uri.file(currentSong.uri!));
@@ -1700,7 +1704,9 @@ class SonoPlayer extends BaseAudioHandler {
       } catch (e) {
         //MPV on Linux may not support setSpeed for certain file formats/configurations
         if (Platform.isLinux) {
-          debugPrint('Warning: setSpeed($clampedSpeed) not supported on Linux/MPV');
+          debugPrint(
+            'Warning: setSpeed($clampedSpeed) not supported on Linux/MPV',
+          );
           //dont apply the speed change if it fails on Linux
           return;
         } else {
@@ -2154,7 +2160,9 @@ class SonoPlayer extends BaseAudioHandler {
 
       //verify song is playable (only for local files => not preloading)
       final isRemoteUrl = song.uri?.startsWith('http') == true;
-      if (!isPreloading && _playbackMode == _PlaybackMode.local && !isRemoteUrl) {
+      if (!isPreloading &&
+          _playbackMode == _PlaybackMode.local &&
+          !isRemoteUrl) {
         final isPlayable = await _isSongPlayable(song);
         if (!isPlayable) {
           if (kDebugMode) {
@@ -2217,12 +2225,14 @@ class SonoPlayer extends BaseAudioHandler {
       if (songUri.scheme == 'http' || songUri.scheme == 'https') {
         //remote stream URL (e.g. from music server)
         audioSource = AudioSource.uri(songUri);
-      } else if (songUri.scheme == 'content' || songUri.scheme == 'ipod-library') {
+      } else if (songUri.scheme == 'content' ||
+          songUri.scheme == 'ipod-library') {
         //android content:// URIs or iOS ipod-library:// URIs
         audioSource = AudioSource.uri(songUri);
       } else if (songUri.scheme == 'file' || songUri.path.startsWith('/')) {
         //use Uri.file to ensure proper encoding of spaces and special characters
-        final path = songUri.scheme == 'file' ? songUri.toFilePath() : song.uri!;
+        final path =
+            songUri.scheme == 'file' ? songUri.toFilePath() : song.uri!;
         audioSource = AudioSource.uri(Uri.file(path));
       } else {
         audioSource = AudioSource.uri(Uri.file(song.uri!));
@@ -2261,7 +2271,9 @@ class SonoPlayer extends BaseAudioHandler {
           try {
             await targetPlayer.setSpeed(_currentSpeed.value);
           } catch (e) {
-            debugPrint('Warning: setSpeed($_currentSpeed.value) not supported on Linux/MPV for this file');
+            debugPrint(
+              'Warning: setSpeed($_currentSpeed.value) not supported on Linux/MPV for this file',
+            );
             //reset to default if it fails
             _currentSpeed.value = 1.0;
           }
@@ -2320,8 +2332,12 @@ class SonoPlayer extends BaseAudioHandler {
 
       if (isInvalidParameterError && Platform.isLinux) {
         if (kDebugMode) {
-          debugPrint("MPV invalid parameter error for '$safeTitle': ${e.message}");
-          debugPrint("This may be due to unsupported audio filters on Linux/MPV");
+          debugPrint(
+            "MPV invalid parameter error for '$safeTitle': ${e.message}",
+          );
+          debugPrint(
+            "This may be due to unsupported audio filters on Linux/MPV",
+          );
         }
 
         if (!isPreloading) {
@@ -2760,7 +2776,10 @@ class SonoPlayer extends BaseAudioHandler {
   // PROCESSING STATE
   //============================================================================
 
-  Future<void> _handleProcessingStateChange(AudioPlayer player, ProcessingState state) async {
+  Future<void> _handleProcessingStateChange(
+    AudioPlayer player,
+    ProcessingState state,
+  ) async {
     if (player != _currentPlayer ||
         state != ProcessingState.completed ||
         _isCrossfading) {

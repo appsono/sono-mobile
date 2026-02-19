@@ -79,7 +79,10 @@ class _RemoteArtistPageState extends State<RemoteArtistPage> {
 
   void _startStarRefresh() {
     if (_starRefreshTimer?.isActive ?? false) return;
-    _starRefreshTimer = Timer.periodic(_starRefreshInterval, (_) => _refreshStarStates());
+    _starRefreshTimer = Timer.periodic(
+      _starRefreshInterval,
+      (_) => _refreshStarStates(),
+    );
   }
 
   Future<void> _refreshStarStates() async {
@@ -107,8 +110,7 @@ class _RemoteArtistPageState extends State<RemoteArtistPage> {
       _error = null;
     });
     try {
-      final albums =
-          await widget.protocol.getArtistAlbums(widget.artist.id);
+      final albums = await widget.protocol.getArtistAlbums(widget.artist.id);
       if (mounted) {
         setState(() {
           _albums = albums;
@@ -133,12 +135,17 @@ class _RemoteArtistPageState extends State<RemoteArtistPage> {
     for (final album in _albums!) {
       try {
         final songs = await widget.protocol.getAlbumSongs(album.id);
-        allSongs.addAll(songs.map((s) => s.toSongModel(
+        allSongs.addAll(
+          songs.map(
+            (s) => s.toSongModel(
               widget.protocol.getStreamUrl(s.id),
-              coverArtUrl: s.coverArtId != null
-                  ? widget.protocol.getCoverArtUrl(s.coverArtId!, size: 600)
-                  : null,
-            )));
+              coverArtUrl:
+                  s.coverArtId != null
+                      ? widget.protocol.getCoverArtUrl(s.coverArtId!, size: 600)
+                      : null,
+            ),
+          ),
+        );
       } catch (_) {}
     }
     if (mounted) {
@@ -153,15 +160,21 @@ class _RemoteArtistPageState extends State<RemoteArtistPage> {
       if (mounted) {
         setState(() {
           _topSongs = songs;
-          _topSongModels = songs
-              .map((s) => s.toSongModel(
-                    widget.protocol.getStreamUrl(s.id),
-                    coverArtUrl: s.coverArtId != null
-                        ? widget.protocol
-                            .getCoverArtUrl(s.coverArtId!, size: 600)
-                        : null,
-                  ))
-              .toList();
+          _topSongModels =
+              songs
+                  .map(
+                    (s) => s.toSongModel(
+                      widget.protocol.getStreamUrl(s.id),
+                      coverArtUrl:
+                          s.coverArtId != null
+                              ? widget.protocol.getCoverArtUrl(
+                                s.coverArtId!,
+                                size: 600,
+                              )
+                              : null,
+                    ),
+                  )
+                  .toList();
           _starredSongIds.addAll(
             songs.where((s) => s.starred).map((s) => s.id),
           );
@@ -281,72 +294,74 @@ class _RemoteArtistPageState extends State<RemoteArtistPage> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 8),
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppTheme.textTertiaryDark,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 16),
-            ListTile(
-              leading: const Icon(Icons.refresh_rounded,
-                  color: AppTheme.textSecondaryDark),
-              title: const Text(
-                'Refresh artist data',
-                style: TextStyle(
-                  fontFamily: AppTheme.fontFamily,
-                  color: AppTheme.textPrimaryDark,
+      builder:
+          (context) => SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 8),
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppTheme.textTertiaryDark,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                _refreshAllData();
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.playlist_add_rounded,
-                  color: AppTheme.textSecondaryDark),
-              title: const Text(
-                'Add all to queue',
-                style: TextStyle(
-                  fontFamily: AppTheme.fontFamily,
-                  color: AppTheme.textPrimaryDark,
-                ),
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                if (_allArtistSongModels.isNotEmpty) {
-                  SonoPlayer().addSongsToQueue(_allArtistSongModels);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                          'Added ${_allArtistSongModels.length} songs to queue'),
-                      behavior: SnackBarBehavior.floating,
+                const SizedBox(height: 16),
+                ListTile(
+                  leading: const Icon(
+                    Icons.refresh_rounded,
+                    color: AppTheme.textSecondaryDark,
+                  ),
+                  title: const Text(
+                    'Refresh artist data',
+                    style: TextStyle(
+                      fontFamily: AppTheme.fontFamily,
+                      color: AppTheme.textPrimaryDark,
                     ),
-                  );
-                }
-              },
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _refreshAllData();
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(
+                    Icons.playlist_add_rounded,
+                    color: AppTheme.textSecondaryDark,
+                  ),
+                  title: const Text(
+                    'Add all to queue',
+                    style: TextStyle(
+                      fontFamily: AppTheme.fontFamily,
+                      color: AppTheme.textPrimaryDark,
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    if (_allArtistSongModels.isNotEmpty) {
+                      SonoPlayer().addSongsToQueue(_allArtistSongModels);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Added ${_allArtistSongModels.length} songs to queue',
+                          ),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    }
+                  },
+                ),
+                const SizedBox(height: 8),
+              ],
             ),
-            const SizedBox(height: 8),
-          ],
-        ),
-      ),
+          ),
     );
   }
 
   Future<void> _refreshAllData() async {
-    await Future.wait([
-      _loadAlbums(),
-      _loadTopSongs(),
-      _loadArtistMetadata(),
-    ]);
+    await Future.wait([_loadAlbums(), _loadTopSongs(), _loadArtistMetadata()]);
   }
 
   void _showTopSongOptions(RemoteSong song, int index) {
@@ -356,132 +371,143 @@ class _RemoteArtistPageState extends State<RemoteArtistPage> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 8),
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppTheme.textTertiaryDark,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing),
-              child: Row(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                    child: SizedBox(
-                      width: 48,
-                      height: 48,
-                      child: RemoteArtwork(
-                        coverArtId: song.coverArtId,
-                        protocol: widget.protocol,
-                        size: 48,
-                        borderRadius:
-                            BorderRadius.circular(AppTheme.radiusSm),
-                      ),
-                    ),
+      builder:
+          (context) => SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 8),
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppTheme.textTertiaryDark,
+                    borderRadius: BorderRadius.circular(2),
                   ),
-                  const SizedBox(width: AppTheme.spacingMd),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          song.title,
-                          style: const TextStyle(
-                            fontFamily: AppTheme.fontFamily,
-                            color: AppTheme.textPrimaryDark,
-                            fontSize: AppTheme.font,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        if (song.artist != null)
-                          Text(
-                            song.artist!,
-                            style: const TextStyle(
-                              fontFamily: AppTheme.fontFamily,
-                              color: AppTheme.textSecondaryDark,
-                              fontSize: AppTheme.fontSm,
+                ),
+                const SizedBox(height: 16),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.spacing,
+                  ),
+                  child: Row(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                        child: SizedBox(
+                          width: 48,
+                          height: 48,
+                          child: RemoteArtwork(
+                            coverArtId: song.coverArtId,
+                            protocol: widget.protocol,
+                            size: 48,
+                            borderRadius: BorderRadius.circular(
+                              AppTheme.radiusSm,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
                           ),
-                      ],
+                        ),
+                      ),
+                      const SizedBox(width: AppTheme.spacingMd),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              song.title,
+                              style: const TextStyle(
+                                fontFamily: AppTheme.fontFamily,
+                                color: AppTheme.textPrimaryDark,
+                                fontSize: AppTheme.font,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            if (song.artist != null)
+                              Text(
+                                song.artist!,
+                                style: const TextStyle(
+                                  fontFamily: AppTheme.fontFamily,
+                                  color: AppTheme.textSecondaryDark,
+                                  fontSize: AppTheme.fontSm,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Divider(color: Color(0xFF3d3d3d)),
+                ListTile(
+                  leading: Icon(
+                    _starredSongIds.contains(song.id)
+                        ? Icons.star_rounded
+                        : Icons.star_border_rounded,
+                    color:
+                        _starredSongIds.contains(song.id)
+                            ? AppTheme.textPrimaryDark
+                            : AppTheme.textSecondaryDark,
+                  ),
+                  title: Text(
+                    _starredSongIds.contains(song.id) ? 'Unstar' : 'Star',
+                    style: const TextStyle(
+                      fontFamily: AppTheme.fontFamily,
+                      color: AppTheme.textPrimaryDark,
                     ),
                   ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Divider(color: Color(0xFF3d3d3d)),
-            ListTile(
-              leading: Icon(
-                _starredSongIds.contains(song.id)
-                    ? Icons.star_rounded
-                    : Icons.star_border_rounded,
-                color: _starredSongIds.contains(song.id)
-                    ? AppTheme.textPrimaryDark
-                    : AppTheme.textSecondaryDark,
-              ),
-              title: Text(
-                _starredSongIds.contains(song.id) ? 'Unstar' : 'Star',
-                style: const TextStyle(
-                  fontFamily: AppTheme.fontFamily,
-                  color: AppTheme.textPrimaryDark,
+                  onTap: () {
+                    Navigator.pop(context);
+                    _toggleSongStar(song);
+                  },
                 ),
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                _toggleSongStar(song);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.playlist_play_rounded,
-                  color: AppTheme.textSecondaryDark),
-              title: const Text(
-                'Play next',
-                style: TextStyle(
-                  fontFamily: AppTheme.fontFamily,
-                  color: AppTheme.textPrimaryDark,
+                ListTile(
+                  leading: const Icon(
+                    Icons.playlist_play_rounded,
+                    color: AppTheme.textSecondaryDark,
+                  ),
+                  title: const Text(
+                    'Play next',
+                    style: TextStyle(
+                      fontFamily: AppTheme.fontFamily,
+                      color: AppTheme.textPrimaryDark,
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    if (_topSongModels != null &&
+                        index < _topSongModels!.length) {
+                      SonoPlayer().addSongToPlayNext(_topSongModels![index]);
+                    }
+                  },
                 ),
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                if (_topSongModels != null && index < _topSongModels!.length) {
-                  SonoPlayer().addSongToPlayNext(_topSongModels![index]);
-                }
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.queue_music_rounded,
-                  color: AppTheme.textSecondaryDark),
-              title: const Text(
-                'Add to queue',
-                style: TextStyle(
-                  fontFamily: AppTheme.fontFamily,
-                  color: AppTheme.textPrimaryDark,
+                ListTile(
+                  leading: const Icon(
+                    Icons.queue_music_rounded,
+                    color: AppTheme.textSecondaryDark,
+                  ),
+                  title: const Text(
+                    'Add to queue',
+                    style: TextStyle(
+                      fontFamily: AppTheme.fontFamily,
+                      color: AppTheme.textPrimaryDark,
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    if (_topSongModels != null &&
+                        index < _topSongModels!.length) {
+                      SonoPlayer().addSongsToQueue([_topSongModels![index]]);
+                    }
+                  },
                 ),
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                if (_topSongModels != null && index < _topSongModels!.length) {
-                  SonoPlayer().addSongsToQueue([_topSongModels![index]]);
-                }
-              },
+                const SizedBox(height: 8),
+              ],
             ),
-            const SizedBox(height: 8),
-          ],
-        ),
-      ),
+          ),
     );
   }
 
@@ -516,9 +542,7 @@ class _RemoteArtistPageState extends State<RemoteArtistPage> {
                 ),
               ),
               //top songs
-              SliverToBoxAdapter(
-                child: _buildTopSongsSection(),
-              ),
+              SliverToBoxAdapter(child: _buildTopSongsSection()),
               //albums content
               if (_isLoading)
                 const SliverFillRemaining(
@@ -527,12 +551,8 @@ class _RemoteArtistPageState extends State<RemoteArtistPage> {
               else if (_error != null)
                 SliverFillRemaining(child: _buildError())
               else if (_albums != null && _albums!.isNotEmpty) ...[
-                SliverToBoxAdapter(
-                  child: _buildDiscographyCarousel(),
-                ),
-                SliverToBoxAdapter(
-                  child: _buildAlbumsListSection(),
-                ),
+                SliverToBoxAdapter(child: _buildDiscographyCarousel()),
+                SliverToBoxAdapter(child: _buildAlbumsListSection()),
               ] else
                 SliverToBoxAdapter(
                   child: Padding(
@@ -550,12 +570,11 @@ class _RemoteArtistPageState extends State<RemoteArtistPage> {
                   ),
                 ),
               //about section
-              SliverToBoxAdapter(
-                child: _buildAboutSection(),
-              ),
+              SliverToBoxAdapter(child: _buildAboutSection()),
               SliverToBoxAdapter(
                 child: SizedBox(
-                    height: MediaQuery.of(context).padding.bottom + 100),
+                  height: MediaQuery.of(context).padding.bottom + 100,
+                ),
               ),
             ],
           ),
@@ -585,26 +604,28 @@ class _RemoteArtistPageState extends State<RemoteArtistPage> {
                   (280.0 - kToolbarHeight))
               .clamp(0.0, 1.0);
 
-          final bigTitleOpacity =
-              ((expandRatio - 0.3) / 0.3).clamp(0.0, 1.0);
-          final collapsedTitleOpacity =
-              ((0.7 - expandRatio) / 0.2).clamp(0.0, 1.0);
+          final bigTitleOpacity = ((expandRatio - 0.3) / 0.3).clamp(0.0, 1.0);
+          final collapsedTitleOpacity = ((0.7 - expandRatio) / 0.2).clamp(
+            0.0,
+            1.0,
+          );
 
           return FlexibleSpaceBar(
-            title: expandRatio < 0.7
-                ? Opacity(
-                    opacity: collapsedTitleOpacity,
-                    child: Text(
-                      widget.artist.name,
-                      style: const TextStyle(
-                        fontFamily: AppTheme.fontFamily,
-                        color: AppTheme.textPrimaryDark,
-                        fontSize: AppTheme.fontTitle,
-                        fontWeight: FontWeight.bold,
+            title:
+                expandRatio < 0.7
+                    ? Opacity(
+                      opacity: collapsedTitleOpacity,
+                      child: Text(
+                        widget.artist.name,
+                        style: const TextStyle(
+                          fontFamily: AppTheme.fontFamily,
+                          color: AppTheme.textPrimaryDark,
+                          fontSize: AppTheme.fontTitle,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                  )
-                : null,
+                    )
+                    : null,
             titlePadding: const EdgeInsets.only(left: 56, bottom: 16),
             background: Stack(
               fit: StackFit.expand,
@@ -704,12 +725,11 @@ class _RemoteArtistPageState extends State<RemoteArtistPage> {
               //star button
               IconButton(
                 icon: Icon(
-                  _isStarred
-                      ? Icons.star_rounded
-                      : Icons.star_border_rounded,
-                  color: _isStarred
-                      ? AppTheme.textPrimaryDark
-                      : AppTheme.textSecondaryDark,
+                  _isStarred ? Icons.star_rounded : Icons.star_border_rounded,
+                  color:
+                      _isStarred
+                          ? AppTheme.textPrimaryDark
+                          : AppTheme.textSecondaryDark,
                 ),
                 iconSize: 24,
                 onPressed: _toggleStar,
@@ -721,8 +741,7 @@ class _RemoteArtistPageState extends State<RemoteArtistPage> {
                   color: AppTheme.textSecondaryDark,
                 ),
                 iconSize: 24,
-                onPressed:
-                    _lastfmInfo?['url'] != null ? _openLastFmLink : null,
+                onPressed: _lastfmInfo?['url'] != null ? _openLastFmLink : null,
               ),
               //more options
               IconButton(
@@ -751,17 +770,19 @@ class _RemoteArtistPageState extends State<RemoteArtistPage> {
               color: AppTheme.textSecondaryDark,
             ),
             iconSize: 24,
-            onPressed: _allArtistSongModels.isNotEmpty
-                ? () {
-                    final shuffled =
-                        List<SongModel>.from(_allArtistSongModels)..shuffle();
-                    SonoPlayer().playNewPlaylist(
-                      shuffled,
-                      0,
-                      context: "Artist: ${widget.artist.name}",
-                    );
-                  }
-                : null,
+            onPressed:
+                _allArtistSongModels.isNotEmpty
+                    ? () {
+                      final shuffled = List<SongModel>.from(
+                        _allArtistSongModels,
+                      )..shuffle();
+                      SonoPlayer().playNewPlaylist(
+                        shuffled,
+                        0,
+                        context: "Artist: ${widget.artist.name}",
+                      );
+                    }
+                    : null,
           ),
         ),
         SizedBox(width: AppTheme.spacingSm),
@@ -773,9 +794,11 @@ class _RemoteArtistPageState extends State<RemoteArtistPage> {
               valueListenable: SonoPlayer().playbackContext,
               builder: (context, playbackContext, _) {
                 final expectedContext = "Artist: ${widget.artist.name}";
-                final isArtistPlaying = playbackContext == expectedContext &&
-                    _allArtistSongModels
-                        .any((song) => song.id == currentSong?.id);
+                final isArtistPlaying =
+                    playbackContext == expectedContext &&
+                    _allArtistSongModels.any(
+                      (song) => song.id == currentSong?.id,
+                    );
 
                 return Container(
                   height: 48,
@@ -794,22 +817,23 @@ class _RemoteArtistPageState extends State<RemoteArtistPage> {
                           color: Colors.white,
                         ),
                         iconSize: 24,
-                        onPressed: _allArtistSongModels.isNotEmpty
-                            ? () {
-                                if (isArtistPlaying && isPlaying) {
-                                  SonoPlayer().pause();
-                                } else if (isArtistPlaying && !isPlaying) {
-                                  SonoPlayer().play();
-                                } else {
-                                  SonoPlayer().playNewPlaylist(
-                                    _allArtistSongModels,
-                                    0,
-                                    context:
-                                        "Server Artist: ${widget.artist.name}",
-                                  );
+                        onPressed:
+                            _allArtistSongModels.isNotEmpty
+                                ? () {
+                                  if (isArtistPlaying && isPlaying) {
+                                    SonoPlayer().pause();
+                                  } else if (isArtistPlaying && !isPlaying) {
+                                    SonoPlayer().play();
+                                  } else {
+                                    SonoPlayer().playNewPlaylist(
+                                      _allArtistSongModels,
+                                      0,
+                                      context:
+                                          "Server Artist: ${widget.artist.name}",
+                                    );
+                                  }
                                 }
-                              }
-                            : null,
+                                : null,
                       );
                     },
                   ),
@@ -823,8 +847,7 @@ class _RemoteArtistPageState extends State<RemoteArtistPage> {
   }
 
   Widget _buildTopSongsSection() {
-    if (!_isLoadingTopSongs &&
-        (_topSongs == null || _topSongs!.isEmpty)) {
+    if (!_isLoadingTopSongs && (_topSongs == null || _topSongs!.isEmpty)) {
       return const SizedBox.shrink();
     }
 
@@ -867,7 +890,8 @@ class _RemoteArtistPageState extends State<RemoteArtistPage> {
     return ValueListenableBuilder<SongModel?>(
       valueListenable: SonoPlayer().currentSong,
       builder: (context, currentSong, _) {
-        final isCurrentSong = _topSongModels != null &&
+        final isCurrentSong =
+            _topSongModels != null &&
             index < _topSongModels!.length &&
             currentSong?.id == _topSongModels![index].id;
 
@@ -896,9 +920,10 @@ class _RemoteArtistPageState extends State<RemoteArtistPage> {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontFamily: AppTheme.fontFamily,
-                      color: isCurrentSong
-                          ? AppTheme.brandPink
-                          : AppTheme.textSecondaryDark,
+                      color:
+                          isCurrentSong
+                              ? AppTheme.brandPink
+                              : AppTheme.textSecondaryDark,
                       fontSize: AppTheme.fontBody,
                       fontWeight: FontWeight.w500,
                     ),
@@ -915,8 +940,7 @@ class _RemoteArtistPageState extends State<RemoteArtistPage> {
                       coverArtId: song.coverArtId,
                       protocol: widget.protocol,
                       size: 48,
-                      borderRadius:
-                          BorderRadius.circular(AppTheme.radiusSm),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                     ),
                   ),
                 ),
@@ -930,9 +954,10 @@ class _RemoteArtistPageState extends State<RemoteArtistPage> {
                         song.title,
                         style: TextStyle(
                           fontFamily: AppTheme.fontFamily,
-                          color: isCurrentSong
-                              ? AppTheme.brandPink
-                              : AppTheme.textPrimaryDark,
+                          color:
+                              isCurrentSong
+                                  ? AppTheme.brandPink
+                                  : AppTheme.textPrimaryDark,
                           fontSize: AppTheme.font,
                           fontWeight: FontWeight.w500,
                         ),
@@ -994,8 +1019,7 @@ class _RemoteArtistPageState extends State<RemoteArtistPage> {
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
-            padding:
-                const EdgeInsets.symmetric(horizontal: AppTheme.spacing),
+            padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing),
             itemCount: _albums!.length,
             itemBuilder: (context, index) {
               final album = _albums![index];
@@ -1004,22 +1028,23 @@ class _RemoteArtistPageState extends State<RemoteArtistPage> {
                 child: SizedBox(
                   width: 110,
                   child: InkWell(
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => RemoteAlbumPage(
-                          album: album,
-                          protocol: widget.protocol,
+                    onTap:
+                        () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (_) => RemoteAlbumPage(
+                                  album: album,
+                                  protocol: widget.protocol,
+                                ),
+                          ),
                         ),
-                      ),
-                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         ClipRRect(
-                          borderRadius:
-                              BorderRadius.circular(AppTheme.radius),
+                          borderRadius: BorderRadius.circular(AppTheme.radius),
                           child: SizedBox(
                             width: 110,
                             height: 110,
@@ -1027,24 +1052,27 @@ class _RemoteArtistPageState extends State<RemoteArtistPage> {
                               coverArtId: album.coverArtId,
                               protocol: widget.protocol,
                               size: 110,
-                              borderRadius:
-                                  BorderRadius.circular(AppTheme.radius),
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radius,
+                              ),
                             ),
                           ),
                         ),
                         const SizedBox(height: 6),
                         Text(
                           album.name,
-                          style: AppStyles.sonoPlayerTitle
-                              .copyWith(fontSize: 12),
+                          style: AppStyles.sonoPlayerTitle.copyWith(
+                            fontSize: 12,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                         if (album.year != null)
                           Text(
                             album.year.toString(),
-                            style: AppStyles.sonoPlayerArtist
-                                .copyWith(fontSize: 10),
+                            style: AppStyles.sonoPlayerArtist.copyWith(
+                              fontSize: 10,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -1061,8 +1089,7 @@ class _RemoteArtistPageState extends State<RemoteArtistPage> {
   }
 
   Widget _buildAlbumsListSection() {
-    final displayAlbums =
-        _showAllAlbums ? _albums! : _albums!.take(2).toList();
+    final displayAlbums = _showAllAlbums ? _albums! : _albums!.take(2).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1097,11 +1124,9 @@ class _RemoteArtistPageState extends State<RemoteArtistPage> {
                   backgroundColor: AppTheme.elevatedSurfaceDark,
                   foregroundColor: AppTheme.textPrimaryDark,
                   elevation: 0,
-                  side: const BorderSide(
-                      color: Color(0xFF3d3d3d), width: 1),
+                  side: const BorderSide(color: Color(0xFF3d3d3d), width: 1),
                   shape: RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppTheme.radiusMd),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
@@ -1130,10 +1155,9 @@ class _RemoteArtistPageState extends State<RemoteArtistPage> {
         onTap: () {
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (_) => RemoteAlbumPage(
-                album: album,
-                protocol: widget.protocol,
-              ),
+              builder:
+                  (_) =>
+                      RemoteAlbumPage(album: album, protocol: widget.protocol),
             ),
           );
         },
@@ -1149,8 +1173,7 @@ class _RemoteArtistPageState extends State<RemoteArtistPage> {
                   coverArtId: album.coverArtId,
                   protocol: widget.protocol,
                   size: 80,
-                  borderRadius:
-                      BorderRadius.circular(AppTheme.radiusSm),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                 ),
               ),
             ),
@@ -1227,8 +1250,11 @@ class _RemoteArtistPageState extends State<RemoteArtistPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline_rounded,
-                size: 48, color: AppTheme.textTertiaryDark),
+            const Icon(
+              Icons.error_outline_rounded,
+              size: 48,
+              color: AppTheme.textTertiaryDark,
+            ),
             const SizedBox(height: 16),
             const Text(
               'Failed to load albums',
@@ -1253,8 +1279,10 @@ class _RemoteArtistPageState extends State<RemoteArtistPage> {
             const SizedBox(height: 16),
             TextButton(
               onPressed: _loadAlbums,
-              child: const Text('Retry',
-                  style: TextStyle(fontFamily: AppTheme.fontFamily)),
+              child: const Text(
+                'Retry',
+                style: TextStyle(fontFamily: AppTheme.fontFamily),
+              ),
             ),
           ],
         ),

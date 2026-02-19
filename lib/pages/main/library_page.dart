@@ -79,9 +79,7 @@ class _LibraryPageState extends State<LibraryPage>
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (_) => const ServerLibraryPage(),
-              ),
+              MaterialPageRoute(builder: (_) => const ServerLibraryPage()),
             );
           },
         ),

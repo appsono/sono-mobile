@@ -24,8 +24,8 @@ class MusicServerModel {
     this.isActive = false,
     DateTime? createdAt,
     DateTime? updatedAt,
-  })  : createdAt = createdAt ?? DateTime.now(),
-        updatedAt = updatedAt ?? DateTime.now();
+  }) : createdAt = createdAt ?? DateTime.now(),
+       updatedAt = updatedAt ?? DateTime.now();
 
   factory MusicServerModel.fromMap(Map<String, dynamic> map) {
     return MusicServerModel(

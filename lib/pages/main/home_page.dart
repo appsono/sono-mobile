@@ -95,15 +95,30 @@ class HomePageState extends State<HomePage>
   Future<void> _loadExternalAlbums() async {
     final protocol = MusicServerService.instance.activeProtocol;
     if (protocol == null) {
-      if (mounted) setState(() { _externalAlbums = null; _isLoadingExternalAlbums = false; });
+      if (mounted) {
+        setState(() {
+          _externalAlbums = null;
+          _isLoadingExternalAlbums = false;
+        });
+      }
       return;
     }
     if (mounted) setState(() => _isLoadingExternalAlbums = true);
     try {
       final albums = await protocol.getAlbumList(type: 'newest', count: 20);
-      if (mounted) setState(() { _externalAlbums = albums; _isLoadingExternalAlbums = false; });
+      if (mounted) {
+        setState(() {
+          _externalAlbums = albums;
+          _isLoadingExternalAlbums = false;
+        });
+      }
     } catch (_) {
-      if (mounted) setState(() { _externalAlbums = []; _isLoadingExternalAlbums = false; });
+      if (mounted) {
+        setState(() {
+          _externalAlbums = [];
+          _isLoadingExternalAlbums = false;
+        });
+      }
     }
   }
 
@@ -473,44 +488,46 @@ class HomePageState extends State<HomePage>
       child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: <Widget>[
-          if (!isDesktop) SliverAppBar(
-            pinned: true,
-            floating: false,
-            automaticallyImplyLeading: false,
-            backgroundColor: AppTheme.backgroundDark,
-            elevation: 0,
-            toolbarHeight: appBarContentHeight,
-            titleSpacing: 0,
-            title: Builder(
-              builder: (context) {
-                return HomeAppBarContent(
-                  key: ValueKey(
-                    'HomeAppBarContent_${widget.isLoggedIn}_${widget.currentUser?['username']}',
-                  ),
-                  onMenuTap: widget.onMenuTap ?? () {},
-                  onNewsTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const AnnouncementsChangelogPage(),
-                      ),
-                    );
-                  },
-                  onSearchTap: widget.onSearchTap,
-                  onSettingsTap: widget.onSettingsTap,
-                  toolbarHeight: appBarContentHeight,
-                  currentUser: widget.currentUser,
-                  isLoggedIn: widget.isLoggedIn,
-                );
-              },
+          if (!isDesktop)
+            SliverAppBar(
+              pinned: true,
+              floating: false,
+              automaticallyImplyLeading: false,
+              backgroundColor: AppTheme.backgroundDark,
+              elevation: 0,
+              toolbarHeight: appBarContentHeight,
+              titleSpacing: 0,
+              title: Builder(
+                builder: (context) {
+                  return HomeAppBarContent(
+                    key: ValueKey(
+                      'HomeAppBarContent_${widget.isLoggedIn}_${widget.currentUser?['username']}',
+                    ),
+                    onMenuTap: widget.onMenuTap ?? () {},
+                    onNewsTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const AnnouncementsChangelogPage(),
+                        ),
+                      );
+                    },
+                    onSearchTap: widget.onSearchTap,
+                    onSettingsTap: widget.onSettingsTap,
+                    toolbarHeight: appBarContentHeight,
+                    currentUser: widget.currentUser,
+                    isLoggedIn: widget.isLoggedIn,
+                  );
+                },
+              ),
             ),
-          ),
-          if (!isDesktop) SliverToBoxAdapter(
-            child: ShuffleCreatePlaylistButtons(
-              onShuffleAll: _handleShuffleAll,
-              onCreatePlaylist: widget.onCreatePlaylist ?? () {},
+          if (!isDesktop)
+            SliverToBoxAdapter(
+              child: ShuffleCreatePlaylistButtons(
+                onShuffleAll: _handleShuffleAll,
+                onCreatePlaylist: widget.onCreatePlaylist ?? () {},
+              ),
             ),
-          ),
           if (isDesktop) const SliverToBoxAdapter(child: SizedBox(height: 8)),
           _buildSection<SongModel>(
             context: context,
@@ -539,7 +556,12 @@ class HomePageState extends State<HomePage>
             itemBuilder:
                 (ctx, item, listCtx, idx) => HomePageSongItem(
                   song: item,
-                  artworkSize: isDesktop ? 140 : isLargeScreen ? 110 : 70,
+                  artworkSize:
+                      isDesktop
+                          ? 140
+                          : isLargeScreen
+                          ? 110
+                          : 70,
                   onSongTap:
                       (s) => _handleSongTap(
                         s,
@@ -548,11 +570,31 @@ class HomePageState extends State<HomePage>
                         playbackContext: ": Recently Added",
                       ),
                 ),
-            itemWidth: isDesktop ? 140 : isLargeScreen ? 110 : 70,
-            listHeight: isDesktop ? 210 : isLargeScreen ? 180 : 125,
+            itemWidth:
+                isDesktop
+                    ? 140
+                    : isLargeScreen
+                    ? 110
+                    : 70,
+            listHeight:
+                isDesktop
+                    ? 210
+                    : isLargeScreen
+                    ? 180
+                    : 125,
             skeletonLoader: _buildHorizontalSkeletonLoader(
-              itemWidth: isDesktop ? 140 : isLargeScreen ? 110 : 70,
-              itemHeight: isDesktop ? 210 : isLargeScreen ? 180 : 125,
+              itemWidth:
+                  isDesktop
+                      ? 140
+                      : isLargeScreen
+                      ? 110
+                      : 70,
+              itemHeight:
+                  isDesktop
+                      ? 210
+                      : isLargeScreen
+                      ? 180
+                      : 125,
               itemCount: 6,
             ),
           ),
@@ -583,18 +625,44 @@ class HomePageState extends State<HomePage>
             itemBuilder:
                 (ctx, item, listCtx, idx) => HomePageAlbumItem(
                   album: item,
-                  artworkSize: isDesktop ? 180 : isLargeScreen ? 150 : 110,
+                  artworkSize:
+                      isDesktop
+                          ? 180
+                          : isLargeScreen
+                          ? 150
+                          : 110,
                   audioQuery: _audioQuery,
                 ),
-            itemWidth: isDesktop ? 180 : isLargeScreen ? 150 : 110,
-            listHeight: isDesktop ? 260 : isLargeScreen ? 220 : 165,
+            itemWidth:
+                isDesktop
+                    ? 180
+                    : isLargeScreen
+                    ? 150
+                    : 110,
+            listHeight:
+                isDesktop
+                    ? 260
+                    : isLargeScreen
+                    ? 220
+                    : 165,
             skeletonLoader: _buildHorizontalSkeletonLoader(
-              itemWidth: isDesktop ? 180 : isLargeScreen ? 150 : 110,
-              itemHeight: isDesktop ? 260 : isLargeScreen ? 220 : 165,
+              itemWidth:
+                  isDesktop
+                      ? 180
+                      : isLargeScreen
+                      ? 150
+                      : 110,
+              itemHeight:
+                  isDesktop
+                      ? 260
+                      : isLargeScreen
+                      ? 220
+                      : 165,
               itemCount: 4,
             ),
           ),
-          if (_isLoadingExternalAlbums || (_externalAlbums?.isNotEmpty ?? false))
+          if (_isLoadingExternalAlbums ||
+              (_externalAlbums?.isNotEmpty ?? false))
             _buildExternalAlbumsSection(context, isDesktop, isLargeScreen),
           _buildSection<ArtistModel>(
             context: context,
@@ -623,13 +691,33 @@ class HomePageState extends State<HomePage>
             itemBuilder:
                 (ctx, item, listCtx, idx) => HomePageArtistItem(
                   artist: item,
-                  diameter: isDesktop ? 140 : isLargeScreen ? 110 : 80,
+                  diameter:
+                      isDesktop
+                          ? 140
+                          : isLargeScreen
+                          ? 110
+                          : 80,
                   audioQuery: _audioQuery,
                 ),
-            itemWidth: isDesktop ? 140 : isLargeScreen ? 110 : 80,
-            listHeight: isDesktop ? 210 : isLargeScreen ? 180 : 130,
+            itemWidth:
+                isDesktop
+                    ? 140
+                    : isLargeScreen
+                    ? 110
+                    : 80,
+            listHeight:
+                isDesktop
+                    ? 210
+                    : isLargeScreen
+                    ? 180
+                    : 130,
             skeletonLoader: _buildCircularSkeletonLoader(
-              diameter: isDesktop ? 140 : isLargeScreen ? 110 : 80,
+              diameter:
+                  isDesktop
+                      ? 140
+                      : isLargeScreen
+                      ? 110
+                      : 80,
               itemCount: 5,
             ),
           ),
@@ -706,9 +794,23 @@ class HomePageState extends State<HomePage>
     );
   }
 
-  Widget _buildExternalAlbumsSection(BuildContext context, bool isDesktop, bool isLargeScreen) {
-    final itemWidth = isDesktop ? 180.0 : isLargeScreen ? 150.0 : 110.0;
-    final listHeight = isDesktop ? 260.0 : isLargeScreen ? 220.0 : 165.0;
+  Widget _buildExternalAlbumsSection(
+    BuildContext context,
+    bool isDesktop,
+    bool isLargeScreen,
+  ) {
+    final itemWidth =
+        isDesktop
+            ? 180.0
+            : isLargeScreen
+            ? 150.0
+            : 110.0;
+    final listHeight =
+        isDesktop
+            ? 260.0
+            : isLargeScreen
+            ? 220.0
+            : 165.0;
     final protocol = MusicServerService.instance.activeProtocol;
 
     return SliverToBoxAdapter(
@@ -729,10 +831,13 @@ class HomePageState extends State<HomePage>
                     ),
                   ),
                   InkWell(
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const ServerLibraryPage()),
-                    ),
+                    onTap:
+                        () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const ServerLibraryPage(),
+                          ),
+                        ),
                     borderRadius: BorderRadius.circular(AppTheme.radius),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
@@ -767,74 +872,89 @@ class HomePageState extends State<HomePage>
             SizedBox(height: AppTheme.spacingMd),
             SizedBox(
               height: listHeight,
-              child: _isLoadingExternalAlbums
-                  ? _buildHorizontalSkeletonLoader(
-                      itemWidth: itemWidth,
-                      itemHeight: listHeight,
-                      itemCount: 4,
-                    )
-                  : ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: _externalAlbums!.length,
-                      padding: EdgeInsets.symmetric(horizontal: AppTheme.spacing),
-                      physics: const BouncingScrollPhysics(),
-                      itemBuilder: (ctx, index) {
-                        final album = _externalAlbums![index];
-                        return Padding(
-                          padding: EdgeInsets.only(right: AppTheme.spacing),
-                          child: SizedBox(
-                            width: itemWidth,
-                            child: GestureDetector(
-                              onTap: protocol == null
-                                  ? null
-                                  : () => Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => RemoteAlbumPage(
-                                            album: album,
-                                            protocol: protocol,
+              child:
+                  _isLoadingExternalAlbums
+                      ? _buildHorizontalSkeletonLoader(
+                        itemWidth: itemWidth,
+                        itemHeight: listHeight,
+                        itemCount: 4,
+                      )
+                      : ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: _externalAlbums!.length,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: AppTheme.spacing,
+                        ),
+                        physics: const BouncingScrollPhysics(),
+                        itemBuilder: (ctx, index) {
+                          final album = _externalAlbums![index];
+                          return Padding(
+                            padding: EdgeInsets.only(right: AppTheme.spacing),
+                            child: SizedBox(
+                              width: itemWidth,
+                              child: GestureDetector(
+                                onTap:
+                                    protocol == null
+                                        ? null
+                                        : () => Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder:
+                                                (_) => RemoteAlbumPage(
+                                                  album: album,
+                                                  protocol: protocol,
+                                                ),
                                           ),
                                         ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(
+                                        AppTheme.radius,
                                       ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(AppTheme.radius),
-                                    child: protocol == null
-                                        ? SizedBox(width: itemWidth, height: itemWidth)
-                                        : RemoteArtwork(
-                                            coverArtId: album.coverArtId,
-                                            protocol: protocol,
-                                            size: itemWidth,
-                                            borderRadius: BorderRadius.circular(AppTheme.radius),
-                                          ),
-                                  ),
-                                  SizedBox(height: AppTheme.spacingSm),
-                                  Text(
-                                    album.name,
-                                    style: AppStyles.sonoPlayerTitle.copyWith(
-                                      fontSize: isDesktop ? 14 : 12,
+                                      child:
+                                          protocol == null
+                                              ? SizedBox(
+                                                width: itemWidth,
+                                                height: itemWidth,
+                                              )
+                                              : RemoteArtwork(
+                                                coverArtId: album.coverArtId,
+                                                protocol: protocol,
+                                                size: itemWidth,
+                                                borderRadius:
+                                                    BorderRadius.circular(
+                                                      AppTheme.radius,
+                                                    ),
+                                              ),
                                     ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  if (album.artistName != null)
+                                    SizedBox(height: AppTheme.spacingSm),
                                     Text(
-                                      album.artistName!,
-                                      style: AppStyles.sonoPlayerArtist.copyWith(
-                                        fontSize: isDesktop ? 12 : 10,
+                                      album.name,
+                                      style: AppStyles.sonoPlayerTitle.copyWith(
+                                        fontSize: isDesktop ? 14 : 12,
                                       ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
-                                ],
+                                    if (album.artistName != null)
+                                      Text(
+                                        album.artistName!,
+                                        style: AppStyles.sonoPlayerArtist
+                                            .copyWith(
+                                              fontSize: isDesktop ? 12 : 10,
+                                            ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                        );
-                      },
-                    ),
+                          );
+                        },
+                      ),
             ),
           ],
         ),

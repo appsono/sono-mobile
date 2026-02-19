@@ -27,8 +27,10 @@ class SubsonicProtocol extends MusicServerProtocol {
   String _generateSalt([int length = 16]) {
     const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
     final random = Random.secure();
-    return List.generate(length, (_) => chars[random.nextInt(chars.length)])
-        .join();
+    return List.generate(
+      length,
+      (_) => chars[random.nextInt(chars.length)],
+    ).join();
   }
 
   /// Compute MD5 auth token: md5(password + salt)
@@ -95,8 +97,7 @@ class SubsonicProtocol extends MusicServerProtocol {
     }
 
     final json = jsonDecode(response.body) as Map<String, dynamic>;
-    final subsonicResponse =
-        json['subsonic-response'] as Map<String, dynamic>?;
+    final subsonicResponse = json['subsonic-response'] as Map<String, dynamic>?;
 
     if (subsonicResponse == null) {
       throw Exception('Invalid Subsonic response from $method');
@@ -144,14 +145,16 @@ class SubsonicProtocol extends MusicServerProtocol {
           (index as Map<String, dynamic>)['artist'] as List<dynamic>? ?? [];
       for (final a in artistList) {
         final artist = a as Map<String, dynamic>;
-        artists.add(RemoteArtist(
-          id: artist['id'].toString(),
-          name: artist['name'] as String? ?? 'Unknown',
-          albumCount: (artist['albumCount'] as int?) ?? 0,
-          coverArtId: artist['coverArt']?.toString(),
-          serverId: server.id!,
-          starred: artist['starred'] != null,
-        ));
+        artists.add(
+          RemoteArtist(
+            id: artist['id'].toString(),
+            name: artist['name'] as String? ?? 'Unknown',
+            albumCount: (artist['albumCount'] as int?) ?? 0,
+            coverArtId: artist['coverArt']?.toString(),
+            serverId: server.id!,
+            starred: artist['starred'] != null,
+          ),
+        );
       }
     }
 
@@ -226,30 +229,31 @@ class SubsonicProtocol extends MusicServerProtocol {
     final searchResult = response['searchResult3'] as Map<String, dynamic>?;
     if (searchResult == null) return RemoteSearchResult();
 
-    final artists = (searchResult['artist'] as List<dynamic>? ?? [])
-        .map((a) => RemoteArtist(
-              id: (a as Map<String, dynamic>)['id'].toString(),
-              name: a['name'] as String? ?? 'Unknown',
-              albumCount: (a['albumCount'] as int?) ?? 0,
-              coverArtId: a['coverArt']?.toString(),
-              serverId: server.id!,
-              starred: a['starred'] != null,
-            ))
-        .toList();
+    final artists =
+        (searchResult['artist'] as List<dynamic>? ?? [])
+            .map(
+              (a) => RemoteArtist(
+                id: (a as Map<String, dynamic>)['id'].toString(),
+                name: a['name'] as String? ?? 'Unknown',
+                albumCount: (a['albumCount'] as int?) ?? 0,
+                coverArtId: a['coverArt']?.toString(),
+                serverId: server.id!,
+                starred: a['starred'] != null,
+              ),
+            )
+            .toList();
 
-    final albums = (searchResult['album'] as List<dynamic>? ?? [])
-        .map((a) => _parseAlbum(a as Map<String, dynamic>))
-        .toList();
+    final albums =
+        (searchResult['album'] as List<dynamic>? ?? [])
+            .map((a) => _parseAlbum(a as Map<String, dynamic>))
+            .toList();
 
-    final songs = (searchResult['song'] as List<dynamic>? ?? [])
-        .map((s) => _parseSong(s as Map<String, dynamic>))
-        .toList();
+    final songs =
+        (searchResult['song'] as List<dynamic>? ?? [])
+            .map((s) => _parseSong(s as Map<String, dynamic>))
+            .toList();
 
-    return RemoteSearchResult(
-      artists: artists,
-      albums: albums,
-      songs: songs,
-    );
+    return RemoteSearchResult(artists: artists, albums: albums, songs: songs);
   }
 
   @override
@@ -296,9 +300,7 @@ class SubsonicProtocol extends MusicServerProtocol {
     if (topSongs == null) return [];
 
     final songList = topSongs['song'] as List<dynamic>? ?? [];
-    return songList
-        .map((s) => _parseSong(s as Map<String, dynamic>))
-        .toList();
+    return songList.map((s) => _parseSong(s as Map<String, dynamic>)).toList();
   }
 
   @override

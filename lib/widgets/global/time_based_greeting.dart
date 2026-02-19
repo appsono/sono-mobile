@@ -104,7 +104,10 @@ class _TimeBasedGreetingState extends State<TimeBasedGreeting> {
         widget.userName != null ? '$greeting,' : '$greeting!',
         style: TextStyle(
           fontFamily: 'VarelaRound',
-          fontSize: isLargeScreen ? 22.0 : AppTheme.responsiveFontSize(context, 22.0, min: 18.0),
+          fontSize:
+              isLargeScreen
+                  ? 22.0
+                  : AppTheme.responsiveFontSize(context, 22.0, min: 18.0),
           color: Colors.white,
           fontWeight: FontWeight.bold,
         ),
@@ -119,17 +122,26 @@ class _TimeBasedGreetingState extends State<TimeBasedGreeting> {
           '$greeting,',
           style: TextStyle(
             fontFamily: 'VarelaRound',
-            fontSize: isLargeScreen ? 14.0 : AppTheme.responsiveFontSize(context, 14.0, min: 12.0),
+            fontSize:
+                isLargeScreen
+                    ? 14.0
+                    : AppTheme.responsiveFontSize(context, 14.0, min: 12.0),
             color: Colors.white.withAlpha(179),
             fontWeight: FontWeight.normal,
           ),
         ),
-        SizedBox(height: isLargeScreen ? 2.0 : AppTheme.responsiveSpacing(context, 2.0)),
+        SizedBox(
+          height:
+              isLargeScreen ? 2.0 : AppTheme.responsiveSpacing(context, 2.0),
+        ),
         Text(
           widget.userName!,
           style: TextStyle(
             fontFamily: 'VarelaRound',
-            fontSize: isLargeScreen ? 20.0 : AppTheme.responsiveFontSize(context, 20.0, min: 16.0),
+            fontSize:
+                isLargeScreen
+                    ? 20.0
+                    : AppTheme.responsiveFontSize(context, 20.0, min: 16.0),
             color: Colors.white,
             fontWeight: FontWeight.bold,
           ),

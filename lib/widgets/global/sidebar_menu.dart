@@ -82,17 +82,18 @@ class Sidebar extends StatelessWidget {
                     ),
                     const SizedBox(width: 16),
                     Expanded(
-                      child: showNavItems
-                          ? TimeBasedGreeting(userName: userName)
-                          : Text(
-                              userName,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 20,
-                                fontWeight: FontWeight.w600,
+                      child:
+                          showNavItems
+                              ? TimeBasedGreeting(userName: userName)
+                              : Text(
+                                userName,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
                     ),
                     if (onCollapseTap != null)
                       IconButton(
@@ -181,12 +182,25 @@ class Sidebar extends StatelessWidget {
                   ),
                   if (showNavItems)
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12.0,
+                        vertical: 4.0,
+                      ),
                       child: Column(
                         children: [
-                          _buildActionButton(icon: Icons.shuffle_rounded, label: 'Shuffle all', isDark: true, onTap: onShuffleAllTap),
+                          _buildActionButton(
+                            icon: Icons.shuffle_rounded,
+                            label: 'Shuffle all',
+                            isDark: true,
+                            onTap: onShuffleAllTap,
+                          ),
                           const SizedBox(height: 8),
-                          _buildActionButton(icon: Icons.add_rounded, label: 'Create Playlist', isDark: false, onTap: onCreatePlaylistTap),
+                          _buildActionButton(
+                            icon: Icons.add_rounded,
+                            label: 'Create Playlist',
+                            isDark: false,
+                            onTap: onCreatePlaylistTap,
+                          ),
                         ],
                       ),
                     ),
@@ -270,7 +284,11 @@ class Sidebar extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             child: Row(
               children: [
-                Icon(isSelected && activeIcon != null ? activeIcon : icon, color: currentIconColor, size: 22),
+                Icon(
+                  isSelected && activeIcon != null ? activeIcon : icon,
+                  color: currentIconColor,
+                  size: 22,
+                ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Text(
@@ -289,6 +307,7 @@ class Sidebar extends StatelessWidget {
       ),
     );
   }
+
   Widget _buildActionButton({
     required IconData icon,
     required String label,
@@ -297,7 +316,8 @@ class Sidebar extends StatelessWidget {
   }) {
     final backgroundColor = isDark ? const Color(0xFF2A2A2A) : Colors.white;
     final foregroundColor = isDark ? Colors.white : const Color(0xFF1A1A1A);
-    final borderColor = isDark ? Colors.white.withAlpha(25) : Colors.transparent;
+    final borderColor =
+        isDark ? Colors.white.withAlpha(25) : Colors.transparent;
 
     return SizedBox(
       width: double.infinity,

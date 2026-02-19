@@ -35,8 +35,7 @@ class _AddServerDialogState extends State<AddServerDialog> {
       _usernameController.text.trim().isNotEmpty &&
       _passwordController.text.trim().isNotEmpty;
 
-  bool get _canSave =>
-      _testPassed && _nameController.text.trim().isNotEmpty;
+  bool get _canSave => _testPassed && _nameController.text.trim().isNotEmpty;
 
   String _normalizeUrl(String url) {
     var normalized = url.trim().replaceAll(RegExp(r'/+$'), '');
@@ -62,8 +61,7 @@ class _AddServerDialogState extends State<AddServerDialog> {
       password: _passwordController.text.trim(),
     );
 
-    final protocol =
-        MusicServerService.instance.createProtocol(server);
+    final protocol = MusicServerService.instance.createProtocol(server);
     final error = await protocol.ping();
 
     if (mounted) {
@@ -180,7 +178,9 @@ class _AddServerDialogState extends State<AddServerDialog> {
             TextField(
               controller: _nameController,
               style: const TextStyle(
-                  color: Colors.white, fontFamily: 'VarelaRound'),
+                color: Colors.white,
+                fontFamily: 'VarelaRound',
+              ),
               decoration: _inputDecoration('Server name (e.g. Home Navidrome)'),
               textInputAction: TextInputAction.next,
               onChanged: (_) => setState(() {}),
@@ -191,16 +191,20 @@ class _AddServerDialogState extends State<AddServerDialog> {
             TextField(
               controller: _urlController,
               style: const TextStyle(
-                  color: Colors.white, fontFamily: 'VarelaRound'),
-              decoration:
-                  _inputDecoration('Server URL (e.g. https://music.example.com)'),
+                color: Colors.white,
+                fontFamily: 'VarelaRound',
+              ),
+              decoration: _inputDecoration(
+                'Server URL (e.g. https://music.example.com)',
+              ),
               keyboardType: TextInputType.url,
               autocorrect: false,
               textInputAction: TextInputAction.next,
-              onChanged: (_) => setState(() {
-                _testPassed = false;
-                _testError = null;
-              }),
+              onChanged:
+                  (_) => setState(() {
+                    _testPassed = false;
+                    _testError = null;
+                  }),
             ),
 
             const SizedBox(height: 12),
@@ -208,14 +212,17 @@ class _AddServerDialogState extends State<AddServerDialog> {
             TextField(
               controller: _usernameController,
               style: const TextStyle(
-                  color: Colors.white, fontFamily: 'VarelaRound'),
+                color: Colors.white,
+                fontFamily: 'VarelaRound',
+              ),
               decoration: _inputDecoration('Username'),
               autocorrect: false,
               textInputAction: TextInputAction.next,
-              onChanged: (_) => setState(() {
-                _testPassed = false;
-                _testError = null;
-              }),
+              onChanged:
+                  (_) => setState(() {
+                    _testPassed = false;
+                    _testError = null;
+                  }),
             ),
 
             const SizedBox(height: 12),
@@ -223,14 +230,17 @@ class _AddServerDialogState extends State<AddServerDialog> {
             TextField(
               controller: _passwordController,
               style: const TextStyle(
-                  color: Colors.white, fontFamily: 'VarelaRound'),
+                color: Colors.white,
+                fontFamily: 'VarelaRound',
+              ),
               decoration: _inputDecoration('Password'),
               obscureText: true,
               textInputAction: TextInputAction.done,
-              onChanged: (_) => setState(() {
-                _testPassed = false;
-                _testError = null;
-              }),
+              onChanged:
+                  (_) => setState(() {
+                    _testPassed = false;
+                    _testError = null;
+                  }),
             ),
 
             const SizedBox(height: 16),
@@ -255,8 +265,11 @@ class _AddServerDialogState extends State<AddServerDialog> {
                 padding: const EdgeInsets.only(bottom: 12),
                 child: Row(
                   children: [
-                    const Icon(Icons.check_circle_rounded,
-                        color: AppTheme.success, size: 18),
+                    const Icon(
+                      Icons.check_circle_rounded,
+                      color: AppTheme.success,
+                      size: 18,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       'Connection successful',
@@ -274,57 +287,67 @@ class _AddServerDialogState extends State<AddServerDialog> {
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: (_canTest && !_isTesting && !_isSaving)
-                        ? _testConnection
-                        : null,
+                    onPressed:
+                        (_canTest && !_isTesting && !_isSaving)
+                            ? _testConnection
+                            : null,
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.white,
                       side: BorderSide(
                         color: Colors.white.withAlpha((0.3 * 255).round()),
                       ),
                       shape: RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(AppTheme.radiusSm),
+                        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
-                    child: _isTesting
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.white),
-                          )
-                        : const Text('Test Connection',
-                            style: TextStyle(fontFamily: 'VarelaRound')),
+                    child:
+                        _isTesting
+                            ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                            : const Text(
+                              'Test Connection',
+                              style: TextStyle(fontFamily: 'VarelaRound'),
+                            ),
                   ),
                 ),
 
                 const SizedBox(width: 12),
-                
+
                 Expanded(
                   child: ElevatedButton(
                     onPressed: (_canSave && !_isSaving) ? _save : null,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.brandPink,
                       foregroundColor: Colors.white,
-                      disabledBackgroundColor:
-                          AppTheme.brandPink.withAlpha((0.3 * 255).round()),
+                      disabledBackgroundColor: AppTheme.brandPink.withAlpha(
+                        (0.3 * 255).round(),
+                      ),
                       shape: RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(AppTheme.radiusSm),
+                        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
-                    child: _isSaving
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.white),
-                          )
-                        : const Text('Save',
-                            style: TextStyle(fontFamily: 'VarelaRound')),
+                    child:
+                        _isSaving
+                            ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                            : const Text(
+                              'Save',
+                              style: TextStyle(fontFamily: 'VarelaRound'),
+                            ),
                   ),
                 ),
               ],

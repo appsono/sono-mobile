@@ -55,7 +55,11 @@ class GlobalPageHeader extends StatelessWidget implements PreferredSizeWidget {
                 pageTitle,
                 style: TextStyle(
                   fontFamily: 'VarelaRound',
-                  fontSize: AppTheme.responsiveFontSize(context, 22.0, min: 18.0),
+                  fontSize: AppTheme.responsiveFontSize(
+                    context,
+                    22.0,
+                    min: 18.0,
+                  ),
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),

@@ -1615,37 +1615,37 @@ Tap "Read Full Terms" below to view the complete Terms of Service.
       children: [
         _isRailExpanded
             ? SizedBox(
-                width: 256,
-                child: Sidebar(
-                  userName: _sidebarUserName,
-                  appVersion: _displayAppVersion,
-                  currentRoute: _getRouteNameForSidebar(),
-                  profilePictureUrl: _profilePictureUrl,
-                  showNavItems: true,
-                  currentTabIndex: _currentIndex,
-                  onNavItemTap: _onItemTapped,
-                  onCollapseTap: () => setState(() => _isRailExpanded = false),
-                  onProfileTap: () {
-                    if (_isLoggedIn) {
-                      _navigateToProfilePage();
-                    } else {
-                      _navigateToLoginPage();
-                    }
-                  },
-                  onWhatsNewTap: _navigateToChangelog,
-                  onSettingsTap: () => _onItemTapped(3),
-                  onRecentsTap: _navigateToRecents,
-                  onShuffleAllTap: _handleShuffleAll,
-                  onCreatePlaylistTap: _showCreatePlaylistSheet,
-                  onLogoutTap: () {
-                    if (_isLoggedIn) {
-                      _handleLogout();
-                    } else {
-                      _navigateToLoginPage();
-                    }
-                  },
-                ),
-              )
+              width: 256,
+              child: Sidebar(
+                userName: _sidebarUserName,
+                appVersion: _displayAppVersion,
+                currentRoute: _getRouteNameForSidebar(),
+                profilePictureUrl: _profilePictureUrl,
+                showNavItems: true,
+                currentTabIndex: _currentIndex,
+                onNavItemTap: _onItemTapped,
+                onCollapseTap: () => setState(() => _isRailExpanded = false),
+                onProfileTap: () {
+                  if (_isLoggedIn) {
+                    _navigateToProfilePage();
+                  } else {
+                    _navigateToLoginPage();
+                  }
+                },
+                onWhatsNewTap: _navigateToChangelog,
+                onSettingsTap: () => _onItemTapped(3),
+                onRecentsTap: _navigateToRecents,
+                onShuffleAllTap: _handleShuffleAll,
+                onCreatePlaylistTap: _showCreatePlaylistSheet,
+                onLogoutTap: () {
+                  if (_isLoggedIn) {
+                    _handleLogout();
+                  } else {
+                    _navigateToLoginPage();
+                  }
+                },
+              ),
+            )
             : _buildNavigationRail(),
         Expanded(child: _buildPageContent(bottomPadding: 0)),
       ],
@@ -1759,20 +1759,33 @@ Tap "Read Full Terms" below to view the complete Terms of Service.
           trailing: Column(
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12.0,
+                  vertical: 4.0,
+                ),
                 child: Divider(
                   color: Colors.white.withAlpha((255 * 0.1).round()),
                   thickness: 0.8,
                   height: 12,
                 ),
               ),
-              _buildRailActionButton(icon: Icons.new_releases_rounded, tooltip: 'Changelog', onTap: _navigateToChangelog),
-              _buildRailActionButton(icon: Icons.history_rounded, tooltip: 'Recents', onTap: _navigateToRecents),
+              _buildRailActionButton(
+                icon: Icons.new_releases_rounded,
+                tooltip: 'Changelog',
+                onTap: _navigateToChangelog,
+              ),
+              _buildRailActionButton(
+                icon: Icons.history_rounded,
+                tooltip: 'Recents',
+                onTap: _navigateToRecents,
+              ),
               const SizedBox(height: 8),
               _buildRailActionButton(
                 icon: Icons.logout_rounded,
                 tooltip: _isLoggedIn ? 'Logout' : 'Login',
-                onTap: () => _isLoggedIn ? _handleLogout() : _navigateToLoginPage(),
+                onTap:
+                    () =>
+                        _isLoggedIn ? _handleLogout() : _navigateToLoginPage(),
                 color: Colors.red.shade400,
               ),
             ],
