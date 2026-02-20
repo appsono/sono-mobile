@@ -42,9 +42,9 @@ class _SetupFlowPageState extends State<SetupFlowPage>
   @override
   void initState() {
     super.initState();
-    //iOS: 4 relevant steps (Welcome, Media, Excluded Folders, Notifications, All Set)
+    //iOS: 5 relevant steps (Welcome, Media, Excluded Folders, Notifications, Music Folder, All Set)
     //Android: 8 steps (all pages)
-    _totalSteps = Platform.isIOS ? 4 : 8;
+    _totalSteps = Platform.isIOS ? 5 : 8;
     _setupAnimations();
     _checkInitialPermissions();
   }
@@ -123,7 +123,7 @@ class _SetupFlowPageState extends State<SetupFlowPage>
 
   Future<void> _navigateToPage(int newPage) async {
     if (_isTransitioning || newPage == _currentPage) return;
-    if (newPage < 0 || newPage > 8) return;
+    if (newPage < 0 || newPage > 9) return;
 
     _isTransitioning = true;
 
@@ -139,8 +139,8 @@ class _SetupFlowPageState extends State<SetupFlowPage>
   int _getDisplayStep() {
     if (Platform.isAndroid) return _currentPage;
 
-    //iOS: map page number to display step (skipping Android-only pages)
-    //Page 0 -> Step 0, Page 1 -> Step 1, Page 3 -> Step 2, Page 4 -> Step 3, Page 8 -> Step 4
+    //iOS: map page number to display step
+    //0=Welcome, 1=Media, 3=Excluded Folders, 4=Notifications, 9=Music Folder, 8=All Set
     switch (_currentPage) {
       case 0:
         return 0;
@@ -150,33 +150,38 @@ class _SetupFlowPageState extends State<SetupFlowPage>
         return 2;
       case 4:
         return 3;
-      case 8:
+      case 9:
         return 4;
+      case 8:
+        return 5;
       default:
         return _currentPage;
     }
   }
 
+  // Explicit page order for iOS avoids fragile while-loop skip logic.
+  static const _iosPageFlow = [0, 1, 3, 4, 9, 8];
+
   void _nextPage() {
-    int nextPage = _currentPage + 1;
-    //iOS: skip Android-only pages (2, 5, 6, 7)
     if (Platform.isIOS) {
-      while (nextPage == 2 || nextPage == 5 || nextPage == 6 || nextPage == 7) {
-        nextPage++;
+      final idx = _iosPageFlow.indexOf(_currentPage);
+      if (idx >= 0 && idx < _iosPageFlow.length - 1) {
+        _navigateToPage(_iosPageFlow[idx + 1]);
       }
+      return;
     }
-    _navigateToPage(nextPage);
+    _navigateToPage(_currentPage + 1);
   }
 
   void _previousPage() {
-    int prevPage = _currentPage - 1;
-    //iOS: skip Android-only pages (2, 5, 6, 7)
     if (Platform.isIOS) {
-      while (prevPage == 2 || prevPage == 5 || prevPage == 6 || prevPage == 7) {
-        prevPage--;
+      final idx = _iosPageFlow.indexOf(_currentPage);
+      if (idx > 0) {
+        _navigateToPage(_iosPageFlow[idx - 1]);
       }
+      return;
     }
-    _navigateToPage(prevPage);
+    _navigateToPage(_currentPage - 1);
   }
 
   Future<void> _completeSetup() async {
@@ -214,20 +219,6 @@ class _SetupFlowPageState extends State<SetupFlowPage>
   }
 
   Widget _buildCurrentPage() {
-    //iOS: skip Android-only pages
-    if (Platform.isIOS) {
-      if (_currentPage == 2 ||
-          _currentPage == 5 ||
-          _currentPage == 6 ||
-          _currentPage == 7) {
-        //auto-skip All Files Access, Alarms, Battery, Install Updates on iOS
-        WidgetsBinding.instance.addPostFrameCallback(
-          (_) => _navigateToPage(_currentPage + 1),
-        );
-        return const Center(child: CircularProgressIndicator());
-      }
-    }
-
     switch (_currentPage) {
       case 0:
         return _WelcomePage(onNext: _nextPage);
@@ -350,6 +341,8 @@ class _SetupFlowPageState extends State<SetupFlowPage>
         );
       case 8:
         return _AllSetPage(onFinish: _completeSetup, onBack: _previousPage);
+      case 9:
+        return _IosMusicFolderPage(onNext: _nextPage, onBack: _previousPage);
       default:
         return const SizedBox.shrink();
     }
@@ -932,6 +925,154 @@ class _AllSetPage extends StatelessWidget {
           _PrimaryButton(label: "Let's Go!", onPressed: onFinish),
         ],
       ),
+    );
+  }
+}
+
+class _IosMusicFolderPage extends StatelessWidget {
+  final VoidCallback onNext;
+  final VoidCallback onBack;
+
+  const _IosMusicFolderPage({required this.onNext, required this.onBack});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        children: [
+          Align(
+            alignment: Alignment.centerLeft,
+            child: _BackButton(onPressed: onBack),
+          ),
+
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  const SizedBox(height: 24),
+
+                  Container(
+                    width: 200,
+                    height: 200,
+                    decoration: BoxDecoration(
+                      color: AppTheme.surfaceDark,
+                      borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+                    ),
+                    child: Icon(
+                      Icons.drive_folder_upload_rounded,
+                      size: 80,
+                      color: AppTheme.brandPink,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+
+                  Text(
+                    'Add Your Music',
+                    style: TextStyle(
+                      color: AppTheme.textPrimaryDark,
+                      fontSize: AppTheme.fontHeading,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: AppTheme.fontFamily,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+
+                  Text(
+                    'To play your own audio files, copy them into the Sono Music folder using the Files app.',
+                    style: TextStyle(
+                      color: AppTheme.textSecondaryDark,
+                      fontSize: AppTheme.font,
+                      fontFamily: AppTheme.fontFamily,
+                      height: 1.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 32),
+
+                  _StepRow(
+                    number: 1,
+                    text: 'Open the Files app on your iPhone or iPad.',
+                  ),
+                  const SizedBox(height: 12),
+                  _StepRow(
+                    number: 2,
+                    text: 'Navigate to On My iPhone > Sono > Music.',
+                  ),
+                  const SizedBox(height: 12),
+                  _StepRow(
+                    number: 3,
+                    text: 'Move or copy your audio files into that folder.',
+                  ),
+                  const SizedBox(height: 12),
+                  _StepRow(
+                    number: 4,
+                    text:
+                        'Your tracks will appear in the library next time Sono loads.',
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 16),
+          Align(
+            alignment: Alignment.centerRight,
+            child: _ContinueArrow(onPressed: onNext),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StepRow extends StatelessWidget {
+  final int number;
+  final String text;
+
+  const _StepRow({required this.number, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 28,
+          height: 28,
+          decoration: BoxDecoration(
+            color: AppTheme.brandPink.withValues(alpha: 0.2),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            '$number',
+            style: TextStyle(
+              color: AppTheme.brandPink,
+              fontWeight: FontWeight.bold,
+              fontSize: AppTheme.fontSm,
+              fontFamily: AppTheme.fontFamily,
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              text,
+              style: TextStyle(
+                color: AppTheme.textSecondaryDark,
+                fontSize: AppTheme.font,
+                fontFamily: AppTheme.fontFamily,
+                height: 1.4,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
