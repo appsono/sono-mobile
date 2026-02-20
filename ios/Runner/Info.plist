@@ -67,8 +67,6 @@
 		<string>audio-output</string>
 	</array>
 	
-	<key>NSMicrophoneUsageDescription</key>
-	<string>Sono needs microphone access for voice features and audio recording.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Sono needs photo library access to select profile pictures.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
@@ -111,6 +109,11 @@
 	<true/>
 	
 	<key>UIBackgroundTasksEnabled</key>
+	<true/>
+
+	<key>UIFileSharingEnabled</key>
+	<true/>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
 	<true/>
 
 	<key>UIApplicationSceneManifest</key>
