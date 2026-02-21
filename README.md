@@ -3,7 +3,7 @@
 <div align="center">
   <img src="assets/icon/icon_legacy.png" alt="Sono Logo" width="128" height="128" style="border-radius: 16px;">
 
-  **A Flutter based Music Player for Android, iOS and Linux*
+  **A Flutter based Music Player for Android, iOS and Linux**
 
   <a href="https://github.com/appsono/sono-mobile/releases/latest">
     <img src="https://img.shields.io/github/v/release/appsono/sono-mobile?style=flat&logo=github&label=stable&color=green" alt="Latest Release">
