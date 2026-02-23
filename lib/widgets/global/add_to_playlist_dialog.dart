@@ -1,10 +1,14 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:sono/data/models/playlist_model.dart' as db;
+import 'package:sono/services/playlist/playlist_cover_service.dart';
 import 'package:sono/services/playlist/playlist_service.dart';
 import 'package:sono/styles/app_theme.dart';
 import 'package:sono/widgets/global/bottom_sheet.dart';
+import 'package:sono/widgets/global/cached_artwork_image.dart';
 
 /// Multi-song version => for adding multiple songs to a playlist
 class AddToPlaylistDialog extends StatefulWidget {
@@ -212,19 +216,9 @@ class _AddToPlaylistDialogState extends State<AddToPlaylistDialog> {
                   else
                     ...playlists.map(
                       (playlist) => ListTile(
-                        leading: Container(
-                          width: AppTheme.artworkSm,
-                          height: AppTheme.artworkSm,
-                          decoration: BoxDecoration(
-                            color: AppTheme.elevatedSurfaceDark,
-                            borderRadius: BorderRadius.circular(
-                              AppTheme.radiusSm,
-                            ),
-                          ),
-                          child: const Icon(
-                            Icons.queue_music_rounded,
-                            color: AppTheme.textTertiaryDark,
-                          ),
+                        leading: SizedBox.square(
+                          dimension: AppTheme.artworkSm,
+                          child: _PlaylistCoverWidget(playlist: playlist),
                         ),
                         title: Text(
                           playlist.name,
@@ -232,6 +226,22 @@ class _AddToPlaylistDialogState extends State<AddToPlaylistDialog> {
                             color: AppTheme.textPrimaryDark,
                             fontWeight: FontWeight.w500,
                           ),
+                        ),
+                        subtitle: FutureBuilder<int>(
+                          future: playlistService.getPlaylistSongCount(
+                            playlist.id,
+                          ),
+                          builder: (context, countSnapshot) {
+                            final count = countSnapshot.data;
+                            if (count == null) return const SizedBox.shrink();
+                            return Text(
+                              count == 1 ? '1 song' : '$count songs',
+                              style: const TextStyle(
+                                color: AppTheme.textTertiaryDark,
+                                fontSize: AppTheme.fontSm,
+                              ),
+                            );
+                          },
                         ),
                         onTap: () => _addToPlaylist(playlist),
                       ),
@@ -242,6 +252,70 @@ class _AddToPlaylistDialogState extends State<AddToPlaylistDialog> {
           ),
         );
       },
+    );
+  }
+}
+
+/// Widget that shows the correct cover for a playlist:
+/// custom file → CachedArtworkImage (via coverSongId) → default icon
+class _PlaylistCoverWidget extends StatelessWidget {
+  final db.PlaylistModel playlist;
+
+  const _PlaylistCoverWidget({required this.playlist});
+
+  @override
+  Widget build(BuildContext context) {
+    if (playlist.hasCustomCover) {
+      return FutureBuilder<Uint8List?>(
+        future: PlaylistCoverService.instance.loadPlaylistCover(
+          playlist.customCoverPath,
+        ),
+        builder: (context, snapshot) {
+          if (snapshot.hasData && snapshot.data != null) {
+            return ClipRRect(
+              borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+              child: Image.memory(
+                snapshot.data!,
+                width: AppTheme.artworkSm,
+                height: AppTheme.artworkSm,
+                fit: BoxFit.cover,
+              ),
+            );
+          }
+          return _defaultIcon(context);
+        },
+      );
+    }
+
+    if (playlist.coverSongId != null) {
+      return CachedArtworkImage(
+        id: playlist.coverSongId!,
+        size: AppTheme.artworkSm,
+        type: ArtworkType.AUDIO,
+        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+      );
+    }
+
+    return _defaultIcon(context);
+  }
+
+  Widget _defaultIcon(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.elevatedSurfaceDark,
+        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+      ),
+      child: playlist.isFavorite
+          ? Icon(
+              Icons.favorite_rounded,
+              color: Theme.of(context).primaryColor,
+              size: AppTheme.iconMd,
+            )
+          : const Icon(
+              Icons.queue_music_rounded,
+              color: AppTheme.textTertiaryDark,
+              size: AppTheme.iconMd,
+            ),
     );
   }
 }
