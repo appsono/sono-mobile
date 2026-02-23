@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:sono/data/models/remote_models.dart';
 import 'package:sono/pages/servers/album_page.dart';
 import 'package:sono/pages/servers/artist_page.dart';
@@ -310,7 +311,7 @@ class _ServerLibraryPageState extends State<ServerLibraryPage> {
                     protocol: _protocol,
                     size: 44,
                     borderRadius: BorderRadius.circular(22),
-                    fallbackIcon: Icons.person_rounded,
+                    fallbackIcon: Symbols.person_rounded,
                   ),
                 ),
               ),
@@ -461,7 +462,7 @@ class _RemoteSearchDelegate extends SearchDelegate<String?> {
                         protocol: _protocol,
                         size: 40,
                         borderRadius: BorderRadius.circular(20),
-                        fallbackIcon: Icons.person_rounded,
+                        fallbackIcon: Symbols.person_rounded,
                       ),
                     ),
                   ),

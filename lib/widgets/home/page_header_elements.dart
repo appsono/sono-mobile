@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:sono/styles/app_theme.dart';
 
 class ShuffleCreatePlaylistButtons extends StatelessWidget {
@@ -28,7 +29,7 @@ class ShuffleCreatePlaylistButtons extends StatelessWidget {
               Expanded(
                 child: _ActionButton(
                   onTap: onShuffleAll,
-                  icon: Icons.shuffle_rounded,
+                  icon: Symbols.shuffle_rounded,
                   label: 'Shuffle all',
                   isDark: true,
                 ),
@@ -39,7 +40,7 @@ class ShuffleCreatePlaylistButtons extends StatelessWidget {
               Expanded(
                 child: _ActionButton(
                   onTap: onCreatePlaylist,
-                  icon: Icons.add_rounded,
+                  icon: Symbols.add_rounded,
                   label: 'Create Playlist',
                   isDark: false,
                 ),

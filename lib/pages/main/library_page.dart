@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:sono/pages/library/all_items_page.dart';
 import 'package:sono/pages/servers/library_page.dart';
@@ -74,7 +75,7 @@ class _LibraryPageState extends State<LibraryPage>
       if (serverService.hasActiveServer)
         _LibraryCategory(
           title: serverService.activeServer!.name,
-          icon: Icons.cloud_rounded,
+          icon: Symbols.cloud_rounded,
           color: Colors.teal.shade300,
           onTap: () {
             Navigator.push(
@@ -85,7 +86,7 @@ class _LibraryPageState extends State<LibraryPage>
         ),
       _LibraryCategory(
         title: "Playlists",
-        icon: Icons.queue_music_rounded,
+        icon: Symbols.queue_music_rounded,
         color: Colors.blue.shade300,
         onTap: () {
           _navigateTo(
@@ -98,7 +99,7 @@ class _LibraryPageState extends State<LibraryPage>
       ),
       _LibraryCategory(
         title: "Liked Songs",
-        icon: Icons.favorite_rounded,
+        icon: Symbols.favorite_rounded,
         color: Theme.of(context).primaryColor,
         onTap: () {
           final favoritesService = context.read<FavoritesService>();
@@ -139,7 +140,7 @@ class _LibraryPageState extends State<LibraryPage>
       ),
       _LibraryCategory(
         title: "Favorite Artists",
-        icon: Icons.star_rounded,
+        icon: Symbols.star_rounded,
         color: Colors.amber.shade400,
         onTap: () {
           final favoritesService = context.read<FavoritesService>();
@@ -182,7 +183,7 @@ class _LibraryPageState extends State<LibraryPage>
       ),
       _LibraryCategory(
         title: "Favorite Albums",
-        icon: Icons.bookmark_added_rounded,
+        icon: Symbols.bookmark_added_rounded,
         color: Colors.green.shade400,
         onTap: () {
           final favoritesService = context.read<FavoritesService>();
@@ -221,7 +222,7 @@ class _LibraryPageState extends State<LibraryPage>
       ),
       _LibraryCategory(
         title: "Songs",
-        icon: Icons.music_note_rounded,
+        icon: Symbols.music_note_rounded,
         color: Colors.purple.shade300,
         onTap: () {
           Navigator.push(
@@ -244,7 +245,7 @@ class _LibraryPageState extends State<LibraryPage>
       ),
       _LibraryCategory(
         title: "Albums",
-        icon: Icons.album_rounded,
+        icon: Symbols.album_rounded,
         color: Colors.orange.shade400,
         onTap: () {
           Navigator.push(
@@ -267,7 +268,7 @@ class _LibraryPageState extends State<LibraryPage>
       ),
       _LibraryCategory(
         title: "Artists",
-        icon: Icons.person_rounded,
+        icon: Symbols.person_rounded,
         color: Colors.teal.shade300,
         onTap: () {
           Navigator.push(
@@ -290,7 +291,7 @@ class _LibraryPageState extends State<LibraryPage>
       ),
       _LibraryCategory(
         title: "Recently Added",
-        icon: Icons.history_rounded,
+        icon: Symbols.history_rounded,
         color: Colors.lightBlue.shade300,
         onTap: () {
           Navigator.push(
@@ -315,7 +316,7 @@ class _LibraryPageState extends State<LibraryPage>
       ),
       _LibraryCategory(
         title: "Genres",
-        icon: Icons.category_rounded,
+        icon: Symbols.category_rounded,
         color: Colors.red.shade300,
         onTap: () {
           Navigator.push(
@@ -337,7 +338,7 @@ class _LibraryPageState extends State<LibraryPage>
       ),
       _LibraryCategory(
         title: "Folders",
-        icon: Icons.folder_open_rounded,
+        icon: Symbols.folder_open_rounded,
         color: Colors.brown.shade300,
         onTap: () {
           _navigateTo(context, "Folders", ListItemType.folder, () async {
@@ -478,7 +479,7 @@ class _LibraryPageState extends State<LibraryPage>
                 ),
               ),
               onPressed: widget.onRequestPermission,
-              icon: const Icon(Icons.security_rounded),
+              icon: const Icon(Symbols.security_rounded),
               label: const Text('Grant Permission'),
             ),
           ],

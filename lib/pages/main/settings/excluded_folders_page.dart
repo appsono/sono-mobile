@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:sono/services/settings/library_settings_service.dart';
 import 'package:sono/styles/app_theme.dart';
 import 'package:sono/widgets/global/bottom_sheet.dart';
@@ -162,7 +163,7 @@ class _ExcludedFoldersPageState extends State<ExcludedFoldersPage> {
         backgroundColor: AppTheme.backgroundDark,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+          icon: const Icon(Symbols.arrow_back_rounded, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: const Text(
@@ -216,7 +217,7 @@ class _ExcludedFoldersPageState extends State<ExcludedFoldersPage> {
                           backgroundColor: AppTheme.brandPink,
                           foregroundColor: Colors.white,
                         ),
-                        icon: const Icon(Icons.add_rounded),
+                        icon: const Icon(Symbols.add_rounded),
                         label: const Text(
                           'Add Folder',
                           style: TextStyle(fontFamily: 'VarelaRound'),
@@ -330,7 +331,7 @@ class _ExcludedFoldersPageState extends State<ExcludedFoldersPage> {
                 tooltip: 'Add Folder',
                 backgroundColor: AppTheme.brandPink,
                 foregroundColor: Colors.white,
-                child: const Icon(Icons.add_rounded),
+                child: const Icon(Symbols.add_rounded),
               )
               : null,
     );

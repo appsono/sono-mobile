@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'dart:ui';
 import 'package:sono/widgets/global/time_based_greeting.dart';
 
@@ -97,7 +98,7 @@ class Sidebar extends StatelessWidget {
                     ),
                     if (onCollapseTap != null)
                       IconButton(
-                        icon: const Icon(Icons.chevron_left_rounded),
+                        icon: const Icon(Symbols.chevron_left_rounded),
                         color: Colors.white38,
                         iconSize: 22,
                         padding: EdgeInsets.zero,
@@ -120,29 +121,29 @@ class Sidebar extends StatelessWidget {
             //navigation items (only in permanent sidebar mode)
             if (showNavItems) ...[
               _buildMenuItem(
-                icon: Icons.home_outlined,
-                activeIcon: Icons.home_rounded,
+                icon: Symbols.home,
+                activeIcon: Symbols.home_rounded,
                 title: "Home",
                 onTap: () => onNavItemTap?.call(0),
                 isSelected: currentTabIndex == 0,
               ),
               _buildMenuItem(
-                icon: Icons.search_outlined,
-                activeIcon: Icons.search_rounded,
+                icon: Symbols.search,
+                activeIcon: Symbols.search_rounded,
                 title: "Search",
                 onTap: () => onNavItemTap?.call(1),
                 isSelected: currentTabIndex == 1,
               ),
               _buildMenuItem(
-                icon: Icons.library_music_outlined,
-                activeIcon: Icons.library_music_rounded,
+                icon: Symbols.library_music,
+                activeIcon: Symbols.library_music_rounded,
                 title: "Library",
                 onTap: () => onNavItemTap?.call(2),
                 isSelected: currentTabIndex == 2,
               ),
               _buildMenuItem(
-                icon: Icons.settings_outlined,
-                activeIcon: Icons.settings_rounded,
+                icon: Symbols.settings,
+                activeIcon: Symbols.settings_rounded,
                 title: "Settings",
                 onTap: () => onNavItemTap?.call(3),
                 isSelected: currentTabIndex == 3,
@@ -162,20 +163,20 @@ class Sidebar extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 8.0),
                 children: [
                   _buildMenuItem(
-                    icon: Icons.new_releases_rounded,
+                    icon: Symbols.new_releases_rounded,
                     title: "Changelog",
                     onTap: onWhatsNewTap,
                     isSelected: currentRoute == "Changelog",
                   ),
                   if (!showNavItems)
                     _buildMenuItem(
-                      icon: Icons.settings_rounded,
+                      icon: Symbols.settings_rounded,
                       title: "Settings",
                       onTap: onSettingsTap,
                       isSelected: currentRoute == "Settings",
                     ),
                   _buildMenuItem(
-                    icon: Icons.history_rounded,
+                    icon: Symbols.history_rounded,
                     title: "Recents",
                     onTap: onRecentsTap,
                     isSelected: currentRoute == "Recents",
@@ -189,14 +190,14 @@ class Sidebar extends StatelessWidget {
                       child: Column(
                         children: [
                           _buildActionButton(
-                            icon: Icons.shuffle_rounded,
+                            icon: Symbols.shuffle_rounded,
                             label: 'Shuffle all',
                             isDark: true,
                             onTap: onShuffleAllTap,
                           ),
                           const SizedBox(height: 8),
                           _buildActionButton(
-                            icon: Icons.add_rounded,
+                            icon: Symbols.add_rounded,
                             label: 'Create Playlist',
                             isDark: false,
                             onTap: onCreatePlaylistTap,
@@ -216,7 +217,7 @@ class Sidebar extends StatelessWidget {
               ),
             ),
             _buildMenuItem(
-              icon: Icons.logout_rounded,
+              icon: Symbols.logout_rounded,
               title: "Logout",
               onTap: onLogoutTap,
               isDestructive: true,

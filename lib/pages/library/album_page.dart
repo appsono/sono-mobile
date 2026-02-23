@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -1274,7 +1275,7 @@ class _AlbumPageState extends State<AlbumPage> {
           backgroundColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+            icon: const Icon(Symbols.arrow_back_rounded, color: Colors.white),
             onPressed: () => Navigator.of(context).pop(),
           ),
         ),

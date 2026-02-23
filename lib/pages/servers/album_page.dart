@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:sono/data/models/remote_models.dart';
 import 'package:sono/pages/servers/artist_page.dart';
@@ -832,7 +833,7 @@ class _RemoteAlbumPageState extends State<RemoteAlbumPage> {
           backgroundColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+            icon: const Icon(Symbols.arrow_back_rounded, color: Colors.white),
             onPressed: () => Navigator.of(context).pop(),
           ),
         ),

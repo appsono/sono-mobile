@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:yaml/yaml.dart';
 import 'package:flutter/services.dart' show rootBundle;
@@ -246,7 +247,7 @@ class _CreditsPageState extends State<CreditsPage> {
             elevation: 0,
             pinned: true,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+              icon: const Icon(Symbols.arrow_back_rounded, color: Colors.white),
               onPressed: () => Navigator.of(context).pop(),
             ),
             title: const Text(

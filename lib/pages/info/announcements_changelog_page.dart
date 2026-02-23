@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:sono/styles/app_theme.dart';
 import 'package:sono/services/api/api_service.dart';
 import 'package:http/http.dart' as http;
@@ -209,7 +210,10 @@ class _AnnouncementsChangelogPageState
         backgroundColor: AppTheme.surfaceDark,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_rounded, color: AppTheme.textPrimaryDark),
+          icon: Icon(
+            Symbols.arrow_back_rounded,
+            color: AppTheme.textPrimaryDark,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -223,7 +227,10 @@ class _AnnouncementsChangelogPageState
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.refresh_rounded, color: AppTheme.textPrimaryDark),
+            icon: Icon(
+              Symbols.refresh_rounded,
+              color: AppTheme.textPrimaryDark,
+            ),
             onPressed: _loadAllNews,
           ),
         ],

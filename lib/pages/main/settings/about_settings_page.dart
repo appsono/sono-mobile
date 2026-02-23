@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:sono/styles/app_theme.dart';
@@ -55,7 +56,7 @@ class _AboutSettingsPageState extends State<AboutSettingsPage> {
             elevation: 0,
             pinned: true,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+              icon: const Icon(Symbols.arrow_back_rounded, color: Colors.white),
               onPressed: () => Navigator.of(context).pop(),
             ),
             title: const Text(

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:sono/widgets/global/bottom_sheet.dart';
 
 class ErrorHandler {
@@ -81,7 +82,7 @@ class ErrorHandler {
                   ),
                 )
                 : ElevatedButton.icon(
-                  icon: const Icon(Icons.share_rounded, size: 16),
+                  icon: const Icon(Symbols.share_rounded, size: 16),
                   label: const Text('Copy Link'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Theme.of(context).primaryColor,

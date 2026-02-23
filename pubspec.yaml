@@ -19,7 +19,7 @@ dependencies:
       ref: v1.0.1
 
   # UI & visuals
-  cupertino_icons: ^1.0.8
+  material_symbols_icons: ^4.2906.0
   flutter_blurhash: ^0.9.1
   flutter_svg: ^2.0.10+1
   marquee: ^2.3.0

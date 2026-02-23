@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:sono/services/utils/favorites_service.dart';
@@ -158,7 +159,7 @@ class _ArtistPageState extends State<ArtistPage> {
         ),
       ),
       child: const Center(
-        child: Icon(Icons.person_rounded, color: Colors.white54, size: 100),
+        child: Icon(Symbols.person_rounded, color: Colors.white54, size: 100),
       ),
     );
   }

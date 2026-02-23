@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:sono/widgets/global/time_based_greeting.dart';
 import 'package:sono/styles/app_theme.dart';
 
@@ -197,19 +198,19 @@ class _ActionButtonsPill extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           _PillActionButton(
-            icon: Icons.article_rounded,
+            icon: Symbols.article_rounded,
             svgAsset: 'assets/icons/news.svg',
             onTap: onNewsTap,
             tooltip: 'Changelog',
           ),
           _PillActionButton(
-            icon: Icons.search_rounded,
+            icon: Symbols.search_rounded,
             svgAsset: 'assets/icons/search.svg',
             onTap: onSearchTap,
             tooltip: 'Search',
           ),
           _PillActionButton(
-            icon: Icons.settings_rounded,
+            icon: Symbols.settings_rounded,
             svgAsset: 'assets/icons/settings.svg',
             onTap: onSettingsTap,
             tooltip: 'Settings',

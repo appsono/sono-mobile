@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:sono/styles/app_theme.dart';
@@ -354,7 +355,7 @@ class _CoverPickerDialogState extends State<CoverPickerDialog>
             const SizedBox(height: AppTheme.spacing),
             TextButton.icon(
               onPressed: _pickImage,
-              icon: const Icon(Icons.swap_horiz_rounded),
+              icon: const Icon(Symbols.swap_horiz_rounded),
               label: const Text('Choose Different Image'),
               style: TextButton.styleFrom(foregroundColor: AppTheme.brandPink),
             ),
@@ -393,7 +394,7 @@ class _CoverPickerDialogState extends State<CoverPickerDialog>
             const SizedBox(height: AppTheme.spacingLg),
             ElevatedButton.icon(
               onPressed: _pickImage,
-              icon: const Icon(Icons.photo_library_rounded),
+              icon: const Icon(Symbols.photo_library_rounded),
               label: const Text('Select from Gallery'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.brandPink,

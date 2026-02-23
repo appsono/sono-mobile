@@ -10,6 +10,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:sono_refresh/sono_refresh.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:shimmer/shimmer.dart';
@@ -475,7 +476,7 @@ class _AllItemsPageState extends State<AllItemsPage> {
             color: AppTheme.textPrimaryDark,
           ),
         ),
-        icon: const Icon(Icons.add_rounded, color: AppTheme.textPrimaryDark),
+        icon: const Icon(Symbols.add_rounded, color: AppTheme.textPrimaryDark),
         backgroundColor: AppTheme.brandPink,
       );
     }
@@ -910,7 +911,7 @@ class _DatabasePlaylistTileState extends State<_DatabasePlaylistTile>
   Widget _buildCover() {
     //liked Songs always uses default icon
     if (_isLikedSongsPlaylist) {
-      return _buildDefaultCover(icon: Icons.favorite_rounded);
+      return _buildDefaultCover(icon: Symbols.favorite_rounded);
     }
 
     //check for custom cover first

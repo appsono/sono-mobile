@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:sono/models/search/search_filter_options.dart';
 import 'package:sono/styles/app_theme.dart';
 
@@ -95,7 +96,7 @@ class SearchFilterChips extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.sort_rounded, size: 18, color: AppTheme.brandPink),
+            Icon(Symbols.sort_rounded, size: 18, color: AppTheme.brandPink),
             const SizedBox(width: AppTheme.spacingSm),
             Text(
               _getSortLabel(filterOptions.sortType),
@@ -148,7 +149,7 @@ class SearchFilterChips extends StatelessWidget {
           ),
           if (isSelected) ...[
             const Spacer(),
-            Icon(Icons.check_rounded, size: 18, color: AppTheme.brandPink),
+            Icon(Symbols.check_rounded, size: 18, color: AppTheme.brandPink),
           ],
         ],
       ),

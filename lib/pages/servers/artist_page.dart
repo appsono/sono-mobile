@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:sono/data/models/remote_models.dart';
 import 'package:sono/data/repositories/artist_data_repository.dart';
@@ -705,7 +706,7 @@ class _RemoteArtistPageState extends State<RemoteArtistPage> {
       protocol: widget.protocol,
       size: 400,
       borderRadius: BorderRadius.zero,
-      fallbackIcon: Icons.person_rounded,
+      fallbackIcon: Symbols.person_rounded,
     );
   }
 

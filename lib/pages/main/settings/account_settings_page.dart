@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:sono/services/api/api_service.dart';
 import 'package:sono/styles/app_theme.dart';
 import 'package:sono/pages/auth/forgot_password_page.dart';
@@ -63,7 +64,7 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
           SnackBar(
             content: Row(
               children: [
-                Icon(Icons.check_circle_rounded, color: Colors.white),
+                Icon(Symbols.check_circle_rounded, color: Colors.white),
                 SizedBox(width: AppTheme.spacingSm),
                 Expanded(
                   child: Text('Data exported to:\n$directoryPath/$filename'),
@@ -342,7 +343,10 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
           ),
         ),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_rounded, color: AppTheme.textPrimaryDark),
+          icon: Icon(
+            Symbols.arrow_back_rounded,
+            color: AppTheme.textPrimaryDark,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -463,7 +467,7 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
 
           _buildSectionHeader('Security'),
           _buildSettingsTile(
-            icon: Icons.lock_reset_rounded,
+            icon: Symbols.lock_reset_rounded,
             title: 'Reset Password',
             subtitle: 'Request a password reset link',
             onTap: _handlePasswordReset,
@@ -472,14 +476,14 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
 
           _buildSectionHeader('Privacy & Legal'),
           _buildSettingsTile(
-            icon: Icons.policy_rounded,
+            icon: Symbols.policy_rounded,
             title: 'Consent History',
             subtitle: 'View your privacy and terms consents',
             onTap: _showConsentHistory,
           ),
           SizedBox(height: AppTheme.spacingSm),
           _buildSettingsTile(
-            icon: Icons.download_rounded,
+            icon: Symbols.download_rounded,
             title: 'Export My Data',
             subtitle: 'Download all your account data',
             onTap: _handleExportData,
@@ -489,7 +493,7 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
 
           _buildSectionHeader('Information'),
           _buildSettingsTile(
-            icon: Icons.campaign_rounded,
+            icon: Symbols.campaign_rounded,
             title: 'News & Updates',
             subtitle: 'View announcements and changelog',
             onTap: _handleViewAnnouncements,
@@ -499,7 +503,7 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
           if (isAdmin || isSuperuser) ...[
             _buildSectionHeader('Administration'),
             _buildSettingsTile(
-              icon: Icons.admin_panel_settings_rounded,
+              icon: Symbols.admin_panel_settings_rounded,
               title: 'Admin Dashboard',
               subtitle: 'Access to the admin panel',
               onTap: _handleAdminDashboard,

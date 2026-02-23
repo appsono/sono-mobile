@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:sono/services/api/api_service.dart';
 import 'package:sono/styles/app_theme.dart';
 import 'package:sono/widgets/global/consent_dialog.dart';
@@ -228,7 +229,7 @@ Tap "Read Full Terms" below to view the complete Terms of Service.
                   TextFormField(
                     decoration: _inputDecoration(
                       labelText: 'Username',
-                      prefixIcon: Icons.person_outline_rounded,
+                      prefixIcon: Symbols.person_outline_rounded,
                     ),
                     style: TextStyle(
                       color: AppTheme.textPrimaryDark,
@@ -250,7 +251,7 @@ Tap "Read Full Terms" below to view the complete Terms of Service.
                   TextFormField(
                     decoration: _inputDecoration(
                       labelText: 'Email',
-                      prefixIcon: Icons.email_rounded,
+                      prefixIcon: Symbols.email_rounded,
                     ),
                     style: TextStyle(
                       color: AppTheme.textPrimaryDark,
@@ -277,7 +278,7 @@ Tap "Read Full Terms" below to view the complete Terms of Service.
                     controller: _passwordController,
                     decoration: _inputDecoration(
                       labelText: 'Password',
-                      prefixIcon: Icons.lock_outline_rounded,
+                      prefixIcon: Symbols.lock_outline_rounded,
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscurePassword
@@ -313,7 +314,7 @@ Tap "Read Full Terms" below to view the complete Terms of Service.
                   TextFormField(
                     decoration: _inputDecoration(
                       labelText: 'Confirm Password',
-                      prefixIcon: Icons.lock_outline_rounded,
+                      prefixIcon: Symbols.lock_outline_rounded,
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscureConfirmPassword
@@ -350,7 +351,7 @@ Tap "Read Full Terms" below to view the complete Terms of Service.
                   TextFormField(
                     decoration: _inputDecoration(
                       labelText: 'Display Name (Optional)',
-                      prefixIcon: Icons.badge_rounded,
+                      prefixIcon: Symbols.badge_rounded,
                     ),
                     style: TextStyle(
                       color: AppTheme.textPrimaryDark,

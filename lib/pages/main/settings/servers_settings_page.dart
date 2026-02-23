@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:provider/provider.dart';
 import 'package:sono/data/models/music_server_model.dart';
 import 'package:sono/services/servers/server_service.dart';
@@ -16,7 +17,7 @@ class ServersSettingsPage extends StatelessWidget {
         backgroundColor: AppTheme.backgroundDark,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+          icon: const Icon(Symbols.arrow_back_rounded, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: const Text(
@@ -32,7 +33,7 @@ class ServersSettingsPage extends StatelessWidget {
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddServerDialog(context),
         backgroundColor: AppTheme.brandPink,
-        child: const Icon(Icons.add_rounded, color: Colors.white),
+        child: const Icon(Symbols.add_rounded, color: Colors.white),
       ),
       body: Consumer<MusicServerService>(
         builder: (context, service, _) {
@@ -88,7 +89,7 @@ class ServersSettingsPage extends StatelessWidget {
             const SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: () => _showAddServerDialog(context),
-              icon: const Icon(Icons.add_rounded),
+              icon: const Icon(Symbols.add_rounded),
               label: const Text(
                 'Add Server',
                 style: TextStyle(fontFamily: 'VarelaRound'),

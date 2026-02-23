@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:provider/provider.dart';
 import 'package:sono/services/artists/artist_fetch_progress_service.dart';
 import 'package:sono/styles/app_theme.dart';
@@ -57,7 +58,7 @@ class ArtistFetchProgressDialog extends StatelessWidget {
       padding: const EdgeInsets.all(AppTheme.spacing),
       child: Row(
         children: [
-          const Icon(Icons.download_rounded, color: AppTheme.textPrimaryDark),
+          const Icon(Symbols.download_rounded, color: AppTheme.textPrimaryDark),
           const SizedBox(width: AppTheme.spacingSm),
           const Expanded(
             child: Text(

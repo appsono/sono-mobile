@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:sono/widgets/global/page_header.dart';
 import 'package:sono/styles/app_theme.dart';
 import 'package:sono/pages/main/settings/general_settings_page.dart';
@@ -48,7 +49,7 @@ class SettingsPage extends StatelessWidget {
                 children: [
                   _buildSettingsCard(
                     context,
-                    icon: Icons.palette_rounded,
+                    icon: Symbols.palette_rounded,
                     title: 'General',
                     subtitle: 'Theme, appearance, auto-update',
                     onTap:
@@ -62,7 +63,7 @@ class SettingsPage extends StatelessWidget {
                   const SizedBox(height: 5),
                   _buildSettingsCard(
                     context,
-                    icon: Icons.music_note_rounded,
+                    icon: Symbols.music_note_rounded,
                     title: 'Playback & Audio',
                     subtitle: 'Speed, pitch, crossfade, equalizer',
                     onTap:
@@ -77,7 +78,7 @@ class SettingsPage extends StatelessWidget {
                   const SizedBox(height: 5),
                   _buildSettingsCard(
                     context,
-                    icon: Icons.library_music_rounded,
+                    icon: Symbols.library_music_rounded,
                     title: 'Library & Scrobbling',
                     subtitle: 'Excluded folders, Last.fm scrobbling',
                     onTap:
@@ -93,7 +94,7 @@ class SettingsPage extends StatelessWidget {
                   const SizedBox(height: 5),
                   _buildSettingsCard(
                     context,
-                    icon: Icons.dns_rounded,
+                    icon: Symbols.dns_rounded,
                     title: 'Music Servers',
                     subtitle: 'Navidrome, Airsonic, Gonic, and more',
                     onTap:
@@ -108,7 +109,7 @@ class SettingsPage extends StatelessWidget {
                   if (isLoggedIn)
                     _buildSettingsCard(
                       context,
-                      icon: Icons.person_rounded,
+                      icon: Symbols.person_rounded,
                       title: 'Account',
                       subtitle: 'Password, privacy, Export Data',
                       onTap:
@@ -125,7 +126,7 @@ class SettingsPage extends StatelessWidget {
                   if (isLoggedIn) const SizedBox(height: 5),
                   _buildSettingsCard(
                     context,
-                    icon: Icons.code_rounded,
+                    icon: Symbols.code_rounded,
                     title: 'Developer',
                     subtitle: 'Analytics, API, cache, database',
                     onTap:
@@ -139,7 +140,7 @@ class SettingsPage extends StatelessWidget {
                   const SizedBox(height: 25),
                   _buildSettingsCard(
                     context,
-                    icon: Icons.info_rounded,
+                    icon: Symbols.info_rounded,
                     title: 'About',
                     subtitle: 'Version, credits, links',
                     onTap:

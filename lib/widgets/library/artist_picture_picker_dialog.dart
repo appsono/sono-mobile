@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:sono/styles/app_theme.dart';
 import 'package:sono/services/artists/artist_profile_image_service.dart';
 
@@ -135,7 +136,7 @@ class _ArtistPicturePickerDialogState extends State<ArtistPicturePickerDialog> {
       padding: const EdgeInsets.all(AppTheme.spacing),
       child: Row(
         children: [
-          const Icon(Icons.image_rounded, color: AppTheme.textPrimaryDark),
+          const Icon(Symbols.image_rounded, color: AppTheme.textPrimaryDark),
           const SizedBox(width: AppTheme.spacingSm),
           const Text(
             'Artist Picture',
@@ -179,7 +180,7 @@ class _ArtistPicturePickerDialogState extends State<ArtistPicturePickerDialog> {
 
           ElevatedButton.icon(
             onPressed: _pickImage,
-            icon: const Icon(Icons.photo_library_rounded),
+            icon: const Icon(Symbols.photo_library_rounded),
             label: Text(
               _selectedImagePath == null
                   ? 'Choose from Gallery'
@@ -199,7 +200,7 @@ class _ArtistPicturePickerDialogState extends State<ArtistPicturePickerDialog> {
             const SizedBox(height: AppTheme.spacingSm),
             OutlinedButton.icon(
               onPressed: _onRefetchPressed,
-              icon: const Icon(Icons.refresh_rounded),
+              icon: const Icon(Symbols.refresh_rounded),
               label: const Text('Refetch from Internet'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppTheme.textPrimaryDark,
@@ -216,7 +217,7 @@ class _ArtistPicturePickerDialogState extends State<ArtistPicturePickerDialog> {
             const SizedBox(height: AppTheme.spacingSm),
             OutlinedButton.icon(
               onPressed: _onRemovePressed,
-              icon: const Icon(Icons.delete_rounded),
+              icon: const Icon(Symbols.delete_rounded),
               label: const Text('Remove Custom Picture'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppTheme.error,

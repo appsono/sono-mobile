@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:sono/services/api/api_service.dart';
 import 'package:sono/styles/app_theme.dart';
 
@@ -60,7 +61,10 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_rounded, color: AppTheme.textPrimaryDark),
+          icon: Icon(
+            Symbols.arrow_back_rounded,
+            color: AppTheme.textPrimaryDark,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -115,7 +119,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           TextFormField(
             decoration: _inputDecoration(
               labelText: 'Email',
-              prefixIcon: Icons.email_outlined,
+              prefixIcon: Symbols.email,
             ),
             style: TextStyle(
               color: AppTheme.textPrimaryDark,
@@ -193,7 +197,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Icon(Icons.mark_email_read_rounded, size: 80, color: Colors.green),
+        Icon(Symbols.mark_email_read_rounded, size: 80, color: Colors.green),
         SizedBox(height: AppTheme.spacingXl),
         Text(
           'Check Your Email',

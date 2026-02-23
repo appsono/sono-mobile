@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:sono/services/api/api_service.dart';
 import 'package:sono/styles/app_theme.dart';
 import 'package:sono/pages/auth/forgot_password_page.dart';
@@ -202,7 +203,7 @@ Tap "Read Full Terms" below to view the complete Terms of Service.
                   TextFormField(
                     decoration: _inputDecoration(
                       labelText: 'Username / Email',
-                      prefixIcon: Icons.person_outline_rounded,
+                      prefixIcon: Symbols.person_outline_rounded,
                     ),
                     style: TextStyle(
                       color: AppTheme.textPrimaryDark,
@@ -225,7 +226,7 @@ Tap "Read Full Terms" below to view the complete Terms of Service.
                   TextFormField(
                     decoration: _inputDecoration(
                       labelText: 'Password',
-                      prefixIcon: Icons.lock_outline_rounded,
+                      prefixIcon: Symbols.lock_outline_rounded,
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscurePassword

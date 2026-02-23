@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:sono/services/api/api_service.dart';
 import 'package:sono/utils/error_handler.dart';
 import 'package:sono/styles/app_theme.dart';
@@ -67,7 +68,7 @@ class _ProfilePageState extends State<ProfilePage> {
             SnackBar(
               content: Row(
                 children: [
-                  Icon(Icons.check_circle_rounded, color: Colors.white),
+                  Icon(Symbols.check_circle_rounded, color: Colors.white),
                   SizedBox(width: AppTheme.spacingSm),
                   const Text('Profile picture updated!'),
                 ],
@@ -313,7 +314,10 @@ class _ProfilePageState extends State<ProfilePage> {
         backgroundColor: AppTheme.surfaceDark,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_rounded, color: AppTheme.textPrimaryDark),
+          icon: Icon(
+            Symbols.arrow_back_rounded,
+            color: AppTheme.textPrimaryDark,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -327,7 +331,7 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.edit_rounded, color: AppTheme.textPrimaryDark),
+            icon: Icon(Symbols.edit_rounded, color: AppTheme.textPrimaryDark),
             onPressed: _showEditDialog,
           ),
         ],
@@ -460,13 +464,13 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                   SizedBox(height: AppTheme.spacingSm),
                   _buildInfoTile(
-                    icon: Icons.email_rounded,
+                    icon: Symbols.email_rounded,
                     label: 'Email',
                     value: _email,
                   ),
                   SizedBox(height: AppTheme.spacingSm),
                   _buildInfoTile(
-                    icon: Icons.person_outline_rounded,
+                    icon: Symbols.person_outline_rounded,
                     label: 'Username',
                     value: _username,
                   ),
@@ -503,7 +507,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.logout_rounded, color: Colors.white),
+                          Icon(Symbols.logout_rounded, color: Colors.white),
                           SizedBox(width: AppTheme.spacingSm),
                           Text(
                             'LOGOUT',

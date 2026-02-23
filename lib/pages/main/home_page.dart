@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:sono/data/models/remote_models.dart';
@@ -459,7 +460,7 @@ class HomePageState extends State<HomePage>
                 ),
               ),
               onPressed: widget.onRequestPermission,
-              icon: const Icon(Icons.security_rounded),
+              icon: const Icon(Symbols.security_rounded),
               label: const Text('Grant Permission'),
             ),
           ],

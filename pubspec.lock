@@ -201,14 +201,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.7"
-  cupertino_icons:
-    dependency: "direct main"
-    description:
-      name: cupertino_icons
-      sha256: ba631d1c7f7bef6b729a622b7b752645a2d076dba9976925b8f25725a30e1ee6
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.8"
   dbus:
     dependency: transitive
     description:
@@ -816,6 +808,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.13.0"
+  material_symbols_icons:
+    dependency: "direct main"
+    description:
+      name: material_symbols_icons
+      sha256: c62b15f2b3de98d72cbff0148812f5ef5159f05e61fc9f9a089ec2bb234df082
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.2906.0"
   media_kit:
     dependency: transitive
     description:
@@ -916,17 +916,17 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/on_audio_query"
-      ref: "v3.0.1"
-      resolved-ref: "5d2c363cd79b9aa1126162d562012c76baaa6679"
+      ref: "v3.0.4"
+      resolved-ref: "6ed7f051c2c1299d06f8aba67cbd7277fa511e37"
       url: "https://github.com/appsono/on_audio_query.git"
     source: git
-    version: "3.0.1"
+    version: "3.0.4"
   on_audio_query_android:
     dependency: transitive
     description:
       path: "packages/on_audio_query_android"
-      ref: "5d2c363cd79b9aa1126162d562012c76baaa6679"
-      resolved-ref: "5d2c363cd79b9aa1126162d562012c76baaa6679"
+      ref: "6ed7f051c2c1299d06f8aba67cbd7277fa511e37"
+      resolved-ref: "6ed7f051c2c1299d06f8aba67cbd7277fa511e37"
       url: "https://github.com/appsono/on_audio_query.git"
     source: git
     version: "1.1.6"
@@ -934,17 +934,17 @@ packages:
     dependency: transitive
     description:
       path: "packages/on_audio_query_ios"
-      ref: "5d2c363cd79b9aa1126162d562012c76baaa6679"
-      resolved-ref: "5d2c363cd79b9aa1126162d562012c76baaa6679"
+      ref: "6ed7f051c2c1299d06f8aba67cbd7277fa511e37"
+      resolved-ref: "6ed7f051c2c1299d06f8aba67cbd7277fa511e37"
       url: "https://github.com/appsono/on_audio_query.git"
     source: git
-    version: "1.1.4"
+    version: "1.1.7"
   on_audio_query_linux:
     dependency: transitive
     description:
       path: "packages/on_audio_query_linux"
-      ref: "5d2c363cd79b9aa1126162d562012c76baaa6679"
-      resolved-ref: "5d2c363cd79b9aa1126162d562012c76baaa6679"
+      ref: "6ed7f051c2c1299d06f8aba67cbd7277fa511e37"
+      resolved-ref: "6ed7f051c2c1299d06f8aba67cbd7277fa511e37"
       url: "https://github.com/appsono/on_audio_query.git"
     source: git
     version: "1.0.0"
@@ -952,8 +952,8 @@ packages:
     dependency: transitive
     description:
       path: "packages/on_audio_query_platform_interface"
-      ref: "5d2c363cd79b9aa1126162d562012c76baaa6679"
-      resolved-ref: "5d2c363cd79b9aa1126162d562012c76baaa6679"
+      ref: "6ed7f051c2c1299d06f8aba67cbd7277fa511e37"
+      resolved-ref: "6ed7f051c2c1299d06f8aba67cbd7277fa511e37"
       url: "https://github.com/appsono/on_audio_query.git"
     source: git
     version: "1.7.2"
@@ -961,8 +961,8 @@ packages:
     dependency: transitive
     description:
       path: "packages/on_audio_query_web"
-      ref: "5d2c363cd79b9aa1126162d562012c76baaa6679"
-      resolved-ref: "5d2c363cd79b9aa1126162d562012c76baaa6679"
+      ref: "6ed7f051c2c1299d06f8aba67cbd7277fa511e37"
+      resolved-ref: "6ed7f051c2c1299d06f8aba67cbd7277fa511e37"
       url: "https://github.com/appsono/on_audio_query.git"
     source: git
     version: "1.6.0"

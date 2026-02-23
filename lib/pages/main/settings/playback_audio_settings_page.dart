@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:sono/services/settings/playback_settings_service.dart';
 import 'package:sono/styles/app_theme.dart';
 import 'package:sono/widgets/player/sono_player.dart';
@@ -58,7 +59,7 @@ class _PlaybackAudioSettingsPageState extends State<PlaybackAudioSettingsPage> {
         backgroundColor: AppTheme.backgroundDark,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+          icon: const Icon(Symbols.arrow_back_rounded, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: const Text(
@@ -91,7 +92,7 @@ class _PlaybackAudioSettingsPageState extends State<PlaybackAudioSettingsPage> {
                   const SizedBox(height: 12),
 
                   _buildSwitchTile(
-                    icon: Icons.play_circle_rounded,
+                    icon: Symbols.play_circle_rounded,
                     title: 'Background Playback',
                     subtitle: 'Continue playing when app is in background',
                     value: _backgroundPlayback,
@@ -106,7 +107,7 @@ class _PlaybackAudioSettingsPageState extends State<PlaybackAudioSettingsPage> {
                   const SizedBox(height: 5),
 
                   _buildSwitchTile(
-                    icon: Icons.waves_rounded,
+                    icon: Symbols.waves_rounded,
                     title: 'Crossfade',
                     subtitle: 'Fade between tracks',
                     value: _crossfadeEnabled,
@@ -198,7 +199,7 @@ class _PlaybackAudioSettingsPageState extends State<PlaybackAudioSettingsPage> {
                   const SizedBox(height: 5),
 
                   _buildNavigationTile(
-                    icon: Icons.timer_rounded,
+                    icon: Symbols.timer_rounded,
                     title: 'Sleep Timer',
                     subtitle: 'Stop playback after a set time',
                     onTap: () {
@@ -221,7 +222,7 @@ class _PlaybackAudioSettingsPageState extends State<PlaybackAudioSettingsPage> {
                   const SizedBox(height: 16),
 
                   _buildSliderControl(
-                    icon: Icons.speed_rounded,
+                    icon: Symbols.speed_rounded,
                     label: 'Playback Speed',
                     value: _speed,
                     min: 0.5,
@@ -245,7 +246,7 @@ class _PlaybackAudioSettingsPageState extends State<PlaybackAudioSettingsPage> {
                   const SizedBox(height: 5),
 
                   _buildSliderControl(
-                    icon: Icons.graphic_eq_rounded,
+                    icon: Symbols.graphic_eq_rounded,
                     label: 'Playback Pitch',
                     value: _pitch,
                     min: 0.5,
@@ -281,7 +282,7 @@ class _PlaybackAudioSettingsPageState extends State<PlaybackAudioSettingsPage> {
                   const SizedBox(height: 12),
 
                   _buildNavigationTile(
-                    icon: Icons.equalizer_rounded,
+                    icon: Symbols.equalizer_rounded,
                     title: 'Equalizer',
                     subtitle: 'Adjust frequency bands',
                     onTap: () {

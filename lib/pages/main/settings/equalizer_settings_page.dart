@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:sono/widgets/player/sono_player.dart';
 import 'package:sono/services/settings/audio_effects_service.dart';
 import 'package:sono/styles/app_theme.dart';
@@ -71,7 +72,7 @@ class _EqualizerSettingsPageState extends State<EqualizerSettingsPage> {
         backgroundColor: AppTheme.backgroundDark,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+          icon: const Icon(Symbols.arrow_back_rounded, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: const Text(
@@ -211,7 +212,9 @@ class _EqualizerSettingsPageState extends State<EqualizerSettingsPage> {
                                 Center(
                                   child: ElevatedButton.icon(
                                     onPressed: _resetToFlat,
-                                    icon: const Icon(Icons.restart_alt_rounded),
+                                    icon: const Icon(
+                                      Symbols.restart_alt_rounded,
+                                    ),
                                     label: const Text(
                                       'Reset to Flat',
                                       style: TextStyle(

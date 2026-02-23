@@ -8,6 +8,7 @@ import 'package:flutter/material.dart'
     hide RepeatMode; //required for build use in gitub workflow
 import 'package:flutter/services.dart';
 import 'package:marquee/marquee.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:sono/pages/library/album_page.dart';
 import 'package:sono/services/api/musicbrainz_service.dart';
@@ -1484,7 +1485,7 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
                     valueListenable: _sonoPlayer.isShuffleEnabled,
                     builder: (context, isShuffleEnabled, child) {
                       return _buildControlButton(
-                        icon: Icons.shuffle_rounded,
+                        icon: Symbols.shuffle_rounded,
                         onPressed:
                             isClient
                                 ? null
@@ -1498,7 +1499,7 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
                     },
                   ),
                   _buildControlButton(
-                    icon: Icons.skip_previous_rounded,
+                    icon: Symbols.skip_previous_rounded,
                     isLarger: true,
                     onPressed:
                         isClient
@@ -1518,7 +1519,7 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
                   ),
                   _buildPlayPauseButton(isPlaying, isClient: isClient),
                   _buildControlButton(
-                    icon: Icons.skip_next_rounded,
+                    icon: Symbols.skip_next_rounded,
                     isLarger: true,
                     onPressed:
                         isClient
@@ -1715,17 +1716,17 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             _buildBottomBarButton(
-              icon: Icons.queue_music_rounded,
+              icon: Symbols.queue_music_rounded,
               label: 'Queue',
               onPressed: _showQueueSheet,
             ),
             _buildBottomBarButton(
-              icon: Icons.lyrics_rounded,
+              icon: Symbols.lyrics_rounded,
               label: 'Lyrics',
               onPressed: () => _showLyricsSheet(currentSong),
             ),
             _buildBottomBarButton(
-              icon: Icons.add_circle_outline_rounded,
+              icon: Symbols.add_circle_outline_rounded,
               label: 'Add',
               onPressed: () {
                 showModalBottomSheet(
@@ -1762,12 +1763,12 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             _buildBottomBarButton(
-              icon: Icons.queue_music_rounded,
+              icon: Symbols.queue_music_rounded,
               label: 'Queue',
               onPressed: _showQueueSheet,
             ),
             _buildBottomBarButton(
-              icon: Icons.lyrics_rounded,
+              icon: Symbols.lyrics_rounded,
               label: 'Lyrics',
               onPressed: () {
                 final metadata = _sonoPlayer.sasMetadata;
@@ -1784,7 +1785,7 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
               },
             ),
             _buildBottomBarButton(
-              icon: Icons.add_circle_outline_rounded,
+              icon: Symbols.add_circle_outline_rounded,
               label: 'Add',
               onPressed: null, //disabled in SAS mode
             ),
@@ -2146,7 +2147,10 @@ Widget _buildCreditTile({
               color: AppTheme.elevatedSurfaceDark,
               borderRadius: BorderRadius.circular(25),
             ),
-            child: Icon(Icons.person_rounded, color: AppTheme.textTertiaryDark),
+            child: Icon(
+              Symbols.person_rounded,
+              color: AppTheme.textTertiaryDark,
+            ),
           ),
         ),
       ),
@@ -2167,7 +2171,10 @@ Widget _buildCreditTile({
             isArtist ? 25 : AppTheme.radiusMd,
           ),
         ),
-        child: Icon(Icons.music_note_rounded, color: AppTheme.textTertiaryDark),
+        child: Icon(
+          Symbols.music_note_rounded,
+          color: AppTheme.textTertiaryDark,
+        ),
       ),
     );
   }
@@ -2393,7 +2400,10 @@ class _LyricsDisplayerState extends State<LyricsDisplayer> {
                       () => setState(
                         () => _selectedLyric = _previouslySelectedLyric,
                       ),
-                  icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 14),
+                  icon: const Icon(
+                    Symbols.arrow_back_ios_new_rounded,
+                    size: 14,
+                  ),
                   label: const Text("Back to Lyrics"),
                   style: TextButton.styleFrom(
                     foregroundColor: Theme.of(context).primaryColor,
@@ -2492,7 +2502,7 @@ class _LyricsDisplayerState extends State<LyricsDisplayer> {
             child: Padding(
               padding: EdgeInsets.only(right: AppTheme.spacingSm),
               child: TextButton.icon(
-                icon: Icon(Icons.swap_horiz_rounded, size: AppTheme.iconMd),
+                icon: Icon(Symbols.swap_horiz_rounded, size: AppTheme.iconMd),
                 label: const Text("Switch Version"),
                 onPressed:
                     () => setState(() {

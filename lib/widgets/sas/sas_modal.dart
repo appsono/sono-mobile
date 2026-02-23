@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:sono/services/sas/sas_manager.dart';
@@ -91,7 +92,7 @@ class _SASAdaptiveModalState extends State<SASAdaptiveModal> {
           SizedBox(height: AppTheme.spacingXl),
 
           _buildChoiceButton(
-            icon: Icons.cast_rounded,
+            icon: Symbols.cast_rounded,
             title: 'Host SAS Session',
             description: 'Stream your music to other devices',
             color: AppTheme.brandPink,
@@ -101,7 +102,7 @@ class _SASAdaptiveModalState extends State<SASAdaptiveModal> {
           SizedBox(height: AppTheme.spacingMd),
 
           _buildChoiceButton(
-            icon: Icons.phone_android_rounded,
+            icon: Symbols.phone_android_rounded,
             title: 'Join SAS Session',
             description: 'Connect to another device\'s stream',
             color: AppTheme.brandPinkSwatch[300]!,
@@ -250,7 +251,11 @@ class _SASAdaptiveModalState extends State<SASAdaptiveModal> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.people_rounded, color: AppTheme.brandPink, size: 20),
+                Icon(
+                  Symbols.people_rounded,
+                  color: AppTheme.brandPink,
+                  size: 20,
+                ),
                 SizedBox(width: AppTheme.spacingSm),
                 Text(
                   '${_manager.connectedClientsCount} ${_manager.connectedClientsCount == 1 ? 'listener' : 'listeners'} connected',
@@ -271,7 +276,7 @@ class _SASAdaptiveModalState extends State<SASAdaptiveModal> {
               Expanded(
                 child: _buildActionButton(
                   label: 'Share Link',
-                  icon: Icons.share_rounded,
+                  icon: Symbols.share_rounded,
                   onTap: _shareLink,
                   isPrimary: false,
                 ),
@@ -280,7 +285,7 @@ class _SASAdaptiveModalState extends State<SASAdaptiveModal> {
               Expanded(
                 child: _buildActionButton(
                   label: 'Copy Link',
-                  icon: Icons.copy_rounded,
+                  icon: Symbols.content_copy_rounded,
                   onTap: _copyLink,
                   isPrimary: false,
                 ),
@@ -292,7 +297,7 @@ class _SASAdaptiveModalState extends State<SASAdaptiveModal> {
 
           _buildActionButton(
             label: 'Stop Hosting',
-            icon: Icons.stop_rounded,
+            icon: Symbols.stop_rounded,
             onTap: _stopHosting,
             isPrimary: false,
             color: Colors.red,
@@ -341,7 +346,7 @@ class _SASAdaptiveModalState extends State<SASAdaptiveModal> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.cloud_done_rounded, size: 64, color: AppTheme.brandPink),
+          Icon(Symbols.cloud_done_rounded, size: 64, color: AppTheme.brandPink),
           SizedBox(height: AppTheme.spacingMd),
           Text(
             'Connected to SAS',
@@ -416,7 +421,7 @@ class _SASAdaptiveModalState extends State<SASAdaptiveModal> {
 
           _buildActionButton(
             label: 'Disconnect',
-            icon: Icons.logout_rounded,
+            icon: Symbols.logout_rounded,
             onTap: _disconnectFromSession,
             isPrimary: false,
             color: Colors.red,
@@ -555,7 +560,7 @@ class _SASAdaptiveModalState extends State<SASAdaptiveModal> {
 
             _buildActionButton(
               label: _isJoining ? 'Connecting...' : 'Join Session',
-              icon: Icons.login_rounded,
+              icon: Symbols.login_rounded,
               onTap: _isJoining ? null : _joinManually,
               isPrimary: true,
             ),
@@ -635,7 +640,7 @@ class _SASAdaptiveModalState extends State<SASAdaptiveModal> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.error_outline_rounded, color: Colors.red, size: 48),
+          Icon(Symbols.error_outline_rounded, color: Colors.red, size: 48),
           SizedBox(height: AppTheme.spacingMd),
           Text(
             'Error',
@@ -655,7 +660,7 @@ class _SASAdaptiveModalState extends State<SASAdaptiveModal> {
             SizedBox(height: AppTheme.spacingLg),
             _buildActionButton(
               label: 'Retry',
-              icon: Icons.refresh_rounded,
+              icon: Symbols.refresh_rounded,
               onTap: onRetry,
               isPrimary: true,
             ),

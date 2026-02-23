@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -1134,7 +1135,7 @@ Tap "Read Full Terms" below to view the complete Terms of Service.
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(Icons.download_rounded, size: 18),
+                              const Icon(Symbols.download_rounded, size: 18),
                               const SizedBox(width: 8),
                               Text(
                                 "Update Now",
@@ -1177,7 +1178,7 @@ Tap "Read Full Terms" below to view the complete Terms of Service.
               ),
               title: Row(
                 children: [
-                  Icon(Icons.security_rounded, color: AppTheme.brandPink),
+                  Icon(Symbols.security_rounded, color: AppTheme.brandPink),
                   const SizedBox(width: 12),
                   Text(
                     'Permission Required',
@@ -1752,7 +1753,7 @@ Tap "Read Full Terms" below to view the complete Terms of Service.
           leading: Tooltip(
             message: 'Expand sidebar',
             child: IconButton(
-              icon: Icon(Icons.menu_rounded, color: dimColor),
+              icon: Icon(Symbols.menu_rounded, color: dimColor),
               onPressed: () => setState(() => _isRailExpanded = true),
             ),
           ),
@@ -1770,18 +1771,18 @@ Tap "Read Full Terms" below to view the complete Terms of Service.
                 ),
               ),
               _buildRailActionButton(
-                icon: Icons.new_releases_rounded,
+                icon: Symbols.new_releases_rounded,
                 tooltip: 'Changelog',
                 onTap: _navigateToChangelog,
               ),
               _buildRailActionButton(
-                icon: Icons.history_rounded,
+                icon: Symbols.history_rounded,
                 tooltip: 'Recents',
                 onTap: _navigateToRecents,
               ),
               const SizedBox(height: 8),
               _buildRailActionButton(
-                icon: Icons.logout_rounded,
+                icon: Symbols.logout_rounded,
                 tooltip: _isLoggedIn ? 'Logout' : 'Login',
                 onTap:
                     () =>
@@ -1792,23 +1793,23 @@ Tap "Read Full Terms" below to view the complete Terms of Service.
           ),
           destinations: const [
             NavigationRailDestination(
-              icon: Icon(Icons.home_outlined),
-              selectedIcon: Icon(Icons.home_rounded),
+              icon: Icon(Symbols.home),
+              selectedIcon: Icon(Symbols.home_rounded, fill: 1.0),
               label: Text('Home'),
             ),
             NavigationRailDestination(
-              icon: Icon(Icons.search_outlined),
-              selectedIcon: Icon(Icons.search_rounded),
+              icon: Icon(Symbols.search),
+              selectedIcon: Icon(Symbols.search_rounded, fill: 1.0),
               label: Text('Search'),
             ),
             NavigationRailDestination(
-              icon: Icon(Icons.library_music_outlined),
-              selectedIcon: Icon(Icons.library_music_rounded),
+              icon: Icon(Symbols.library_music),
+              selectedIcon: Icon(Symbols.library_music_rounded, fill: 1.0),
               label: Text('Library'),
             ),
             NavigationRailDestination(
-              icon: Icon(Icons.settings_outlined),
-              selectedIcon: Icon(Icons.settings_rounded),
+              icon: Icon(Symbols.settings),
+              selectedIcon: Icon(Symbols.settings_rounded, fill: 1.0),
               label: Text('Settings'),
             ),
           ],
@@ -1884,26 +1885,26 @@ Tap "Read Full Terms" below to view the complete Terms of Service.
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           _buildNavItem(
-            icon: Icons.home_outlined,
-            activeIcon: Icons.home_rounded,
+            icon: Symbols.home_rounded,
+            activeIcon: Symbols.home_rounded,
             label: 'Home',
             itemIndex: 0,
           ),
           _buildNavItem(
-            icon: Icons.search_outlined,
-            activeIcon: Icons.search_rounded,
+            icon: Symbols.search_rounded,
+            activeIcon: Symbols.search_rounded,
             label: 'Search',
             itemIndex: 1,
           ),
           _buildNavItem(
-            icon: Icons.library_music_outlined,
-            activeIcon: Icons.library_music_rounded,
+            icon: Symbols.library_music_rounded,
+            activeIcon: Symbols.library_music_rounded,
             label: 'Library',
             itemIndex: 2,
           ),
           _buildNavItem(
-            icon: Icons.settings_outlined,
-            activeIcon: Icons.settings_rounded,
+            icon: Symbols.settings_rounded,
+            activeIcon: Symbols.settings_rounded,
             label: 'Settings',
             itemIndex: 3,
           ),
@@ -1949,17 +1950,24 @@ Tap "Read Full Terms" below to view the complete Terms of Service.
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
-              child: Icon(
-                isActive ? activeIcon : icon,
-                key: ValueKey(isActive),
-                color:
-                    isActive
-                        ? const Color.fromARGB(255, 255, 255, 255)
-                        : Colors.white.withAlpha(153),
-                size: 24,
-              ),
+            TweenAnimationBuilder<double>(
+              tween: Tween<double>(end: isActive ? 700.0 : 500.0),
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeInOut,
+              builder: (context, weight, _) {
+                final t = (weight - 500) / 200;
+                return Icon(
+                  icon,
+                  weight: weight,
+                  fill: t,
+                  color: Color.lerp(
+                    Colors.white.withAlpha(153),
+                    Colors.white,
+                    t,
+                  ),
+                  size: 24,
+                );
+              },
             ),
             const SizedBox(height: 4),
             Text(

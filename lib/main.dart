@@ -390,6 +390,7 @@ class _SonoState extends State<Sono> with WidgetsBindingObserver {
           fontFamily: AppTheme.fontFamily,
         ),
       ),
+      iconTheme: const IconThemeData(fill: 1, weight: 600, opticalSize: 48),
       textTheme: TextTheme(
         bodyLarge: TextStyle(color: onBackground),
         bodyMedium: TextStyle(color: onBackground),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:sono/services/settings/ui_settings_service.dart';
 import 'package:sono/services/settings/library_settings_service.dart';
 import 'package:sono/styles/app_theme.dart';
@@ -52,7 +53,7 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
         backgroundColor: AppTheme.backgroundDark,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+          icon: const Icon(Symbols.arrow_back_rounded, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: const Text(
@@ -85,7 +86,7 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
                   const SizedBox(height: 12),
 
                   _buildSwitchTile(
-                    icon: Icons.update_rounded,
+                    icon: Symbols.update_rounded,
                     title: 'Auto Update',
                     subtitle: 'Automatically check for App Updates',
                     value: _autoUpdate,
@@ -110,7 +111,7 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
                   const SizedBox(height: 12),
 
                   _buildNavigationTile(
-                    icon: Icons.brightness_6_rounded,
+                    icon: Symbols.brightness_6_rounded,
                     title: 'Theme Mode (not working atm)',
                     subtitle: _getThemeModeLabel(_themeMode),
                     onTap: () => _showThemeModeDialog(),
@@ -140,7 +141,7 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
                   const SizedBox(height: 12),
 
                   _buildSwitchTile(
-                    icon: Icons.album_rounded,
+                    icon: Symbols.album_rounded,
                     title: 'Album Cover Rotation',
                     subtitle: 'Animate album covers in the player',
                     value: _coverRotation,
@@ -319,7 +320,7 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
                   borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                   border: Border.all(color: color, width: 2),
                 ),
-                child: Icon(Icons.palette_rounded, color: color, size: 20),
+                child: Icon(Symbols.palette_rounded, color: color, size: 20),
               ),
               const SizedBox(width: 16),
               Expanded(

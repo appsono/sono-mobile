@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:sono/styles/app_theme.dart';
 import 'package:sono/services/settings/library_settings_service.dart';
 import 'package:sono/services/api/lastfm_service.dart';
@@ -283,7 +284,7 @@ class _LibraryScrobblingSettingsPageState
         backgroundColor: AppTheme.backgroundDark,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+          icon: const Icon(Symbols.arrow_back_rounded, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: const Text(
@@ -312,7 +313,7 @@ class _LibraryScrobblingSettingsPageState
           ),
           const SizedBox(height: 12),
           _buildNavigationTile(
-            icon: Icons.folder_off_rounded,
+            icon: Symbols.folder_off_rounded,
             title: 'Excluded Folders',
             subtitle:
                 _excludedFolders.isEmpty
@@ -348,7 +349,7 @@ class _LibraryScrobblingSettingsPageState
             _buildLastfmTile(),
             const SizedBox(height: 8),
             _buildSwitchTile(
-              icon: Icons.multitrack_audio_rounded,
+              icon: Symbols.graphic_eq_rounded,
               title: 'Enable Scrobbling',
               subtitle:
                   _isScrobblingEnabled

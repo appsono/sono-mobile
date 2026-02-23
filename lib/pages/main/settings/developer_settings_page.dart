@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:sono/styles/app_theme.dart';
 import 'package:sono/services/settings/developer_settings_service.dart';
 import 'package:sono/services/api/api_service.dart';
@@ -85,7 +86,7 @@ class _DeveloperSettingsPageState extends State<DeveloperSettingsPage> {
         backgroundColor: AppTheme.backgroundDark,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+          icon: const Icon(Symbols.arrow_back_rounded, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: const Text(
@@ -118,7 +119,7 @@ class _DeveloperSettingsPageState extends State<DeveloperSettingsPage> {
                   const SizedBox(height: 12),
 
                   _buildSwitchTile(
-                    icon: Icons.cloud_rounded,
+                    icon: Symbols.cloud_rounded,
                     title: 'Production API Mode',
                     subtitle:
                         _useProductionApi
@@ -154,7 +155,7 @@ class _DeveloperSettingsPageState extends State<DeveloperSettingsPage> {
                   const SizedBox(height: 12),
 
                   _buildSwitchTile(
-                    icon: Icons.bug_report_outlined,
+                    icon: Symbols.bug_report,
                     title: 'Crash Reporting',
                     subtitle:
                         _crashlyticsEnabled
@@ -192,7 +193,7 @@ class _DeveloperSettingsPageState extends State<DeveloperSettingsPage> {
                   const SizedBox(height: 12),
 
                   _buildActionTile(
-                    icon: Icons.cleaning_services_rounded,
+                    icon: Symbols.cleaning_services_rounded,
                     iconColor: AppTheme.warning,
                     title: 'Clear Last.fm Cache',
                     subtitle: 'Remove cached Last.fm data',
@@ -206,7 +207,7 @@ class _DeveloperSettingsPageState extends State<DeveloperSettingsPage> {
                   const SizedBox(height: 8),
 
                   _buildActionTile(
-                    icon: Icons.delete_sweep_rounded,
+                    icon: Symbols.delete_sweep_rounded,
                     iconColor: AppTheme.warning,
                     title: 'Clear All Cache',
                     subtitle: 'Remove all cached data including artwork',
@@ -233,7 +234,7 @@ class _DeveloperSettingsPageState extends State<DeveloperSettingsPage> {
                   const SizedBox(height: 12),
 
                   _buildActionTile(
-                    icon: Icons.bug_report_rounded,
+                    icon: Symbols.bug_report_rounded,
                     iconColor: AppTheme.error,
                     title: 'Test Crash',
                     subtitle: 'Trigger a test crash for Crashlytics',
@@ -247,7 +248,7 @@ class _DeveloperSettingsPageState extends State<DeveloperSettingsPage> {
                   const SizedBox(height: 8),
 
                   _buildActionTile(
-                    icon: Icons.restart_alt_rounded,
+                    icon: Symbols.restart_alt_rounded,
                     iconColor: AppTheme.info,
                     title: 'Reset Setup Flow',
                     subtitle: 'Show the setup wizard on next app launch',
@@ -274,7 +275,7 @@ class _DeveloperSettingsPageState extends State<DeveloperSettingsPage> {
                   const SizedBox(height: 12),
 
                   _buildActionTile(
-                    icon: Icons.storage_rounded,
+                    icon: Symbols.storage_rounded,
                     iconColor: AppTheme.info,
                     title: 'Database Statistics',
                     subtitle:
@@ -291,7 +292,7 @@ class _DeveloperSettingsPageState extends State<DeveloperSettingsPage> {
                   const SizedBox(height: 8),
 
                   _buildActionTile(
-                    icon: Icons.warning_amber_rounded,
+                    icon: Symbols.warning_amber_rounded,
                     iconColor: AppTheme.error,
                     title: 'Clear Database',
                     subtitle: 'Delete all app data (irreversible)',

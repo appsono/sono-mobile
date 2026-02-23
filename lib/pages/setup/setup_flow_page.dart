@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:on_audio_query/on_audio_query.dart';
@@ -227,7 +228,7 @@ class _SetupFlowPageState extends State<SetupFlowPage>
           title: 'Media Permission',
           description:
               'Sono needs access to your audio files to display them in your music library.',
-          icon: Icons.library_music_rounded,
+          icon: Symbols.library_music_rounded,
           isGranted: _mediaPermissionGranted,
           onRequestPermission: () async {
             if (Platform.isAndroid) {
@@ -253,7 +254,7 @@ class _SetupFlowPageState extends State<SetupFlowPage>
           title: 'All Files Access',
           description:
               'For some older Android versions, Sono needs broader file access to find all music files.',
-          icon: Icons.folder_rounded,
+          icon: Symbols.folder_rounded,
           isGranted: _allFilesPermissionGranted,
           onRequestPermission: () async {
             if (Platform.isAndroid) {
@@ -280,7 +281,7 @@ class _SetupFlowPageState extends State<SetupFlowPage>
           title: 'Notifications',
           description:
               'Enable notifications to control your music from the lock screen and notification center.',
-          icon: Icons.notifications_rounded,
+          icon: Symbols.notifications_rounded,
           isGranted: _notificationPermissionGranted,
           onRequestPermission: () async {
             final status = await Permission.notification.request();
@@ -294,7 +295,7 @@ class _SetupFlowPageState extends State<SetupFlowPage>
           title: 'Alarms & Reminders',
           description:
               'To ensure Sleep Timers work reliably and pause music exactly when you want, Sono needs permission to schedule exact alarms.',
-          icon: Icons.alarm_rounded,
+          icon: Symbols.alarm_rounded,
           isGranted: _alarmPermissionGranted,
           onRequestPermission: () async {
             if (Platform.isAndroid) {
@@ -313,7 +314,7 @@ class _SetupFlowPageState extends State<SetupFlowPage>
           title: 'Battery Optimization',
           description:
               'Some Android devices aggressively kill background apps. Disable battery optimization for Sono to prevent this.',
-          icon: Icons.battery_charging_full_rounded,
+          icon: Symbols.battery_charging_full_rounded,
           isGranted: _batteryOptimizationDisabled,
           onRequestPermission: () async {
             final status =
@@ -328,7 +329,7 @@ class _SetupFlowPageState extends State<SetupFlowPage>
           title: 'Install Updates',
           description:
               'To install app updates directly, Sono needs permission to install apps from unknown sources.',
-          icon: Icons.system_update_rounded,
+          icon: Symbols.system_update_rounded,
           isGranted: _installPermissionGranted,
           onRequestPermission: () async {
             if (Platform.isAndroid) {
@@ -666,7 +667,7 @@ class _PermissionButton extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (isGranted) ...[
-              const Icon(Icons.check_rounded, size: 20),
+              const Icon(Symbols.check_rounded, size: 20),
               const SizedBox(width: 8),
               Text(
                 'Permission Granted',
@@ -840,7 +841,7 @@ class _ExcludedFoldersPageState extends State<_ExcludedFoldersPage> {
           _PrimaryButton(
             label: 'Choose Excluded Folders',
             onPressed: _pickFolder,
-            icon: Icons.folder_open_rounded,
+            icon: Symbols.folder_open_rounded,
           ),
           const SizedBox(height: 12),
 

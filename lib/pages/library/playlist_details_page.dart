@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:provider/provider.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:image_picker/image_picker.dart';
@@ -870,7 +871,7 @@ class _PlaylistDetailsPageState extends State<PlaylistDetailsPage> {
         child: Center(
           child: Column(
             children: [
-              Icon(Icons.music_note_rounded, size: 64, color: Colors.white24),
+              Icon(Symbols.music_note_rounded, size: 64, color: Colors.white24),
               SizedBox(height: AppTheme.spacing),
               Text(
                 'No songs in this playlist yet',
@@ -1032,7 +1033,7 @@ class _PlaylistDetailsPageState extends State<PlaylistDetailsPage> {
           backgroundColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+            icon: const Icon(Symbols.arrow_back_rounded, color: Colors.white),
             onPressed: () => Navigator.of(context).pop(),
           ),
         ),
@@ -1047,7 +1048,7 @@ class _PlaylistDetailsPageState extends State<PlaylistDetailsPage> {
           backgroundColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+            icon: const Icon(Symbols.arrow_back_rounded, color: Colors.white),
             onPressed: () => Navigator.of(context).pop(),
           ),
         ),
@@ -1055,7 +1056,11 @@ class _PlaylistDetailsPageState extends State<PlaylistDetailsPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, size: 64, color: AppTheme.error),
+              const Icon(
+                Symbols.error_outline,
+                size: 64,
+                color: AppTheme.error,
+              ),
               SizedBox(height: AppTheme.spacing),
               Text(
                 _loadError!,
@@ -1086,7 +1091,7 @@ class _PlaylistDetailsPageState extends State<PlaylistDetailsPage> {
           backgroundColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+            icon: const Icon(Symbols.arrow_back_rounded, color: Colors.white),
             onPressed: () => Navigator.of(context).pop(),
           ),
         ),
@@ -1468,7 +1473,10 @@ class _CoverPickerModal extends StatelessWidget {
             onTap: onPickFromSystem,
           ),
           ListTile(
-            leading: const Icon(Icons.delete_outline, color: AppTheme.warning),
+            leading: const Icon(
+              Symbols.delete_outline,
+              color: AppTheme.warning,
+            ),
             title: const Text(
               'Remove Cover',
               style: TextStyle(color: AppTheme.warning, fontSize: 16),

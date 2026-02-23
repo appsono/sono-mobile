@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'playlist_migration_service.dart';
 
 /// Service for initializing playlist system and running migration
@@ -115,7 +116,7 @@ class PlaylistInitializationService {
       SnackBar(
         content: Row(
           children: [
-            Icon(Icons.check_circle_rounded, color: Colors.white),
+            Icon(Symbols.check_circle_rounded, color: Colors.white),
             SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -141,7 +142,7 @@ class PlaylistInitializationService {
       SnackBar(
         content: Row(
           children: [
-            Icon(Icons.warning_rounded, color: Colors.white),
+            Icon(Symbols.warning_rounded, color: Colors.white),
             SizedBox(width: 12),
             Expanded(
               child: Text(

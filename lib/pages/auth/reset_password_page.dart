@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:sono/services/api/api_service.dart';
 import 'package:sono/styles/app_theme.dart';
 
@@ -112,7 +113,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.close_rounded, color: AppTheme.textPrimaryDark),
+          icon: Icon(Symbols.close_rounded, color: AppTheme.textPrimaryDark),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -165,7 +166,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Icon(Icons.error_outline_rounded, size: 80, color: AppTheme.error),
+        Icon(Symbols.error_outline_rounded, size: 80, color: AppTheme.error),
         SizedBox(height: AppTheme.spacingXl),
         Text(
           'Invalid or Expired Link',
@@ -252,7 +253,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
           TextFormField(
             decoration: _inputDecoration(
               labelText: 'New Password',
-              prefixIcon: Icons.lock_outline_rounded,
+              prefixIcon: Symbols.lock_outline_rounded,
               suffixIcon: IconButton(
                 icon: Icon(
                   _obscurePassword
@@ -281,7 +282,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
           TextFormField(
             decoration: _inputDecoration(
               labelText: 'Confirm Password',
-              prefixIcon: Icons.lock_outline_rounded,
+              prefixIcon: Symbols.lock_outline_rounded,
               suffixIcon: IconButton(
                 icon: Icon(
                   _obscureConfirmPassword
@@ -373,7 +374,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Icon(Icons.check_circle_rounded, size: 80, color: Colors.green),
+        Icon(Symbols.check_circle_rounded, size: 80, color: Colors.green),
         SizedBox(height: AppTheme.spacingXl),
         Text(
           'Password Reset!',
