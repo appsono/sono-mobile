@@ -16,7 +16,7 @@ dependencies:
     # path: ../../plugins/sono_refresh
     git:
       url: https://github.com/appsono/sono_refresh
-      ref: v1.0.0
+      ref: v1.0.1
 
   # UI & visuals
   cupertino_icons: ^1.0.8
@@ -55,6 +55,7 @@ dependencies:
       path: packages/on_audio_query
       ref: v3.0.4
   audio_service: ^0.18.18
+  audio_session: ^0.1.22
 
   # Device & storage
   permission_handler: ^12.0.1
