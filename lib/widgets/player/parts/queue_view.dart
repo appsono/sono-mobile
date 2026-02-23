@@ -143,7 +143,7 @@ class _QueueViewState extends State<QueueView> {
               }
 
               return ReorderableListView.builder(
-                buildDefaultDragHandles: !SASManager().isInClientMode,
+                buildDefaultDragHandles: false,
                 scrollController: _scrollController,
                 padding: EdgeInsets.only(
                   bottom: 100,
@@ -203,18 +203,23 @@ class _QueueViewState extends State<QueueView> {
                           );
                         }
                       },
-                      child: Material(
-                        color:
+                      child: InkWell(
+                        onTap: () {
+                          //block queue navigation for clients
+                          if (SASManager().isInClientMode) return;
+
+                          widget.sonoPlayer.skipToQueueItem(index);
+                        },
+                        splashColor: AppTheme.brandPink.opacity10,
+                        highlightColor:
                             isCurrent
                                 ? AppTheme.brandPink.opacity10
                                 : Colors.transparent,
-                        child: InkWell(
-                          onTap: () {
-                            //block queue navigation for clients
-                            if (SASManager().isInClientMode) return;
-
-                            widget.sonoPlayer.skipToQueueItem(index);
-                          },
+                        child: ColoredBox(
+                          color:
+                              isCurrent
+                                  ? AppTheme.brandPink.opacity10
+                                  : Colors.transparent,
                           child: Padding(
                             padding: EdgeInsets.symmetric(
                               horizontal: AppTheme.responsiveSpacing(

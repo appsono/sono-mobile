@@ -10,6 +10,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:sono_refresh/sono_refresh.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:sono/utils/audio_filter_utils.dart';
@@ -24,7 +25,6 @@ import 'package:sono/widgets/player/sono_player.dart';
 import 'package:sono/styles/text.dart';
 import 'package:sono/styles/app_theme.dart';
 import 'package:sono/widgets/global/cached_artwork_image.dart';
-import 'package:sono_refresh/sono_refresh.dart';
 import 'package:sono/widgets/library/artist_artwork_widget.dart';
 import 'package:sono/widgets/library/album_artist_text.dart';
 
@@ -308,6 +308,7 @@ class _AllItemsPageState extends State<AllItemsPage> {
             colorBlendMode: BlendMode.srcIn,
           ),
           indicatorColor: AppTheme.elevatedSurfaceDark,
+          edgeOffset: kToolbarHeight,
           child: CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: <Widget>[
@@ -620,11 +621,14 @@ class _AlbumListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: CachedArtworkImage(
-        id: album.id,
-        size: 50,
-        type: ArtworkType.ALBUM,
-        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+      leading: SizedBox.square(
+        dimension: 50,
+        child: CachedArtworkImage(
+          id: album.id,
+          size: 50,
+          type: ArtworkType.ALBUM,
+          borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+        ),
       ),
       title: Text(
         album.album,
@@ -852,9 +856,12 @@ class _DatabasePlaylistTileState extends State<_DatabasePlaylistTile>
     super.build(context);
 
     return ListTile(
-      leading: ClipRRect(
-        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-        child: _buildCover(),
+      leading: SizedBox.square(
+        dimension: 50,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+          child: _buildCover(),
+        ),
       ),
       title: Text(
         widget.playlist.name,

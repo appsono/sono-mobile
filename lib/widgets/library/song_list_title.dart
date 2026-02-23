@@ -48,11 +48,14 @@ class SongListTile extends StatelessWidget {
             horizontal: AppTheme.responsiveSpacing(context, AppTheme.spacing),
             vertical: 0,
           ),
-          leading: CachedArtworkImage(
-            id: song.id,
-            size: AppTheme.responsiveDimension(context, 50),
-            type: ArtworkType.AUDIO,
-            borderRadius: BorderRadius.circular(12.0.r),
+          leading: SizedBox.square(
+            dimension: AppTheme.responsiveDimension(context, 50),
+            child: CachedArtworkImage(
+              id: song.id,
+              size: AppTheme.responsiveDimension(context, 50),
+              type: ArtworkType.AUDIO,
+              borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+            ),
           ),
           title: Text(
             song.title,
