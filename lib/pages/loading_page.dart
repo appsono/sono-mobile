@@ -71,9 +71,7 @@ class _LoadingPageState extends State<LoadingPage> {
 
     debugPrint('[LoadingPage] Setup done, checking permissions...');
     await _checkAndRequestPermissions();
-    debugPrint('[LoadingPage] Permissions done, initializing audio...');
-    await _initializeAudioService();
-    debugPrint('[LoadingPage] Audio done, navigating to AppScaffold');
+    debugPrint('[LoadingPage] Permissions done, navigating to AppScaffold...');
 
     if (mounted) {
       Navigator.of(context).pushReplacement(
@@ -81,9 +79,12 @@ class _LoadingPageState extends State<LoadingPage> {
       );
     }
 
-    //restore playback state in background after UI navigation
-    //this prevents blocking the main thread during startup
-    _restorePlaybackState();
+    //initialize audio service in background so UI is not blocked
+    //mini player handles initializing state gracefully
+    _initializeAudioService().then((_) {
+      debugPrint('[LoadingPage] AudioService ready in background');
+      _restorePlaybackState();
+    });
 
     //fetch artist images in background (non-blocking)
     _fetchArtistImagesInBackground();
@@ -120,54 +121,29 @@ class _LoadingPageState extends State<LoadingPage> {
   }
 
   Future<void> _initializeAudioService() async {
-    if (!mounted) return;
-    setState(() => _loadingMessage = "Starting audio service...");
-
-    int retryCount = 0;
-    const maxRetries = 3;
-
-    while (retryCount < maxRetries) {
-      try {
-        await AudioService.init(
-          builder: () {
-            final handler = SonoPlayer();
-            handler.initialize();
-            return handler;
-          },
-          config: const AudioServiceConfig(
-            androidNotificationChannelId: 'wtf.sono.beta.channel',
-            androidNotificationChannelName: 'Sono Player',
-            androidNotificationOngoing: false,
-            androidStopForegroundOnPause: false,
-            androidNotificationChannelDescription:
-                'Sono audio playback controls',
-            androidShowNotificationBadge: true,
-            androidNotificationClickStartsActivity: true,
-            androidResumeOnClick: true,
-            androidNotificationIcon: 'drawable/ic_notification',
-          ),
-        ).timeout(Duration(seconds: 15));
-
-        return;
-      } catch (e) {
-        retryCount++;
-        debugPrint('AudioService init attempt $retryCount failed: $e');
-
-        if (retryCount < maxRetries) {
-          setState(
-            () =>
-                _loadingMessage =
-                    "Retrying audio service... ($retryCount/$maxRetries)",
-          );
-          await Future.delayed(Duration(milliseconds: 2000 * retryCount));
-        } else if (mounted) {
-          setState(
-            () => _loadingMessage = "Audio service failed, continuing...",
-          );
-          await Future.delayed(Duration(milliseconds: 1000));
-          break;
-        }
-      }
+    //no mounted check => this runs as a background task after navigation
+    try {
+      await AudioService.init(
+        builder: () {
+          final handler = SonoPlayer();
+          handler.initialize();
+          return handler;
+        },
+        config: const AudioServiceConfig(
+          androidNotificationChannelId: 'wtf.sono.beta.channel',
+          androidNotificationChannelName: 'Sono Player',
+          androidNotificationOngoing: false,
+          androidStopForegroundOnPause: false,
+          androidNotificationChannelDescription:
+              'Sono audio playback controls',
+          androidShowNotificationBadge: true,
+          androidNotificationClickStartsActivity: true,
+          androidResumeOnClick: true,
+          androidNotificationIcon: 'drawable/ic_notification',
+        ),
+      ).timeout(const Duration(seconds: 8));
+    } catch (e) {
+      debugPrint('AudioService init failed: $e : continuing without audio');
     }
   }
 
