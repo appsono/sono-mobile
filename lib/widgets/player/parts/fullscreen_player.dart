@@ -151,6 +151,7 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
   bool _swipeInitiatedChange =
       false; //true when song change was triggered by swipe
   int? _pendingSwipePage; //page index from onPageChanged while finger is down
+  bool _isProgrammaticAnimation = false; //true while animateToPage runs programmatically
 
   Timer? _remoteStarredRefreshTimer;
   static const Duration _remoteStarredRefreshInterval = Duration(seconds: 5);
@@ -301,11 +302,17 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
 
         if (currentPage != playerIndex) {
           //not scrolling (skip button pressed) => animate the cover change
-          _pageController.animateToPage(
-            playerIndex,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOutCubic,
-          );
+          //set flag so _onPageChanged ignores intermediate pages during this animation
+          _isProgrammaticAnimation = true;
+          _pageController
+              .animateToPage(
+                playerIndex,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOutCubic,
+              )
+              .whenComplete(() {
+                if (mounted) _isProgrammaticAnimation = false;
+              });
         }
       }
     }
@@ -929,6 +936,7 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
         height: AppTheme.responsiveArtworkSize(context, AppTheme.artworkHero),
         child: Listener(
           onPointerDown: (_) {
+            _isProgrammaticAnimation = false;
             _isUserSwiping = true;
           },
           onPointerUp: (_) {
@@ -1032,6 +1040,10 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
     final currentPlayerIndex = _sonoPlayer.currentIndex ?? 0;
     if (index == currentPlayerIndex) return;
 
+    //ignore intermediate pages during programmatic animations
+    //(e.g. animateToPage triggered by _onSongChanged or _handleSwipeCancel)
+    if (_isProgrammaticAnimation) return;
+
     if (_isUserSwiping) {
       //finger is still down => store and apply on release
       _pendingSwipePage = index;
@@ -1063,11 +1075,16 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
     _pendingSwipePage = null;
     final currentPlayerIndex = _sonoPlayer.currentIndex ?? 0;
     if (_pageController.hasClients) {
-      _pageController.animateToPage(
-        currentPlayerIndex,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOutCubic,
-      );
+      _isProgrammaticAnimation = true;
+      _pageController
+          .animateToPage(
+            currentPlayerIndex,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOutCubic,
+          )
+          .whenComplete(() {
+            if (mounted) _isProgrammaticAnimation = false;
+          });
     }
   }
 

@@ -243,11 +243,10 @@ class _SonoState extends State<Sono> with WidgetsBindingObserver {
     switch (state) {
       case AppLifecycleState.paused:
         //save playback state when app goes to background
-        //his ensures state is persisted if app is killed
+        //this ensures state is persisted if app is killed
         _sonoPlayer.savePlaybackSnapshot();
         break;
       case AppLifecycleState.resumed:
-        _sonoPlayer.onAppLifecycleStateChanged(state);
         _checkSASConnectionHealth();
         break;
       case AppLifecycleState.detached:

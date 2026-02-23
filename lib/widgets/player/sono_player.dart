@@ -1329,10 +1329,11 @@ class SonoPlayer extends BaseAudioHandler {
     //start periodic position saving
     _startPositionSaveTimer();
 
-    //if player idle => reload current song
+    //if player idle => reload current song from the saved position
     if (_primaryPlayer.processingState == ProcessingState.idle) {
       try {
-        await _playSongInternal(_currentSong.value!);
+        final savedPosition = _position.value;
+        await _playSongInternal(_currentSong.value!, initialPosition: savedPosition);
         return;
       } catch (e) {
         if (kDebugMode) {
@@ -2184,6 +2185,7 @@ class SonoPlayer extends BaseAudioHandler {
   Future<void> _playSongInternal(
     SongModel song, {
     bool isPreloading = false,
+    Duration? initialPosition,
   }) async {
     if (!isPreloading) {
       _setLifecycleState(PlayerLifecycleState.initializing);
@@ -2275,15 +2277,16 @@ class SonoPlayer extends BaseAudioHandler {
         audioSource = AudioSource.uri(Uri.file(song.uri!));
       }
 
+      final startPosition = isPreloading ? Duration.zero : (initialPosition ?? Duration.zero);
       final loadedDuration = await targetPlayer.setAudioSource(
         audioSource,
-        initialPosition: Duration.zero,
+        initialPosition: startPosition,
       );
 
       if (!isPreloading) {
         _currentSong.value = song;
         _duration.value = loadedDuration ?? song.durationMsDuration();
-        _position.value = Duration.zero;
+        _position.value = startPosition;
 
         RecentsService.instance.addRecentPlay(
           song.id,
