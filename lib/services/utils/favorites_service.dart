@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -153,7 +155,6 @@ class FavoritesService extends ChangeNotifier {
       _favoriteSongsCache!.remove(songId);
       notifyListeners();
       debugPrint('FavoritesService: Error adding song to favorites: $e');
-      rethrow;
     }
   }
 
@@ -181,7 +182,6 @@ class FavoritesService extends ChangeNotifier {
       _favoriteSongsCache!.add(songId);
       notifyListeners();
       debugPrint('FavoritesService: Error removing song from favorites: $e');
-      rethrow;
     }
   }
 
@@ -461,6 +461,9 @@ class FavoritesService extends ChangeNotifier {
   }
 
   Future<void> _addToSystemPlaylist(int songId) async {
+    //iOS doesnt support on_audio_query system playlist management
+    if (Platform.isIOS) return;
+
     try {
       final playlistId = await _getOrCreateLikedPlaylistId();
       if (playlistId == null) return;
@@ -489,6 +492,9 @@ class FavoritesService extends ChangeNotifier {
   }
 
   Future<void> _removeFromSystemPlaylist(int songId) async {
+    //iOS doesnt support on_audio_query system playlist management
+    if (Platform.isIOS) return;
+
     try {
       final playlistId = await _getOrCreateLikedPlaylistId();
       if (playlistId == null) return;
