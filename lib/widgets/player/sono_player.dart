@@ -16,6 +16,7 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:audio_service/audio_service.dart';
+import 'package:audio_session/audio_session.dart';
 import 'package:flutter/foundation.dart';
 import 'package:sono/services/utils/crashlytics_service.dart';
 import 'package:just_audio/just_audio.dart';
@@ -745,6 +746,38 @@ class SonoPlayer extends BaseAudioHandler {
 
     //load settings asynchronously => dont block initialization
     _loadSettingsAsync();
+
+    //on iOS: listen for audio interruptions (screen recording, calls, Siri, etc.)
+    //without handling these, the app hangs and iOS force-kills it
+    if (Platform.isIOS) {
+      _setupAudioSessionInterruption();
+    }
+  }
+
+  Future<void> _setupAudioSessionInterruption() async {
+    try {
+      final session = await AudioSession.instance;
+      await session.configure(const AudioSessionConfiguration.music());
+
+      _subscriptions.add(
+        session.interruptionEventStream.listen((event) {
+          if (event.begin) {
+            //interruption started
+            //pause immediately => if we dont respond quickly iOS kills the app
+            if (isPlaying.value) {
+              pause();
+            }
+          } else {
+            //interruption ended => only auto-resume for "pause" type interruptions
+            if (event.type == AudioInterruptionType.pause) {
+              play();
+            }
+          }
+        }),
+      );
+    } catch (e) {
+      debugPrint('[Player] Audio session interruption setup failed: $e');
+    }
   }
 
   void _onCoverRotationChanged() {
@@ -1837,10 +1870,14 @@ class SonoPlayer extends BaseAudioHandler {
     if (song == null) return;
 
     if (rating.hasHeart()) {
-      if (rating.isRated()) {
-        await _favoritesService.addSongToFavorites(song.id);
-      } else {
-        await _favoritesService.removeSongFromFavorites(song.id);
+      try {
+        if (rating.isRated()) {
+          await _favoritesService.addSongToFavorites(song.id);
+        } else {
+          await _favoritesService.removeSongFromFavorites(song.id);
+        }
+      } catch (e) {
+        debugPrint('SonoPlayer: Error toggling favorite from rating: $e');
       }
     }
     await _updateFavoriteStatusAsync();
