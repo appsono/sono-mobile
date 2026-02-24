@@ -7,6 +7,7 @@ import 'package:on_audio_query/on_audio_query.dart';
 import 'package:sono/styles/app_theme.dart';
 import 'package:sono/services/settings/developer_settings_service.dart';
 import 'package:sono/services/settings/library_settings_service.dart';
+import 'package:sono/services/utils/env_config.dart';
 import 'package:file_picker/file_picker.dart';
 
 /// Setup flow page
@@ -44,8 +45,8 @@ class _SetupFlowPageState extends State<SetupFlowPage>
   void initState() {
     super.initState();
     //iOS: 5 relevant steps (Welcome, Media, Excluded Folders, Notifications, Music Folder, All Set)
-    //Android: 8 steps (all pages)
-    _totalSteps = Platform.isIOS ? 5 : 8;
+    //Android: 8 steps (all pages), or 7 if auto-update is disabled (skips Install Updates page)
+    _totalSteps = Platform.isIOS ? 5 : (EnvConfig.enableAutoUpdate ? 8 : 7);
     _setupAnimations();
     _checkInitialPermissions();
   }
@@ -171,7 +172,13 @@ class _SetupFlowPageState extends State<SetupFlowPage>
       }
       return;
     }
-    _navigateToPage(_currentPage + 1);
+    //skip "Install Updates" page (7) when auto-update feature is disabled
+    final next = _currentPage + 1;
+    if (!EnvConfig.enableAutoUpdate && next == 7) {
+      _navigateToPage(8);
+    } else {
+      _navigateToPage(next);
+    }
   }
 
   void _previousPage() {
@@ -182,7 +189,13 @@ class _SetupFlowPageState extends State<SetupFlowPage>
       }
       return;
     }
-    _navigateToPage(_currentPage - 1);
+    //skip "Install Updates" page (7) when auto-update feature is disabled
+    final prev = _currentPage - 1;
+    if (!EnvConfig.enableAutoUpdate && prev == 7) {
+      _navigateToPage(6);
+    } else {
+      _navigateToPage(prev);
+    }
   }
 
   Future<void> _completeSetup() async {

@@ -60,6 +60,9 @@ class EnvConfig {
   static bool get crashlyticsEnabledDefault =>
       _getBool('CRASHLYTICS_ENABLED', true);
 
+  /// Enable auto-update feature
+  static bool get enableAutoUpdate => _getBool('ENABLE_FEAT_AUTO_UPDATE', true);
+
   //=== Debug Settings =====
 
   /// Debug mode flag

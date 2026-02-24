@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:sono/services/settings/ui_settings_service.dart';
 import 'package:sono/services/settings/library_settings_service.dart';
+import 'package:sono/services/utils/env_config.dart';
 import 'package:sono/styles/app_theme.dart';
 import 'package:sono/widgets/global/bottom_sheet.dart';
 
@@ -85,16 +88,19 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
                   ),
                   const SizedBox(height: 12),
 
-                  _buildSwitchTile(
-                    icon: Symbols.update_rounded,
-                    title: 'Auto Update',
-                    subtitle: 'Automatically check for App Updates',
-                    value: _autoUpdate,
-                    onChanged: (value) async {
-                      setState(() => _autoUpdate = value);
-                      await _librarySettings.setAutoUpdateEnabled(value);
-                    },
-                  ),
+                  if (EnvConfig.enableAutoUpdate && !Platform.isIOS && !Platform.isLinux) ...[
+                    _buildSwitchTile(
+                      icon: Icons.update_rounded,
+                      title: 'Auto Update',
+                      subtitle: 'Automatically check for App Updates',
+                      value: _autoUpdate,
+                      onChanged: (value) async {
+                        setState(() => _autoUpdate = value);
+                        await _librarySettings.setAutoUpdateEnabled(value);
+                      },
+                    ),
+                    const SizedBox(height: 24),
+                  ],
 
                   const SizedBox(height: 24),
 

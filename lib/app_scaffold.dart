@@ -11,6 +11,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 
 //pages
 import 'package:sono/pages/info/announcements_changelog_page.dart';
+import 'package:sono/services/utils/env_config.dart';
 import 'package:sono/utils/audio_filter_utils.dart';
 import 'package:sono/widgets/player/sono_player.dart';
 import 'package:on_audio_query/on_audio_query.dart';
@@ -907,6 +908,8 @@ Tap "Read Full Terms" below to view the complete Terms of Service.
   }
 
   Future<void> _performUpdateCheckAndShowDialog() async {
+    if (!EnvConfig.enableAutoUpdate || Platform.isIOS || Platform.isLinux) return;
+
     await SharedPreferences.getInstance();
     bool autoUpdatesActuallyEnabled =
         await LibrarySettingsService.instance.getAutoUpdateEnabled();
