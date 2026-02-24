@@ -1,20 +1,22 @@
 import 'dart:io';
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:on_audio_query/on_audio_query.dart' as query;
+import 'package:sono/data/repositories/playlists_repository.dart';
 import 'package:sono/services/api/lastfm_service.dart';
 import 'package:sono/services/api/lyrics_service.dart';
 import 'package:sono/services/artists/artist_fetch_progress_service.dart';
 import 'package:sono/services/artists/artist_image_fetch_service.dart';
 import 'package:sono/services/playlist/playlist_migration_service.dart';
+import 'package:sono/services/playlist/playlist_service.dart';
 import 'package:sono/services/utils/artwork_cache_service.dart';
-import 'package:sono/services/utils/preferences_service.dart';
 import 'package:sono/styles/app_theme.dart';
 import 'package:sono/widgets/library/artist_artwork_widget.dart';
 
 /// Developer sub-page: App Storage & Cache
-/// Contains tools for playlist migration and artist image management.
+/// Contains tools for playlist migration, artist image management, and cache control.
 class AppStorageCacheSettingsPage extends StatefulWidget {
   const AppStorageCacheSettingsPage({super.key});
 
@@ -27,8 +29,13 @@ class _AppStorageCacheSettingsPageState
     extends State<AppStorageCacheSettingsPage> {
   final ArtistFetchProgressService _progress = ArtistFetchProgressService();
   final PlaylistMigrationService _migrationService = PlaylistMigrationService();
+  final PlaylistService _playlistService = PlaylistService();
+  final PlaylistsRepository _playlistsRepo = PlaylistsRepository();
+  final query.OnAudioQuery _audioQuery = query.OnAudioQuery();
 
   bool _isMigrating = false;
+  bool _isSyncing = false;
+  bool _isLinking = false;
   String? _migrationResult;
 
   void _showSnackBar({required String message, required bool isError}) {
@@ -44,6 +51,8 @@ class _AppStorageCacheSettingsPageState
       ),
     );
   }
+
+  /// ============================== Playlist operations ==============================
 
   Future<void> _runPlaylistMigration() async {
     final confirmed = await showDialog<bool>(
@@ -100,9 +109,10 @@ class _AppStorageCacheSettingsPageState
         final errors = result['errors'] as List? ?? [];
         final ms = result['durationMs'] as int? ?? 0;
 
-        final msg = errors.isEmpty
-            ? 'Migrated $playlists playlists, $songs songs in ${ms}ms'
-            : 'Migrated $playlists playlists, $songs songs (${errors.length} errors) in ${ms}ms';
+        final msg =
+            errors.isEmpty
+                ? 'Migrated $playlists playlists, $songs songs in ${ms}ms'
+                : 'Migrated $playlists playlists, $songs songs (${errors.length} errors) in ${ms}ms';
 
         setState(() => _migrationResult = msg);
         _showSnackBar(message: msg, isError: errors.isNotEmpty);
@@ -120,6 +130,235 @@ class _AppStorageCacheSettingsPageState
       if (mounted) setState(() => _isMigrating = false);
     }
   }
+
+  /// Shows a picker dialog and re-creates/syncs the chosen DB playlist to MediaStore.
+  Future<void> _syncDbPlaylistToMediaStore() async {
+    if (_isSyncing) return;
+
+    final playlists = await _playlistService.getAllPlaylists();
+    if (!mounted) return;
+
+    if (playlists.isEmpty) {
+      _showSnackBar(message: 'No playlists found in database', isError: false);
+      return;
+    }
+
+    final picked = await showDialog<int>(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            backgroundColor: AppTheme.backgroundDark,
+            title: const Text(
+              'Select Playlist',
+              style: TextStyle(color: Colors.white, fontFamily: 'VarelaRound'),
+            ),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: playlists.length,
+                itemBuilder: (context, i) {
+                  final pl = playlists[i];
+                  return ListTile(
+                    title: Text(
+                      pl.name,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontFamily: 'VarelaRound',
+                      ),
+                    ),
+                    subtitle: Text(
+                      pl.mediastoreId != null
+                          ? 'Linked (MediaStore ID ${pl.mediastoreId})'
+                          : 'Not linked to MediaStore',
+                      style: TextStyle(
+                        color: Colors.white.withAlpha((0.5 * 255).round()),
+                        fontFamily: 'VarelaRound',
+                        fontSize: 12,
+                      ),
+                    ),
+                    onTap: () => Navigator.pop(context, pl.id),
+                  );
+                },
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text(
+                  'Cancel',
+                  style: TextStyle(fontFamily: 'VarelaRound'),
+                ),
+              ),
+            ],
+          ),
+    );
+
+    if (picked == null || !mounted) return;
+
+    setState(() => _isSyncing = true);
+    try {
+      final success = await _playlistService.retrySync(picked);
+      if (mounted) {
+        _showSnackBar(
+          message:
+              success
+                  ? 'Playlist synced to MediaStore'
+                  : 'Sync failed; check app logs',
+          isError: !success,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        _showSnackBar(message: 'Sync error: $e', isError: true);
+      }
+    } finally {
+      if (mounted) setState(() => _isSyncing = false);
+    }
+  }
+
+  /// Shows pickers to link a MediaStore playlist to a DB playlist.
+  Future<void> _linkMediaStorePlaylist() async {
+    if (_isLinking) return;
+
+    // Step 1: pick a MediaStore playlist
+    final mediaStorePlaylists = await _audioQuery.queryPlaylists();
+    if (!mounted) return;
+
+    if (mediaStorePlaylists.isEmpty) {
+      _showSnackBar(message: 'No MediaStore playlists found', isError: false);
+      return;
+    }
+
+    final pickedMediaStoreId = await showDialog<int>(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            backgroundColor: AppTheme.backgroundDark,
+            title: const Text(
+              'Step 1: Pick MediaStore Playlist',
+              style: TextStyle(color: Colors.white, fontFamily: 'VarelaRound'),
+            ),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: mediaStorePlaylists.length,
+                itemBuilder: (context, i) {
+                  final pl = mediaStorePlaylists[i];
+                  return ListTile(
+                    title: Text(
+                      pl.playlist,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontFamily: 'VarelaRound',
+                      ),
+                    ),
+                    subtitle: Text(
+                      'ID: ${pl.id}',
+                      style: TextStyle(
+                        color: Colors.white.withAlpha((0.5 * 255).round()),
+                        fontFamily: 'VarelaRound',
+                        fontSize: 12,
+                      ),
+                    ),
+                    onTap: () => Navigator.pop(context, pl.id),
+                  );
+                },
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text(
+                  'Cancel',
+                  style: TextStyle(fontFamily: 'VarelaRound'),
+                ),
+              ),
+            ],
+          ),
+    );
+
+    if (pickedMediaStoreId == null || !mounted) return;
+
+    // Step 2: pick a DB playlist
+    final dbPlaylists = await _playlistService.getAllPlaylists();
+    if (!mounted) return;
+
+    if (dbPlaylists.isEmpty) {
+      _showSnackBar(message: 'No DB playlists found', isError: false);
+      return;
+    }
+
+    final pickedDbId = await showDialog<int>(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            backgroundColor: AppTheme.backgroundDark,
+            title: const Text(
+              'Step 2: Pick DB Playlist',
+              style: TextStyle(color: Colors.white, fontFamily: 'VarelaRound'),
+            ),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: dbPlaylists.length,
+                itemBuilder: (context, i) {
+                  final pl = dbPlaylists[i];
+                  return ListTile(
+                    title: Text(
+                      pl.name,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontFamily: 'VarelaRound',
+                      ),
+                    ),
+                    subtitle: Text(
+                      pl.mediastoreId != null
+                          ? 'Currently linked to MediaStore ID ${pl.mediastoreId}'
+                          : 'Not linked',
+                      style: TextStyle(
+                        color: Colors.white.withAlpha((0.5 * 255).round()),
+                        fontFamily: 'VarelaRound',
+                        fontSize: 12,
+                      ),
+                    ),
+                    onTap: () => Navigator.pop(context, pl.id),
+                  );
+                },
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text(
+                  'Cancel',
+                  style: TextStyle(fontFamily: 'VarelaRound'),
+                ),
+              ),
+            ],
+          ),
+    );
+
+    if (pickedDbId == null || !mounted) return;
+
+    setState(() => _isLinking = true);
+    try {
+      await _playlistsRepo.setMediaStoreId(pickedDbId, pickedMediaStoreId);
+      if (mounted) {
+        _showSnackBar(message: 'Playlist linked successfully', isError: false);
+      }
+    } catch (e) {
+      if (mounted) {
+        _showSnackBar(message: 'Link error: $e', isError: true);
+      }
+    } finally {
+      if (mounted) setState(() => _isLinking = false);
+    }
+  }
+
+  /// ============================== Artist images ==============================
 
   Future<void> _fetchMissingArtistImages() async {
     if (_progress.isFetching) return;
@@ -188,52 +427,107 @@ class _AppStorageCacheSettingsPageState
     }
   }
 
-  Future<void> _confirmClearLastfmCache() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            backgroundColor: AppTheme.backgroundDark,
-            title: const Text(
-              'Clear Last.fm Cache',
-              style: TextStyle(color: Colors.white, fontFamily: 'VarelaRound'),
-            ),
-            content: Text(
-              'This will remove all cached Last.fm data. Are you sure?',
-              style: TextStyle(
-                color: Colors.white.withAlpha((0.8 * 255).round()),
-                fontFamily: 'VarelaRound',
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text(
-                  'Cancel',
-                  style: TextStyle(fontFamily: 'VarelaRound'),
-                ),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text(
-                  'Clear',
-                  style: TextStyle(fontFamily: 'VarelaRound'),
-                ),
-              ),
-            ],
-          ),
-    );
+  /// ============================== Cache management ==============================
 
-    if (confirmed == true && mounted) {
-      try {
-        await LastfmService().clearCache();
-        if (mounted) {
-          _showSnackBar(message: 'Last.fm cache cleared', isError: false);
-        }
-      } catch (e) {
-        if (mounted) {
-          _showSnackBar(message: 'Error clearing cache: $e', isError: true);
-        }
+  Future<void> _confirmClearLastfmCache() async {
+    final confirmed = await _confirmClear(
+      'Clear Last.fm Cache',
+      'This will remove all cached Last.fm artist info. Your Last.fm account will not be affected.',
+    );
+    if (!confirmed || !mounted) return;
+
+    try {
+      await LastfmService().clearCache();
+      if (mounted) {
+        _showSnackBar(message: 'Last.fm cache cleared', isError: false);
+      }
+    } catch (e) {
+      if (mounted) {
+        _showSnackBar(message: 'Error clearing cache: $e', isError: true);
+      }
+    }
+  }
+
+  Future<void> _confirmClearArtistArtworkCache() async {
+    final confirmed = await _confirmClear(
+      'Clear Artist Artwork Cache',
+      'Removes cached artist images (in-memory and disk). They will be re-downloaded on next display.',
+    );
+    if (!confirmed || !mounted) return;
+
+    try {
+      ArtistArtworkWidget.clearAllCache();
+      await DefaultCacheManager().emptyCache();
+      if (mounted) {
+        _showSnackBar(message: 'Artist artwork cache cleared', isError: false);
+      }
+    } catch (e) {
+      if (mounted) {
+        _showSnackBar(message: 'Error: $e', isError: true);
+      }
+    }
+  }
+
+  Future<void> _confirmClearAlbumSongArtworkCache() async {
+    final confirmed = await _confirmClear(
+      'Clear Album/Song Artwork Cache',
+      'Removes in-memory cached artwork loaded from your device. Artwork will be re-read from storage on next display.',
+    );
+    if (!confirmed || !mounted) return;
+
+    try {
+      ArtworkCacheService.instance.clearAllCache();
+      PaintingBinding.instance.imageCache.clear();
+      PaintingBinding.instance.imageCache.clearLiveImages();
+      if (mounted) {
+        _showSnackBar(
+          message: 'Album/Song artwork cache cleared',
+          isError: false,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        _showSnackBar(message: 'Error: $e', isError: true);
+      }
+    }
+  }
+
+  Future<void> _confirmClearNetworkImageCache() async {
+    final confirmed = await _confirmClear(
+      'Clear Network Image Cache',
+      'Removes cached network images (e.g. artist photos fetched from the internet).',
+    );
+    if (!confirmed || !mounted) return;
+
+    try {
+      await DefaultCacheManager().emptyCache();
+      PaintingBinding.instance.imageCache.clear();
+      PaintingBinding.instance.imageCache.clearLiveImages();
+      if (mounted) {
+        _showSnackBar(message: 'Network image cache cleared', isError: false);
+      }
+    } catch (e) {
+      if (mounted) {
+        _showSnackBar(message: 'Error: $e', isError: true);
+      }
+    }
+  }
+
+  Future<void> _confirmClearLyricsCache() async {
+    final confirmed = await _confirmClear(
+      'Clear Lyrics Cache',
+      'Removes cached lyrics. They will be re-fetched from the internet when needed.',
+    );
+    if (!confirmed || !mounted) return;
+
+    try {
+      LyricsCacheService.instance.clearCache();
+      if (mounted) {
+        _showSnackBar(message: 'Lyrics cache cleared', isError: false);
+      }
+    } catch (e) {
+      if (mounted) {
+        _showSnackBar(message: 'Error: $e', isError: true);
       }
     }
   }
@@ -249,7 +543,7 @@ class _AppStorageCacheSettingsPageState
               style: TextStyle(color: Colors.white, fontFamily: 'VarelaRound'),
             ),
             content: Text(
-              'This will remove all cached data including artwork. Are you sure?',
+              'Clears all in-memory and disk caches: artist artwork, album/song artwork, network images, lyrics, and Last.fm data.\n\nAccount data, settings, playlists, and favorites are NOT affected.',
               style: TextStyle(
                 color: Colors.white.withAlpha((0.8 * 255).round()),
                 fontFamily: 'VarelaRound',
@@ -265,8 +559,9 @@ class _AppStorageCacheSettingsPageState
               ),
               TextButton(
                 onPressed: () => Navigator.pop(context, true),
+                style: TextButton.styleFrom(foregroundColor: AppTheme.warning),
                 child: const Text(
-                  'Clear',
+                  'Clear All',
                   style: TextStyle(fontFamily: 'VarelaRound'),
                 ),
               ),
@@ -274,31 +569,70 @@ class _AppStorageCacheSettingsPageState
           ),
     );
 
-    if (confirmed == true && mounted) {
-      try {
-        await LastfmService().clearCache();
-        LyricsCacheService.instance.clearCache();
-        ArtworkCacheService.instance.clearAllCache();
-        ArtistArtworkWidget.clearAllCache();
-        await CachedNetworkImage.evictFromCache('');
-        PaintingBinding.instance.imageCache.clear();
-        PaintingBinding.instance.imageCache.clearLiveImages();
-        PreferencesService().clearCache();
+    if (confirmed != true || !mounted) return;
 
-        if (mounted) {
-          _showSnackBar(
-            message: 'All cache cleared successfully',
-            isError: false,
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          _showSnackBar(message: 'Error clearing cache: $e', isError: true);
-        }
+    try {
+      await LastfmService().clearCache();
+      await DefaultCacheManager().emptyCache();
+      LyricsCacheService.instance.clearCache();
+      ArtworkCacheService.instance.clearAllCache();
+      ArtistArtworkWidget.clearAllCache();
+      PaintingBinding.instance.imageCache.clear();
+      PaintingBinding.instance.imageCache.clearLiveImages();
+
+      if (mounted) {
+        _showSnackBar(message: 'All cache cleared', isError: false);
+      }
+    } catch (e) {
+      if (mounted) {
+        _showSnackBar(message: 'Error clearing cache: $e', isError: true);
       }
     }
   }
 
+  /// Generic confirm dialog => returns true if user confirmed.
+  Future<bool> _confirmClear(String title, String body) async {
+    return await showDialog<bool>(
+          context: context,
+          builder:
+              (context) => AlertDialog(
+                backgroundColor: AppTheme.backgroundDark,
+                title: Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontFamily: 'VarelaRound',
+                  ),
+                ),
+                content: Text(
+                  body,
+                  style: TextStyle(
+                    color: Colors.white.withAlpha((0.8 * 255).round()),
+                    fontFamily: 'VarelaRound',
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    child: const Text(
+                      'Cancel',
+                      style: TextStyle(fontFamily: 'VarelaRound'),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    child: const Text(
+                      'Clear',
+                      style: TextStyle(fontFamily: 'VarelaRound'),
+                    ),
+                  ),
+                ],
+              ),
+        ) ??
+        false;
+  }
+
+  /// ============================== Build ==============================
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -325,72 +659,64 @@ class _AppStorageCacheSettingsPageState
         padding: const EdgeInsets.all(16),
         children: [
           if (Platform.isAndroid) ...[
-            const Text(
-              'PLAYLISTS',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.2,
-                fontFamily: 'VarelaRound',
-              ),
-            ),
+            _sectionHeader('PLAYLISTS'),
             const SizedBox(height: 12),
 
             _buildActionTile(
               icon: Symbols.playlist_add_rounded,
               iconColor: AppTheme.info,
               title: 'Migrate All Local Playlists',
-              subtitle: _isMigrating
-                  ? 'Migrating…'
-                  : (_migrationResult ?? 'Re-import MediaStore playlists into the app database'),
-              trailing: _isMigrating
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Icon(
-                      Icons.chevron_right_rounded,
-                      color: Colors.white.withAlpha((0.5 * 255).round()),
-                      size: 20,
-                    ),
+              subtitle:
+                  _isMigrating
+                      ? 'Migrating…'
+                      : (_migrationResult ??
+                          'Re-import MediaStore playlists into the app database'),
+              trailing: _isMigrating ? const _LoadingIcon() : _chevron(),
               onTap: _isMigrating ? null : _runPlaylistMigration,
+            ),
+            const SizedBox(height: 8),
+
+            _buildActionTile(
+              icon: Symbols.sync_rounded,
+              iconColor: AppTheme.info,
+              title: 'Sync DB Playlist to MediaStore',
+              subtitle:
+                  'Re-create or re-sync a database playlist in MediaStore',
+              trailing: _isSyncing ? const _LoadingIcon() : _chevron(),
+              onTap: _isSyncing ? null : _syncDbPlaylistToMediaStore,
+            ),
+            const SizedBox(height: 8),
+
+            _buildActionTile(
+              icon: Symbols.link_rounded,
+              iconColor: AppTheme.info,
+              title: 'Link MediaStore Playlist',
+              subtitle: 'Manually link a MediaStore playlist to a DB playlist',
+              trailing: _isLinking ? const _LoadingIcon() : _chevron(),
+              onTap: _isLinking ? null : _linkMediaStorePlaylist,
             ),
 
             const SizedBox(height: 24),
           ],
 
-          const Text(
-            'ARTIST IMAGES',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 13,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1.2,
-              fontFamily: 'VarelaRound',
-            ),
-          ),
+          _sectionHeader('ARTIST IMAGES'),
           const SizedBox(height: 12),
 
           AnimatedBuilder(
             animation: _progress,
             builder: (context, _) {
-
               final isFetching = _progress.isFetching;
               final hasStarted = _progress.totalArtists > 0;
 
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Status card
                   if (hasStarted) ...[
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: Colors.white.withAlpha((0.05 * 255).round()),
-                        borderRadius:
-                            BorderRadius.circular(AppTheme.radiusMd),
+                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                         border: Border.all(
                           color: Colors.white.withAlpha((0.1 * 255).round()),
                           width: 0.5,
@@ -405,20 +731,25 @@ class _AppStorageCacheSettingsPageState
                                 isFetching
                                     ? Symbols.sync_rounded
                                     : Symbols.check_circle_rounded,
-                                color: isFetching
-                                    ? AppTheme.info
-                                    : AppTheme.success,
+                                color:
+                                    isFetching
+                                        ? AppTheme.info
+                                        : AppTheme.success,
                                 size: 16,
                               ),
                               const SizedBox(width: 8),
-                              Text(
-                                _progress.statusText,
-                                style: TextStyle(
-                                  color: Colors.white.withAlpha(
-                                    (0.9 * 255).round(),
+                              Expanded(
+                                child: Text(
+                                  _progress.statusText,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: Colors.white.withAlpha(
+                                      (0.9 * 255).round(),
+                                    ),
+                                    fontFamily: 'VarelaRound',
+                                    fontWeight: FontWeight.w500,
                                   ),
-                                  fontFamily: 'VarelaRound',
-                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
                             ],
@@ -438,21 +769,22 @@ class _AppStorageCacheSettingsPageState
                                 minHeight: 4,
                               ),
                             ),
-                            if (_progress.currentArtist != null) ...[
-                              const SizedBox(height: 6),
-                              Text(
-                                _progress.currentArtist!,
-                                style: TextStyle(
-                                  color: Colors.white.withAlpha(
-                                    (0.5 * 255).round(),
-                                  ),
-                                  fontSize: 12,
-                                  fontFamily: 'VarelaRound',
+                            // Always keep this slot in the tree (empty string
+                            // when null) => conditional add/remove changes the
+                            // card height and causes the ListView to re-layout.
+                            const SizedBox(height: 6),
+                            Text(
+                              _progress.currentArtist ?? '',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: Colors.white.withAlpha(
+                                  (0.5 * 255).round(),
                                 ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                                fontSize: 12,
+                                fontFamily: 'VarelaRound',
                               ),
-                            ],
+                            ),
                           ],
                           if (!isFetching && hasStarted) ...[
                             const SizedBox(height: 6),
@@ -478,19 +810,7 @@ class _AppStorageCacheSettingsPageState
                     iconColor: AppTheme.info,
                     title: 'Fetch Missing Artist Pictures',
                     subtitle: 'Fetch images only for artists without one',
-                    trailing: isFetching
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Icon(
-                            Icons.chevron_right_rounded,
-                            color: Colors.white.withAlpha(
-                              (0.5 * 255).round(),
-                            ),
-                            size: 20,
-                          ),
+                    trailing: isFetching ? const _LoadingIcon() : _chevron(),
                     onTap: isFetching ? null : _fetchMissingArtistImages,
                   ),
                   const SizedBox(height: 8),
@@ -500,19 +820,7 @@ class _AppStorageCacheSettingsPageState
                     iconColor: AppTheme.warning,
                     title: 'Refetch All Artist Pictures',
                     subtitle: 'Clear stored images and re-fetch everything',
-                    trailing: isFetching
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Icon(
-                            Icons.chevron_right_rounded,
-                            color: Colors.white.withAlpha(
-                              (0.5 * 255).round(),
-                            ),
-                            size: 20,
-                          ),
+                    trailing: isFetching ? const _LoadingIcon() : _chevron(),
                     onTap: isFetching ? null : _refetchAllArtistImages,
                   ),
                 ],
@@ -521,49 +829,98 @@ class _AppStorageCacheSettingsPageState
           ),
 
           const SizedBox(height: 24),
-
-          const Text(
-            'CACHE MANAGEMENT',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 13,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1.2,
-              fontFamily: 'VarelaRound',
-            ),
-          ),
+          _sectionHeader('CACHE MANAGEMENT'),
           const SizedBox(height: 12),
+
+          _buildActionTile(
+            icon: Symbols.face_rounded,
+            iconColor: AppTheme.warning,
+            title: 'Clear Artist Artwork Cache',
+            subtitle: 'In-memory cache of artist images loaded from disk',
+            trailing: _deleteIcon(),
+            onTap: _confirmClearArtistArtworkCache,
+          ),
+          const SizedBox(height: 8),
+
+          _buildActionTile(
+            icon: Symbols.album_rounded,
+            iconColor: AppTheme.warning,
+            title: 'Clear Album/Song Artwork Cache',
+            subtitle: 'In-memory cache of album and song covers from device',
+            trailing: _deleteIcon(),
+            onTap: _confirmClearAlbumSongArtworkCache,
+          ),
+          const SizedBox(height: 8),
+
+          _buildActionTile(
+            icon: Symbols.image_rounded,
+            iconColor: AppTheme.warning,
+            title: 'Clear Network Image Cache',
+            subtitle: 'Cached images fetched from the internet',
+            trailing: _deleteIcon(),
+            onTap: _confirmClearNetworkImageCache,
+          ),
+          const SizedBox(height: 8),
+
+          _buildActionTile(
+            icon: Symbols.lyrics_rounded,
+            iconColor: AppTheme.warning,
+            title: 'Clear Lyrics Cache',
+            subtitle: 'Cached lyrics fetched from lrclib.net',
+            trailing: _deleteIcon(),
+            onTap: _confirmClearLyricsCache,
+          ),
+          const SizedBox(height: 8),
 
           _buildActionTile(
             icon: Symbols.cleaning_services_rounded,
             iconColor: AppTheme.warning,
             title: 'Clear Last.fm Cache',
-            subtitle: 'Remove cached Last.fm data',
-            trailing: Icon(
-              Icons.delete_outline,
-              color: Colors.white.withAlpha((0.5 * 255).round()),
-              size: 20,
-            ),
+            subtitle: 'Cached Last.fm artist info (account data untouched)',
+            trailing: _deleteIcon(),
             onTap: _confirmClearLastfmCache,
           ),
           const SizedBox(height: 8),
 
           _buildActionTile(
             icon: Symbols.delete_sweep_rounded,
-            iconColor: AppTheme.warning,
+            iconColor: AppTheme.error,
             title: 'Clear All Cache',
-            subtitle: 'Remove all cached data including artwork',
-            trailing: Icon(
-              Icons.delete_outline,
-              color: Colors.white.withAlpha((0.5 * 255).round()),
-              size: 20,
-            ),
+            subtitle: 'Clears all caches; account data & settings untouched',
+            trailing: _deleteIcon(color: AppTheme.error),
             onTap: _confirmClearAllCache,
           ),
         ],
       ),
     );
   }
+
+  /// ============================== Helpers ==============================
+
+  Widget _sectionHeader(String text) {
+    return Text(
+      text,
+      style: const TextStyle(
+        color: Colors.white,
+        fontSize: 13,
+        fontWeight: FontWeight.bold,
+        letterSpacing: 1.2,
+        fontFamily: 'VarelaRound',
+      ),
+    );
+  }
+
+  Widget _chevron() => Icon(
+    Icons.chevron_right_rounded,
+    color: Colors.white.withAlpha((0.5 * 255).round()),
+    size: 20,
+  );
+
+  Widget _deleteIcon({Color? color}) => Icon(
+    Icons.delete_outline,
+    color: (color ?? Colors.white).withAlpha((0.5 * 255).round()),
+    size: 20,
+  );
 
   Widget _buildActionTile({
     required IconData icon,
@@ -634,6 +991,19 @@ class _AppStorageCacheSettingsPageState
           ),
         ),
       ),
+    );
+  }
+}
+
+class _LoadingIcon extends StatelessWidget {
+  const _LoadingIcon();
+
+  @override
+  Widget build(BuildContext context) {
+    return const SizedBox(
+      width: 20,
+      height: 20,
+      child: CircularProgressIndicator(strokeWidth: 2),
     );
   }
 }
