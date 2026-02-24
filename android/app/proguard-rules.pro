@@ -21,6 +21,8 @@
 -dontwarn com.lucasjosino.on_audio_query.**
 -keepattributes Signature, InnerClasses
 
+-keep class wtf.sono.app.BootReceiver { *; }
+
 #FileProvider for APK installation
 -keep class androidx.core.content.FileProvider { *; }
 
