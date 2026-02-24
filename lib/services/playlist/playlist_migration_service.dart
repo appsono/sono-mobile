@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:on_audio_query/on_audio_query.dart' as query;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sono/data/repositories/favorites_repository.dart';
 import 'package:sono/data/repositories/playlists_repository.dart';
 import 'package:sono/data/repositories/playlist_songs_repository.dart';
 import 'package:sono/data/models/playlist_model.dart';
@@ -13,6 +14,7 @@ class PlaylistMigrationService {
   final query.OnAudioQuery _audioQuery = query.OnAudioQuery();
   final PlaylistsRepository _playlistsRepo = PlaylistsRepository();
   final PlaylistSongsRepository _playlistSongsRepo = PlaylistSongsRepository();
+  final FavoritesRepository _favoritesRepo = FavoritesRepository();
 
   static const String _migrationFlagKey = 'playlists_migrated_to_db_v1';
   static const String _playlistCoverKeyPrefix = 'playlist_cover_song_id_v1_';
@@ -152,19 +154,49 @@ class PlaylistMigrationService {
       );
       debugPrint('PlaylistMigrationService: Cover song ID: $coverSongId');
 
-      //create playlist in database
-      final dbPlaylistId = await _playlistsRepo.createPlaylist(
-        name: mediaStorePlaylist.playlist,
-        coverSongId: coverSongId,
-        mediastoreId: mediaStorePlaylist.id, //store MediaStore ID
-        isFavorite: isFavorite,
-        syncStatus:
-            PlaylistSyncStatus.synced, //already synced (its from MediaStore)
-      );
+      //get or create the DB playlist
+      int dbPlaylistId;
+      if (isFavorite) {
+        //merge into existing "Liked Songs" playlist if present, to avoid duplicates
+        final allPlaylists = await _playlistsRepo.getAllPlaylists();
+        final existing = allPlaylists.where((p) => p.isFavorite).toList();
 
-      debugPrint(
-        'PlaylistMigrationService: Created playlist in database with ID: $dbPlaylistId',
-      );
+        if (existing.isNotEmpty) {
+          dbPlaylistId = existing.first.id;
+          //link the MediaStore ID if not already set
+          if (existing.first.mediastoreId == null) {
+            await _playlistsRepo.setMediaStoreId(
+              dbPlaylistId,
+              mediaStorePlaylist.id,
+            );
+          }
+          debugPrint(
+            'PlaylistMigrationService: Merging into existing Liked Songs playlist (ID: $dbPlaylistId)',
+          );
+        } else {
+          dbPlaylistId = await _playlistsRepo.createPlaylist(
+            name: mediaStorePlaylist.playlist,
+            coverSongId: coverSongId,
+            mediastoreId: mediaStorePlaylist.id,
+            isFavorite: true,
+            syncStatus: PlaylistSyncStatus.synced,
+          );
+          debugPrint(
+            'PlaylistMigrationService: Created Liked Songs playlist in database with ID: $dbPlaylistId',
+          );
+        }
+      } else {
+        dbPlaylistId = await _playlistsRepo.createPlaylist(
+          name: mediaStorePlaylist.playlist,
+          coverSongId: coverSongId,
+          mediastoreId: mediaStorePlaylist.id,
+          isFavorite: false,
+          syncStatus: PlaylistSyncStatus.synced,
+        );
+        debugPrint(
+          'PlaylistMigrationService: Created playlist in database with ID: $dbPlaylistId',
+        );
+      }
 
       //get songs from MediaStore playlist
       List<query.SongModel> songs = [];
@@ -202,6 +234,16 @@ class PlaylistMigrationService {
           debugPrint(
             'PlaylistMigrationService: Successfully added ${songs.length} songs to database',
           );
+
+          //for "Liked Songs", also register each song in the favorites table
+          if (isFavorite) {
+            for (final song in songs) {
+              await _favoritesRepo.addFavoriteSong(song.id);
+            }
+            debugPrint(
+              'PlaylistMigrationService: Registered ${songs.length} songs as favorites',
+            );
+          }
         } catch (e) {
           debugPrint(
             'PlaylistMigrationService: ERROR adding songs to database: $e',
