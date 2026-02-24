@@ -13,6 +13,7 @@ import 'package:sono/services/playlist/playlist_migration_service.dart';
 import 'package:sono/services/playlist/playlist_service.dart';
 import 'package:sono/services/utils/artwork_cache_service.dart';
 import 'package:sono/styles/app_theme.dart';
+import 'package:sono/widgets/global/bottom_sheet.dart';
 import 'package:sono/widgets/library/artist_artwork_widget.dart';
 
 /// Developer sub-page: App Storage & Cache
@@ -55,38 +56,44 @@ class _AppStorageCacheSettingsPageState
   /// ============================== Playlist operations ==============================
 
   Future<void> _runPlaylistMigration() async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showModalBottomSheet<bool>(
       context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder:
-          (context) => AlertDialog(
-            backgroundColor: AppTheme.backgroundDark,
-            title: const Text(
-              'Migrate Local Playlists',
-              style: TextStyle(color: Colors.white, fontFamily: 'VarelaRound'),
+          (sheetContext) => Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
             ),
-            content: Text(
-              'This will reset the migration flag and re-import all MediaStore playlists into the app database.\n\nNote: Running this more than once may create duplicate playlists. For testing only.',
-              style: TextStyle(
-                color: Colors.white.withAlpha((0.8 * 255).round()),
-                fontFamily: 'VarelaRound',
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text(
-                  'Cancel',
-                  style: TextStyle(fontFamily: 'VarelaRound'),
+            child: SonoBottomSheet(
+              title: 'Migrate Local Playlists',
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(sheetContext, false),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(fontFamily: 'VarelaRound'),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(sheetContext, true),
+                  child: const Text(
+                    'Migrate',
+                    style: TextStyle(fontFamily: 'VarelaRound'),
+                  ),
+                ),
+              ],
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                child: Text(
+                  'This will reset the migration flag and re-import all MediaStore playlists into the app database.\n\nNote: Running this more than once may create duplicate playlists. For testing only.',
+                  style: TextStyle(
+                    color: Colors.white.withAlpha((0.8 * 255).round()),
+                    fontFamily: 'VarelaRound',
+                  ),
                 ),
               ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text(
-                  'Migrate',
-                  style: TextStyle(fontFamily: 'VarelaRound'),
-                ),
-              ),
-            ],
+            ),
           ),
     );
 
@@ -143,19 +150,29 @@ class _AppStorageCacheSettingsPageState
       return;
     }
 
-    final picked = await showDialog<int>(
+    final picked = await showModalBottomSheet<int>(
       context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder:
-          (context) => AlertDialog(
-            backgroundColor: AppTheme.backgroundDark,
-            title: const Text(
-              'Select Playlist',
-              style: TextStyle(color: Colors.white, fontFamily: 'VarelaRound'),
+          (sheetContext) => Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
             ),
-            content: SizedBox(
-              width: double.maxFinite,
+            child: SonoBottomSheet(
+              title: 'Select Playlist',
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(sheetContext),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(fontFamily: 'VarelaRound'),
+                  ),
+                ),
+              ],
               child: ListView.builder(
                 shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
                 itemCount: playlists.length,
                 itemBuilder: (context, i) {
                   final pl = playlists[i];
@@ -177,20 +194,11 @@ class _AppStorageCacheSettingsPageState
                         fontSize: 12,
                       ),
                     ),
-                    onTap: () => Navigator.pop(context, pl.id),
+                    onTap: () => Navigator.pop(sheetContext, pl.id),
                   );
                 },
               ),
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text(
-                  'Cancel',
-                  style: TextStyle(fontFamily: 'VarelaRound'),
-                ),
-              ),
-            ],
           ),
     );
 
@@ -230,19 +238,29 @@ class _AppStorageCacheSettingsPageState
       return;
     }
 
-    final pickedMediaStoreId = await showDialog<int>(
+    final pickedMediaStoreId = await showModalBottomSheet<int>(
       context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder:
-          (context) => AlertDialog(
-            backgroundColor: AppTheme.backgroundDark,
-            title: const Text(
-              'Step 1: Pick MediaStore Playlist',
-              style: TextStyle(color: Colors.white, fontFamily: 'VarelaRound'),
+          (sheetContext) => Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
             ),
-            content: SizedBox(
-              width: double.maxFinite,
+            child: SonoBottomSheet(
+              title: 'Step 1: Pick MediaStore Playlist',
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(sheetContext),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(fontFamily: 'VarelaRound'),
+                  ),
+                ),
+              ],
               child: ListView.builder(
                 shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
                 itemCount: mediaStorePlaylists.length,
                 itemBuilder: (context, i) {
                   final pl = mediaStorePlaylists[i];
@@ -262,20 +280,11 @@ class _AppStorageCacheSettingsPageState
                         fontSize: 12,
                       ),
                     ),
-                    onTap: () => Navigator.pop(context, pl.id),
+                    onTap: () => Navigator.pop(sheetContext, pl.id),
                   );
                 },
               ),
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text(
-                  'Cancel',
-                  style: TextStyle(fontFamily: 'VarelaRound'),
-                ),
-              ),
-            ],
           ),
     );
 
@@ -290,19 +299,29 @@ class _AppStorageCacheSettingsPageState
       return;
     }
 
-    final pickedDbId = await showDialog<int>(
+    final pickedDbId = await showModalBottomSheet<int>(
       context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder:
-          (context) => AlertDialog(
-            backgroundColor: AppTheme.backgroundDark,
-            title: const Text(
-              'Step 2: Pick DB Playlist',
-              style: TextStyle(color: Colors.white, fontFamily: 'VarelaRound'),
+          (sheetContext) => Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
             ),
-            content: SizedBox(
-              width: double.maxFinite,
+            child: SonoBottomSheet(
+              title: 'Step 2: Pick DB Playlist',
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(sheetContext),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(fontFamily: 'VarelaRound'),
+                  ),
+                ),
+              ],
               child: ListView.builder(
                 shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
                 itemCount: dbPlaylists.length,
                 itemBuilder: (context, i) {
                   final pl = dbPlaylists[i];
@@ -324,20 +343,11 @@ class _AppStorageCacheSettingsPageState
                         fontSize: 12,
                       ),
                     ),
-                    onTap: () => Navigator.pop(context, pl.id),
+                    onTap: () => Navigator.pop(sheetContext, pl.id),
                   );
                 },
               ),
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text(
-                  'Cancel',
-                  style: TextStyle(fontFamily: 'VarelaRound'),
-                ),
-              ),
-            ],
           ),
     );
 
@@ -378,39 +388,47 @@ class _AppStorageCacheSettingsPageState
   Future<void> _refetchAllArtistImages() async {
     if (_progress.isFetching) return;
 
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showModalBottomSheet<bool>(
       context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder:
-          (context) => AlertDialog(
-            backgroundColor: AppTheme.backgroundDark,
-            title: const Text(
-              'Refetch All Artist Pictures',
-              style: TextStyle(color: Colors.white, fontFamily: 'VarelaRound'),
+          (sheetContext) => Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
             ),
-            content: Text(
-              'This will clear all stored artist image URLs and re-fetch every artist from the API. This may take a while.',
-              style: TextStyle(
-                color: Colors.white.withAlpha((0.8 * 255).round()),
-                fontFamily: 'VarelaRound',
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text(
-                  'Cancel',
-                  style: TextStyle(fontFamily: 'VarelaRound'),
+            child: SonoBottomSheet(
+              title: 'Refetch All Artist Pictures',
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(sheetContext, false),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(fontFamily: 'VarelaRound'),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(sheetContext, true),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppTheme.warning,
+                  ),
+                  child: const Text(
+                    'Refetch All',
+                    style: TextStyle(fontFamily: 'VarelaRound'),
+                  ),
+                ),
+              ],
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                child: Text(
+                  'This will clear all stored artist image URLs and re-fetch every artist from the API. This may take a while.',
+                  style: TextStyle(
+                    color: Colors.white.withAlpha((0.8 * 255).round()),
+                    fontFamily: 'VarelaRound',
+                  ),
                 ),
               ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                style: TextButton.styleFrom(foregroundColor: AppTheme.warning),
-                child: const Text(
-                  'Refetch All',
-                  style: TextStyle(fontFamily: 'VarelaRound'),
-                ),
-              ),
-            ],
+            ),
           ),
     );
 
@@ -533,39 +551,47 @@ class _AppStorageCacheSettingsPageState
   }
 
   Future<void> _confirmClearAllCache() async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showModalBottomSheet<bool>(
       context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder:
-          (context) => AlertDialog(
-            backgroundColor: AppTheme.backgroundDark,
-            title: const Text(
-              'Clear All Cache',
-              style: TextStyle(color: Colors.white, fontFamily: 'VarelaRound'),
+          (sheetContext) => Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
             ),
-            content: Text(
-              'Clears all in-memory and disk caches: artist artwork, album/song artwork, network images, lyrics, and Last.fm data.\n\nAccount data, settings, playlists, and favorites are NOT affected.',
-              style: TextStyle(
-                color: Colors.white.withAlpha((0.8 * 255).round()),
-                fontFamily: 'VarelaRound',
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text(
-                  'Cancel',
-                  style: TextStyle(fontFamily: 'VarelaRound'),
+            child: SonoBottomSheet(
+              title: 'Clear All Cache',
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(sheetContext, false),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(fontFamily: 'VarelaRound'),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(sheetContext, true),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppTheme.warning,
+                  ),
+                  child: const Text(
+                    'Clear All',
+                    style: TextStyle(fontFamily: 'VarelaRound'),
+                  ),
+                ),
+              ],
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                child: Text(
+                  'Clears all in-memory and disk caches: artist artwork, album/song artwork, network images, lyrics, and Last.fm data.\n\nAccount data, settings, playlists, and favorites are NOT affected.',
+                  style: TextStyle(
+                    color: Colors.white.withAlpha((0.8 * 255).round()),
+                    fontFamily: 'VarelaRound',
+                  ),
                 ),
               ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                style: TextButton.styleFrom(foregroundColor: AppTheme.warning),
-                child: const Text(
-                  'Clear All',
-                  style: TextStyle(fontFamily: 'VarelaRound'),
-                ),
-              ),
-            ],
+            ),
           ),
     );
 
@@ -590,43 +616,46 @@ class _AppStorageCacheSettingsPageState
     }
   }
 
-  /// Generic confirm dialog => returns true if user confirmed.
+  /// Generic confirm bottom sheet => returns true if user confirmed.
   Future<bool> _confirmClear(String title, String body) async {
-    return await showDialog<bool>(
+    return await showModalBottomSheet<bool>(
           context: context,
+          backgroundColor: Colors.transparent,
+          isScrollControlled: true,
           builder:
-              (context) => AlertDialog(
-                backgroundColor: AppTheme.backgroundDark,
-                title: Text(
-                  title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontFamily: 'VarelaRound',
-                  ),
+              (sheetContext) => Padding(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
                 ),
-                content: Text(
-                  body,
-                  style: TextStyle(
-                    color: Colors.white.withAlpha((0.8 * 255).round()),
-                    fontFamily: 'VarelaRound',
-                  ),
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, false),
-                    child: const Text(
-                      'Cancel',
-                      style: TextStyle(fontFamily: 'VarelaRound'),
+                child: SonoBottomSheet(
+                  title: title,
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(sheetContext, false),
+                      child: const Text(
+                        'Cancel',
+                        style: TextStyle(fontFamily: 'VarelaRound'),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(sheetContext, true),
+                      child: const Text(
+                        'Clear',
+                        style: TextStyle(fontFamily: 'VarelaRound'),
+                      ),
+                    ),
+                  ],
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                    child: Text(
+                      body,
+                      style: TextStyle(
+                        color: Colors.white.withAlpha((0.8 * 255).round()),
+                        fontFamily: 'VarelaRound',
+                      ),
                     ),
                   ),
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, true),
-                    child: const Text(
-                      'Clear',
-                      style: TextStyle(fontFamily: 'VarelaRound'),
-                    ),
-                  ),
-                ],
+                ),
               ),
         ) ??
         false;
