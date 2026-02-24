@@ -1,27 +1,11 @@
 # Sono
 
 <div align="center">
-  <img src="assets/icon/icon_legacy.png" alt="Sono Logo" width="128" height="128" style="border-radius: 16px;">
-
+  <img src="https://web.sono.wtf/images/favicon.png" alt="Sono Logo" width="128" height="128" style="border-radius: 16px;">
+  <p><br></p>
+  
   **A beautiful local music player for Android**
-
-  <a href="https://github.com/appsono/sono-mobile/releases/latest">
-    <img src="https://img.shields.io/github/v/release/appsono/sono-mobile?style=flat&logo=github&label=stable&color=green" alt="Latest Release">
-  </a>
-  <a href="https://github.com/appsono/sono-mobile/releases">
-    <img src="https://img.shields.io/github/v/release/appsono/sono-mobile?include_prereleases&style=flat&logo=github&label=beta&color=orange" alt="Latest Pre-release">
-  </a>
-  <a href="https://github.com/appsono/sono-mobile/releases">
-    <img src="https://img.shields.io/github/downloads/appsono/sono-mobile/total?style=flat&logo=github&color=blue" alt="Downloads">
-  </a>
-  <br>
-  <a href="https://flutter.dev">
-    <img src="https://img.shields.io/badge/Flutter-3.7+-02569B?style=flat&logo=flutter&logoColor=white" alt="Flutter">
-  </a>
-  <a href="https://www.gnu.org/licenses/gpl-3.0">
-    <img src="https://img.shields.io/badge/License-GPLv3-blue?style=flat" alt="License: GPL v3">
-  </a>
-
+  
   [Download](https://github.com/appsono/sono-mobile/releases) | [Branching Strategy](BRANCHING.md) | [Contributing](CONTRIBUTING.md)
 </div>
 
