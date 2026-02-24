@@ -271,11 +271,34 @@ class MediaStoreSyncService {
         return false;
       }
 
-      //if already has MediaStore ID => try to sync songs
+      //if already has MediaStore ID => check it still exists, then sync songs
       if (playlist.mediastoreId != null) {
+        final stillExists = await mediaStorePlaylistExists(
+          playlist.mediastoreId!,
+        );
+
+        int targetId = playlist.mediastoreId!;
+
+        if (!stillExists) {
+          //MediaStore playlist was deleted externally => re-create it
+          debugPrint(
+            'MediaStoreSyncService: MediaStore playlist ${playlist.mediastoreId} no longer exists, re-creating',
+          );
+          final newId = await createMediaStorePlaylist(playlist.name);
+          if (newId == null) {
+            await _playlistsRepo.updateSyncStatus(
+              playlistId,
+              PlaylistSyncStatus.failed,
+            );
+            return false;
+          }
+          await _playlistsRepo.setMediaStoreId(playlistId, newId);
+          targetId = newId;
+        }
+
         final success = await syncPlaylistSongsToMediaStore(
           playlistId,
-          playlist.mediastoreId!,
+          targetId,
         );
 
         if (success) {
