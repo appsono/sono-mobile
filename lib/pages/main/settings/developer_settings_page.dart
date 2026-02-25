@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:sono/pages/main/settings/app_storage_cache_settings_page.dart';
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:sono/styles/app_theme.dart';
 import 'package:sono/services/settings/developer_settings_service.dart';
 import 'package:sono/services/api/api_service.dart';
 import 'package:sono/services/utils/crashlytics_service.dart';
-import 'package:sono/services/utils/firebase_availability.dart';
 import 'package:sono/data/database/database_helper.dart';
 
 /// developer settings page - analytics, API mode, cache, database
@@ -526,14 +524,7 @@ class _DeveloperSettingsPageState extends State<DeveloperSettingsPage> {
     );
 
     if (confirmed == true) {
-      if (!FirebaseAvailability.instance.isAvailable) {
-        _showSnackBar(
-          message: 'Firebase is not available, cannot test crash',
-          isError: true,
-        );
-        return;
-      }
-      FirebaseCrashlytics.instance.crash();
+      CrashlyticsService.instance.crash();
     }
   }
 

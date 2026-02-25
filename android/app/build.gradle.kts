@@ -56,6 +56,13 @@ android {
             manifestPlaceholders["appName"] = "Sono Nightly"
             manifestPlaceholders["mainActivity"] = "wtf.sono.app.nightly.MainActivity"
         }
+        create("fdroid") {
+            dimension = "version"
+            applicationIdSuffix = ""
+            manifestPlaceholders["appIcon"] = "@mipmap/ic_launcher"
+            manifestPlaceholders["appName"] = "Sono"
+            manifestPlaceholders["mainActivity"] = "wtf.sono.app.MainActivity"
+        }
     }
 
     signingConfigs {
@@ -107,6 +114,16 @@ android {
 afterEvaluate {
     android.applicationVariants.configureEach {
         val flavorName = productFlavors.firstOrNull()?.name ?: return@configureEach
+        val variantName = name.replaceFirstChar { it.uppercase() }
+
+        //disable all Firebase Gradle tasks for F-Droid builds
+        if (flavorName == "fdroid") {
+            tasks.findByName("process${variantName}GoogleServices")?.enabled = false
+            tasks.findByName("uploadCrashlytics${variantName}MappingFile")?.enabled = false
+            tasks.findByName("injectCrashlytics${variantName}MappingFileId")?.enabled = false
+            return@configureEach
+        }
+
         val mainGoogleServices = file("src/main/google-services.json")
         val flavorGoogleServices = file("src/$flavorName/google-services.json")
 
@@ -115,7 +132,6 @@ afterEvaluate {
             mainGoogleServices.copyTo(flavorGoogleServices)
         }
 
-        val variantName = name.replaceFirstChar { it.uppercase() }
         val hasConfig = flavorGoogleServices.exists() || file("google-services.json").exists()
         if (!hasConfig) {
             tasks.findByName("process${variantName}GoogleServices")?.enabled = false

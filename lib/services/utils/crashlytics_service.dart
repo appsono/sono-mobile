@@ -105,4 +105,10 @@ class CrashlyticsService {
       }
     }
   }
+
+  /// Trigger a test crash to verify Crashlytics is working
+  void crash() {
+    if (!FirebaseAvailability.instance.isAvailable) return;
+    FirebaseCrashlytics.instance.crash();
+  }
 }

@@ -1,16 +1,12 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:just_audio_media_kit/just_audio_media_kit.dart';
 import 'package:sono/services/utils/theme_service.dart';
 import 'package:sono/services/utils/env_config.dart';
-import 'package:sono/services/utils/crashlytics_service.dart';
-import 'package:sono/services/utils/firebase_availability.dart';
 import 'package:sono/services/sas/sas_manager.dart';
 import 'package:sono/services/playlist/playlist_service.dart';
 import 'package:sono/services/artists/artist_fetch_progress_service.dart';
@@ -19,57 +15,13 @@ import 'package:sono/services/servers/server_service.dart';
 import 'package:sono/widgets/player/sono_player.dart';
 import 'package:sono/styles/app_theme.dart';
 import 'pages/loading_page.dart';
-import 'firebase_options.dart';
+import 'firebase_init.dart';
 import 'dart:async';
 import 'package:app_links/app_links.dart';
 import 'package:http/http.dart' as http;
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
-/// Initialize Firebase and Crashlytics in a separate function
-/// If Firebase fails (e.g. missing google-services / GoogleService-Info.plist),
-/// the app will continue to run without Firebase features.
-Future<void> _initializeFirebase() async {
-  try {
-    if (defaultTargetPlatform == TargetPlatform.iOS ||
-        defaultTargetPlatform == TargetPlatform.android) {
-      await Firebase.initializeApp();
-    } else {
-      await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
-      );
-    }
-
-    //mark firebase as available
-    FirebaseAvailability.instance.markAvailable();
-
-    //initialize crashlytics service (only meaningful when firebase is up)
-    await CrashlyticsService.instance.initialize();
-
-    //only set up error handlers if crashlytics is enabled
-    if (CrashlyticsService.instance.isEnabled) {
-      FlutterError.onError = (FlutterErrorDetails details) {
-        if (FirebaseAvailability.instance.isAvailable) {
-          FirebaseCrashlytics.instance.recordFlutterFatalError(details);
-        }
-      };
-      PlatformDispatcher.instance.onError = (error, stack) {
-        if (FirebaseAvailability.instance.isAvailable) {
-          FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-        }
-        return true;
-      };
-    }
-  } catch (e) {
-    if (e.toString().contains('already exists')) {
-      //firebase was already initialized
-      FirebaseAvailability.instance.markAvailable();
-    } else {
-      debugPrint('[Firebase] Init FAILED: $e');
-      //do NOT rethrow, app works fine without firebase
-    }
-  }
-}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -101,12 +53,10 @@ void main() async {
   debugPrint('[Init] Starting EnvConfig + Firebase initialization...');
   await Future.wait([
     EnvConfig.initialize(),
-    _initializeFirebase(),
+    initializeFirebase(),
     MusicServerService.instance.loadServers(),
   ]);
-  debugPrint(
-    '[Init] Firebase available: ${FirebaseAvailability.instance.isAvailable}',
-  );
+  debugPrint('[Init] Firebase initialization complete');
 
   debugPrint('[Init] Calling runApp...');
   runApp(
