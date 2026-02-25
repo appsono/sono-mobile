@@ -1,0 +1,1 @@
+Beautiful local music player with lyrics, playlists & Last.fm scrobbling

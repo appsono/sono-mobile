@@ -1,0 +1,5 @@
+- New Cache & Storage settings page with options to re-import playlists and refresh artist images
+- Fixed an issue where cached data was not being cleared correctly
+- Your device's liked songs are now automatically added to your Sono favourites
+- Fixed playlist sync between Sono and your device's media library
+- Various bug fixes and stability improvements

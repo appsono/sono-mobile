@@ -1,0 +1,20 @@
+Sono is a beautiful, feature-rich local music player designed to make your offline music collection shine.
+
+Browse your library by songs, albums, and artists with a clean, modern interface. Find anything instantly with full-text search across your entire collection.
+
+PLAYER
+Enjoy your music with a stunning fullscreen player featuring swipe gestures, synced lyrics, crossfade transitions, playback speed and pitch control, a built-in equaliser with presets, and a sleep timer. Sono plays in the background and integrates with your device's media controls.
+
+PLAYLISTS & FAVOURITES
+Create and manage playlists with drag-and-drop reordering and custom covers. Sono syncs with your device's media library, so your system playlists are always up to date. Mark your favourite songs, albums, and artists for quick access.
+
+METADATA & SCROBBLING
+Sono connects to Last.fm to scrobble your listening history, fetch artist biographies and images, and retrieve album artwork. Lyrics are fetched automatically so you can always follow along.
+
+SHARED AUDIO SESSION
+Listen in sync with others on the same network. Connect via QR code and enjoy real-time synchronised playback across multiple devices.
+
+CUSTOMISATION
+Make Sono your own with rotating album art, excluded folders to keep your library tidy, and a range of settings to tailor the experience to you.
+
+Sono is free, open source, and built with privacy in mind — no ads, no tracking, just your music.
