@@ -10,7 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'package:sono/utils/error_handler.dart';
 import 'package:sono/utils/string_cleanup.dart';
-import 'package:sono/widgets/player/sono_player.dart';
+import 'package:sono/services/player/player.dart';
 import 'package:sono/widgets/home/page_items.dart';
 import 'package:sono/pages/library/album_page.dart';
 import 'package:sono/widgets/global/add_to_playlist_dialog.dart';

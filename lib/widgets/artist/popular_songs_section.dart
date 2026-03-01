@@ -4,7 +4,7 @@ import 'package:on_audio_query/on_audio_query.dart';
 import 'package:sono/models/popular_song.dart';
 import 'package:sono/styles/app_theme.dart';
 import 'package:sono/widgets/artist/page_skeletons.dart';
-import 'package:sono/widgets/player/sono_player.dart';
+import 'package:sono/services/player/player.dart';
 
 class PopularSongsSection extends StatelessWidget {
   final List<PopularSong> songs;

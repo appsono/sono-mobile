@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:sono/services/utils/recents_service.dart';
-import 'package:sono/widgets/player/sono_player.dart';
+import 'package:sono/services/player/player.dart';
 import 'package:sono/styles/text.dart';
 import 'package:sono/utils/audio_filter_utils.dart';
 import 'package:sono/styles/app_theme.dart';

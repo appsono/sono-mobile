@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:sono/styles/app_theme.dart';
 import 'package:sono/styles/text.dart';
-import 'package:sono/widgets/player/sono_player.dart';
+import 'package:sono/services/player/player.dart';
 import 'package:sono/services/sas/sas_manager.dart';
 import 'package:sono/widgets/global/cached_artwork_image.dart';
 

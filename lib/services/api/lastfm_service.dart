@@ -10,10 +10,12 @@ class LastfmService {
   static String get _apiKey => EnvConfig.lastfmApiKey;
   static String get _apiSecret => EnvConfig.lastfmSharedSecret;
   final String _apiUrl = 'https://ws.audioscrobbler.com/2.0/';
+  final _prefsService = PreferencesService();
 
   static const String _sessionKeyPref = 'lastfm_session_key_v3';
   static const String _userNamePref = 'lastfm_username_v3';
   static const String _artistInfoCachePrefix = 'lastfm_artist_info_cache_v1_';
+  static const String _pendingScrobblesKey = 'lastfm_pending_scrobbles_v1';
 
   Future<SharedPreferences> get _prefs async =>
       await SharedPreferences.getInstance();
@@ -275,64 +277,135 @@ class LastfmService {
     }
   }
 
-  Future<void> updateNowPlaying(
-    String artist,
-    String track, {
+  Future<bool> scrobbleTrack({
+    required String artist,
+    required String track,
+    required int timestamp,
     String? album,
-    int? durationSeconds,
+    String? albumArtist,
+    int? duration,
   }) async {
-    if (!await isLoggedIn()) {
+    if (!await _prefsService.isLastfmScrobblingEnabled()) return false;
+
+    final scrobbleData = {
+      'artist': artist,
+      'track': track,
+      'timestamp': timestamp.toString(),
+      if (album != null) 'album': album,
+      if (albumArtist != null) 'albumArtist': albumArtist,
+      if (duration != null) 'duration': duration.toString(),
+    };
+
+    //save locally first before attempting a network request
+    await _queueScrobble(scrobbleData);
+    //attempt to flush entire queue to api
+    await _flushScrobbleQueue();
+    return true;
+  }
+
+  /// Safely writes scrobble to local storage
+  Future<void> _queueScrobble(Map<String, String> scrobble) async {
+    final prefs = await _prefs;
+    final queueString = prefs.getString(_pendingScrobblesKey) ?? '[]';
+    
+    try {
+      final List<dynamic> queue = json.decode(queueString);
+      queue.add(scrobble);
+      await prefs.setString(_pendingScrobblesKey, json.encode(queue));
+    } catch (e) {
+      //if JSON gets corrupted > overwrite it instead of crashing app permanently
+      await prefs.setString(_pendingScrobblesKey, json.encode([scrobble]));
+    }
+  }
+
+  /// Handles batching and retrying failed requests
+  Future<void> _flushScrobbleQueue() async {
+    final prefs = await _prefs;
+    final queueString = prefs.getString(_pendingScrobblesKey);
+    if (queueString == null) return;
+    
+    List<dynamic> queue;
+    try {
+      queue = json.decode(queueString);
+    } catch (_) {
+      await prefs.remove(_pendingScrobblesKey);
       return;
     }
+
+    if (queue.isEmpty) return;
+
+    // Last.fms API strictly takes a maximum of 50 scrobbles per batch
+    // This splits the queue into valid chunks
+    final batches = <List<dynamic>>[];
+    for (var i = 0; i < queue.length; i += 50) {
+      batches.add(queue.sublist(i, i + 50 > queue.length ? queue.length : i + 50));
+    }
+
+    bool hasNetworkError = false;
+    List<dynamic> remainingQueue = [];
+
+    for (var batch in batches) {
+      if (hasNetworkError) {
+        //if one batch fails > skip rest and keep them in queue
+        remainingQueue.addAll(batch);
+        continue;
+      }
+
+      final params = <String, String>{'method': 'track.scrobble'};
+      for (var i = 0; i < batch.length; i++) {
+        final trackData = batch[i] as Map<String, dynamic>;
+        params['artist[$i]'] = trackData['artist'] as String;
+        params['track[$i]'] = trackData['track'] as String;
+        params['timestamp[$i]'] = trackData['timestamp'] as String;
+        if (trackData.containsKey('album')) params['album[$i]'] = trackData['album'] as String;
+        if (trackData.containsKey('albumArtist')) params['albumArtist[$i]'] = trackData['albumArtist'] as String;
+        if (trackData.containsKey('duration')) params['duration[$i]'] = trackData['duration'] as String;
+      }
+
+      try {
+        await _callApi(params, isPost: true, requiresSk: true);
+        //success: batch is not added to remainingQueue > effectively deleting it
+      } catch (e) {
+        if (kDebugMode) print('Last.fm: Batch failed. Keeping in queue. Error: $e');
+        hasNetworkError = true;
+        remainingQueue.addAll(batch);
+      }
+    }
+
+    //save whatever is left back to disk
+    if (remainingQueue.isEmpty) {
+      await prefs.remove(_pendingScrobblesKey);
+    } else {
+      await prefs.setString(_pendingScrobblesKey, json.encode(remainingQueue));
+    }
+  }
+
+  /// updateNowPlaying does NOT need a queue since it represents current real-time state, 
+  /// but it DOES need to stop swallowing errors and return its status (yes I had to remind how trash this was)
+  Future<bool> updateNowPlaying({
+    required String artist,
+    required String track,
+    String? album,
+    String? albumArtist,
+    int? duration,
+  }) async {
+    if (!await _prefsService.isLastfmScrobblingEnabled()) return false;
+
     final params = {
       'method': 'track.updateNowPlaying',
       'artist': artist,
       'track': track,
     };
-    if (album != null && album.isNotEmpty) {
-      params['album'] = album;
-    }
-    if (durationSeconds != null) {
-      params['duration'] = durationSeconds.toString();
-    }
+    if (album != null) params['album'] = album;
+    if (albumArtist != null) params['albumArtist'] = albumArtist;
+    if (duration != null) params['duration'] = duration.toString();
 
     try {
       await _callApi(params, isPost: true, requiresSk: true);
-      if (kDebugMode) {
-        print('Last.fm: Updated Now Playing - $artist - $track');
-      }
+      return true; 
     } catch (e) {
-      //error already printed by _callApi
-    }
-  }
-
-  Future<void> scrobbleTrack(
-    String artist,
-    String track,
-    int timestamp, {
-    String? album,
-  }) async {
-    final prefsService = PreferencesService(); //inject or pass in
-    if (!await prefsService.isLastfmScrobblingEnabled()) return;
-    if (!await isLoggedIn()) return;
-
-    final params = {
-      'method': 'track.scrobble',
-      'artist[0]': artist,
-      'track[0]': track,
-      'timestamp[0]': timestamp.toString(),
-    };
-    if (album != null && album.isNotEmpty) {
-      params['album[0]'] = album;
-    }
-
-    try {
-      await _callApi(params, isPost: true, requiresSk: true);
-      if (kDebugMode) {
-        print('Last.fm: Scrobble successful - $artist - $track');
-      }
-    } catch (e) {
-      //error already printed by _callApi
+      if (kDebugMode) print('Last.fm: Now playing failed. Network issue? Error: $e');
+      return false; 
     }
   }
 

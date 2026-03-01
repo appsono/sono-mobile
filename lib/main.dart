@@ -12,7 +12,7 @@ import 'package:sono/services/playlist/playlist_service.dart';
 import 'package:sono/services/artists/artist_fetch_progress_service.dart';
 import 'package:sono/services/utils/favorites_service.dart';
 import 'package:sono/services/servers/server_service.dart';
-import 'package:sono/widgets/player/sono_player.dart';
+import 'package:sono/services/player/player.dart';
 import 'package:sono/styles/app_theme.dart';
 import 'pages/loading_page.dart';
 import 'firebase_init.dart';

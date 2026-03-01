@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:sono/services/settings/playback_settings_service.dart';
 import 'package:sono/styles/app_theme.dart';
-import 'package:sono/widgets/player/sono_player.dart';
+import 'package:sono/services/player/player.dart';
 import 'package:sono/widgets/global/sleeptimer.dart';
 import 'equalizer_settings_page.dart';
 

@@ -9,7 +9,7 @@ import 'package:just_audio/just_audio.dart';
 import 'package:network_info_plus/network_info_plus.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:audio_service/audio_service.dart';
-import 'package:sono/widgets/player/sono_player.dart';
+import 'package:sono/services/player/player.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 
 /// Data class for session info

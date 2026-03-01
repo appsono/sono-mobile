@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:material_symbols_icons/symbols.dart';
-import 'package:sono/widgets/player/sono_player.dart';
+import 'package:sono/services/player/player.dart';
 import 'package:sono/services/settings/audio_effects_service.dart';
 import 'package:sono/styles/app_theme.dart';
 import 'package:sono/widgets/global/bottom_sheet.dart';

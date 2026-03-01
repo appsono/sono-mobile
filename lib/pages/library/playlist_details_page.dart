@@ -6,7 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:sono/data/models/playlist_model.dart' as db;
-import 'package:sono/widgets/player/sono_player.dart';
+import 'package:sono/services/player/player.dart';
 import 'package:sono/services/playlist/playlist_service.dart';
 import 'package:sono/styles/text.dart';
 import 'package:sono/styles/app_theme.dart';

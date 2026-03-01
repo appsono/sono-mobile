@@ -22,7 +22,7 @@ import 'package:sono/pages/library/playlist_details_page.dart';
 import 'package:sono/widgets/library/song_list_title.dart';
 import 'package:sono/pages/library/album_page.dart';
 import 'package:sono/pages/library/artist_page.dart';
-import 'package:sono/widgets/player/sono_player.dart';
+import 'package:sono/services/player/player.dart';
 import 'package:sono/styles/text.dart';
 import 'package:sono/styles/app_theme.dart';
 import 'package:sono/widgets/global/cached_artwork_image.dart';

@@ -8,7 +8,7 @@ import 'package:sono/pages/library/artist_page.dart';
 import 'package:sono/widgets/library/song_list_title.dart';
 import 'package:sono/widgets/global/cached_artwork_image.dart';
 import 'package:sono/widgets/library/artist_artwork_widget.dart';
-import 'package:sono/widgets/player/sono_player.dart';
+import 'package:sono/services/player/player.dart';
 import 'package:sono/styles/app_theme.dart';
 import 'package:sono/widgets/library/album_artist_text.dart';
 

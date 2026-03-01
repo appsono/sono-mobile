@@ -5,7 +5,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 
 import 'package:sono/app_scaffold.dart';
-import 'package:sono/widgets/player/sono_player.dart';
+import 'package:sono/services/player/player.dart';
 import 'package:sono/styles/app_theme.dart';
 import 'package:sono/services/artists/artist_image_fetch_service.dart';
 import 'package:sono/services/artists/artist_fetch_progress_service.dart';

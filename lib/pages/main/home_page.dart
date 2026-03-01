@@ -9,7 +9,7 @@ import 'package:sono/pages/servers/library_page.dart';
 import 'package:sono/services/servers/server_service.dart';
 import 'package:sono/styles/app_theme.dart';
 import 'package:sono/styles/text.dart';
-import 'package:sono/widgets/player/sono_player.dart';
+import 'package:sono/services/player/player.dart';
 import 'package:sono/widgets/library/song_list_title.dart';
 import 'package:sono/widgets/home/page_items.dart';
 import 'package:sono/widgets/home/app_bar_content.dart';

@@ -15,7 +15,7 @@ import 'package:sono/styles/text.dart';
 import 'package:sono/widgets/artist/about_modal.dart';
 import 'package:sono/widgets/artist/about_section.dart';
 import 'package:sono/widgets/artist/page_skeletons.dart';
-import 'package:sono/widgets/player/sono_player.dart';
+import 'package:sono/services/player/player.dart';
 import 'package:sono/widgets/servers/remote_artwork.dart';
 import 'package:url_launcher/url_launcher.dart';
 

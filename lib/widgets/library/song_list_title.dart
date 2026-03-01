@@ -3,7 +3,7 @@ import 'package:on_audio_query/on_audio_query.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:sono/utils/artist_string_utils.dart';
 import 'package:sono/widgets/global/add_to_playlist_dialog.dart';
-import 'package:sono/widgets/player/sono_player.dart';
+import 'package:sono/services/player/player.dart';
 import 'package:sono/styles/text.dart';
 import 'package:sono/styles/app_theme.dart';
 import 'package:sono/widgets/global/cached_artwork_image.dart';

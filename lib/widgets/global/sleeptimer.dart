@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 
 import 'package:sono/styles/text.dart';
 import 'package:sono/styles/app_theme.dart';
-import 'package:sono/widgets/player/sono_player.dart';
+import 'package:sono/services/player/player.dart';
 
 void showSleepTimerOptions(BuildContext context, SonoPlayer sonoPlayer) {
   showModalBottomSheet(

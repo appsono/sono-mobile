@@ -13,7 +13,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:sono/pages/info/announcements_changelog_page.dart';
 import 'package:sono/services/utils/env_config.dart';
 import 'package:sono/utils/audio_filter_utils.dart';
-import 'package:sono/widgets/player/sono_player.dart';
+import 'package:sono/services/player/player.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:sono/pages/main/home_page.dart';
 import 'package:sono/pages/main/library_page.dart';
@@ -37,7 +37,7 @@ import 'package:sono/styles/app_theme.dart';
 //utils
 import 'package:sono/utils/error_handler.dart';
 //widgets
-import 'package:sono/widgets/player/parts/mini_player.dart';
+import 'package:sono/widgets/player/main/mini_player.dart';
 import 'package:sono/widgets/global/sidebar_menu.dart';
 import 'package:sono/widgets/global/bottom_sheet.dart';
 import 'package:sono/widgets/artists/artist_fetch_progress_button.dart';

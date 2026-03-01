@@ -5,7 +5,7 @@ import 'package:on_audio_query/on_audio_query.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:sono/services/utils/favorites_service.dart';
-import 'package:sono/widgets/player/sono_player.dart';
+import 'package:sono/services/player/player.dart';
 import 'package:sono/widgets/global/add_to_playlist_dialog.dart';
 import 'package:sono/styles/text.dart';
 import 'package:sono/styles/app_theme.dart';

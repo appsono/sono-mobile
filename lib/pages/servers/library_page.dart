@@ -7,7 +7,7 @@ import 'package:sono/services/servers/server_protocol.dart';
 import 'package:sono/services/servers/server_service.dart';
 import 'package:sono/styles/app_theme.dart';
 import 'package:sono/styles/text.dart';
-import 'package:sono/widgets/player/sono_player.dart';
+import 'package:sono/services/player/player.dart';
 import 'package:sono/widgets/servers/remote_artwork.dart';
 
 class ServerLibraryPage extends StatefulWidget {
