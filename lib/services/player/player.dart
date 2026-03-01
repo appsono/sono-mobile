@@ -1333,7 +1333,10 @@ class SonoPlayer extends BaseAudioHandler {
     if (_primaryPlayer.processingState == ProcessingState.idle) {
       try {
         final savedPosition = _position.value;
-        await _playSongInternal(_currentSong.value!, initialPosition: savedPosition);
+        await _playSongInternal(
+          _currentSong.value!,
+          initialPosition: savedPosition,
+        );
         return;
       } catch (e) {
         if (kDebugMode) {
@@ -2277,7 +2280,8 @@ class SonoPlayer extends BaseAudioHandler {
         audioSource = AudioSource.uri(Uri.file(song.uri!));
       }
 
-      final startPosition = isPreloading ? Duration.zero : (initialPosition ?? Duration.zero);
+      final startPosition =
+          isPreloading ? Duration.zero : (initialPosition ?? Duration.zero);
       final loadedDuration = await targetPlayer.setAudioSource(
         audioSource,
         initialPosition: startPosition,
@@ -3038,16 +3042,18 @@ class SonoPlayer extends BaseAudioHandler {
 
     lastfmService.isLoggedIn().then((loggedIn) {
       if (loggedIn) {
-        lastfmService.updateNowPlaying(
-          artist: song.artist ?? 'Unknown Artist',
-          track: song.title,
-          duration: song.duration != null ? (song.duration! ~/ 1000) : null,
-          album: song.album,
-          albumArtist: song.artist,
-        ).catchError((e) {
-          debugPrint('Last.fm Now Playing Error: $e');
-          return false;
-        });
+        lastfmService
+            .updateNowPlaying(
+              artist: song.artist ?? 'Unknown Artist',
+              track: song.title,
+              duration: song.duration != null ? (song.duration! ~/ 1000) : null,
+              album: song.album,
+              albumArtist: song.artist,
+            )
+            .catchError((e) {
+              debugPrint('Last.fm Now Playing Error: $e');
+              return false;
+            });
       }
     });
   }
@@ -3076,16 +3082,18 @@ class SonoPlayer extends BaseAudioHandler {
         final timestamp =
             DateTime.now().millisecondsSinceEpoch ~/ 1000 -
             (durationMs ~/ 1000);
-            lastfmService.scrobbleTrack(
+        lastfmService
+            .scrobbleTrack(
               artist: song.artist ?? 'Unknown Artist',
               track: song.title,
               timestamp: timestamp,
               duration: song.duration != null ? (song.duration! ~/ 1000) : null,
               album: song.album,
               albumArtist: song.artist,
-            ).catchError((e) {
+            )
+            .catchError((e) {
               debugPrint('Last.fm Scrobble Error: $e');
-              return false; 
+              return false;
             });
       }
     });

@@ -151,7 +151,8 @@ class _SonoFullscreenPlayerState extends State<SonoFullscreenPlayer>
   bool _swipeInitiatedChange =
       false; //true when song change was triggered by swipe
   int? _pendingSwipePage; //page index from onPageChanged while finger is down
-  bool _isProgrammaticAnimation = false; //true while animateToPage runs programmatically
+  bool _isProgrammaticAnimation =
+      false; //true while animateToPage runs programmatically
 
   Timer? _remoteStarredRefreshTimer;
   static const Duration _remoteStarredRefreshInterval = Duration(seconds: 5);

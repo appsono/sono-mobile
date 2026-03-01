@@ -195,13 +195,15 @@ class _DeveloperSettingsPageState extends State<DeveloperSettingsPage> {
                       color: Colors.white.withAlpha((0.5 * 255).round()),
                       size: 20,
                     ),
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            const AppStorageCacheSettingsPage(),
-                      ),
-                    ),
+                    onTap:
+                        () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) =>
+                                    const AppStorageCacheSettingsPage(),
+                          ),
+                        ),
                   ),
 
                   const SizedBox(height: 24),

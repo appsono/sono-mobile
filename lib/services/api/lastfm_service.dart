@@ -307,7 +307,7 @@ class LastfmService {
   Future<void> _queueScrobble(Map<String, String> scrobble) async {
     final prefs = await _prefs;
     final queueString = prefs.getString(_pendingScrobblesKey) ?? '[]';
-    
+
     try {
       final List<dynamic> queue = json.decode(queueString);
       queue.add(scrobble);
@@ -323,7 +323,7 @@ class LastfmService {
     final prefs = await _prefs;
     final queueString = prefs.getString(_pendingScrobblesKey);
     if (queueString == null) return;
-    
+
     List<dynamic> queue;
     try {
       queue = json.decode(queueString);
@@ -338,7 +338,9 @@ class LastfmService {
     // This splits the queue into valid chunks
     final batches = <List<dynamic>>[];
     for (var i = 0; i < queue.length; i += 50) {
-      batches.add(queue.sublist(i, i + 50 > queue.length ? queue.length : i + 50));
+      batches.add(
+        queue.sublist(i, i + 50 > queue.length ? queue.length : i + 50),
+      );
     }
 
     bool hasNetworkError = false;
@@ -357,16 +359,20 @@ class LastfmService {
         params['artist[$i]'] = trackData['artist'] as String;
         params['track[$i]'] = trackData['track'] as String;
         params['timestamp[$i]'] = trackData['timestamp'] as String;
-        if (trackData.containsKey('album')) params['album[$i]'] = trackData['album'] as String;
-        if (trackData.containsKey('albumArtist')) params['albumArtist[$i]'] = trackData['albumArtist'] as String;
-        if (trackData.containsKey('duration')) params['duration[$i]'] = trackData['duration'] as String;
+        if (trackData.containsKey('album'))
+          params['album[$i]'] = trackData['album'] as String;
+        if (trackData.containsKey('albumArtist'))
+          params['albumArtist[$i]'] = trackData['albumArtist'] as String;
+        if (trackData.containsKey('duration'))
+          params['duration[$i]'] = trackData['duration'] as String;
       }
 
       try {
         await _callApi(params, isPost: true, requiresSk: true);
         //success: batch is not added to remainingQueue > effectively deleting it
       } catch (e) {
-        if (kDebugMode) print('Last.fm: Batch failed. Keeping in queue. Error: $e');
+        if (kDebugMode)
+          print('Last.fm: Batch failed. Keeping in queue. Error: $e');
         hasNetworkError = true;
         remainingQueue.addAll(batch);
       }
@@ -380,7 +386,7 @@ class LastfmService {
     }
   }
 
-  /// updateNowPlaying does NOT need a queue since it represents current real-time state, 
+  /// updateNowPlaying does NOT need a queue since it represents current real-time state,
   /// but it DOES need to stop swallowing errors and return its status (yes I had to remind how trash this was)
   Future<bool> updateNowPlaying({
     required String artist,
@@ -402,10 +408,11 @@ class LastfmService {
 
     try {
       await _callApi(params, isPost: true, requiresSk: true);
-      return true; 
+      return true;
     } catch (e) {
-      if (kDebugMode) print('Last.fm: Now playing failed. Network issue? Error: $e');
-      return false; 
+      if (kDebugMode)
+        print('Last.fm: Now playing failed. Network issue? Error: $e');
+      return false;
     }
   }
 

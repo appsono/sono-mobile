@@ -88,7 +88,9 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
                   ),
                   const SizedBox(height: 12),
 
-                  if (EnvConfig.enableAutoUpdate && !Platform.isIOS && !Platform.isLinux) ...[
+                  if (EnvConfig.enableAutoUpdate &&
+                      !Platform.isIOS &&
+                      !Platform.isLinux) ...[
                     _buildSwitchTile(
                       icon: Icons.update_rounded,
                       title: 'Auto Update',

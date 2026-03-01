@@ -498,10 +498,11 @@ class _SonoBottomPlayerState extends State<SonoBottomPlayer>
                               songSwitchController: _songSwitchController,
                               slideInAnimation: _slideInAnimation,
                               fadeAnimation: _fadeAnimation,
-                              buildArtwork: () => _buildArtwork(
-                                currentSong,
-                                fixedSize: isDesktop ? 56.0 : null,
-                              ),
+                              buildArtwork:
+                                  () => _buildArtwork(
+                                    currentSong,
+                                    fixedSize: isDesktop ? 56.0 : null,
+                                  ),
                               buildControls: _buildControls,
                             ),
                           ),
@@ -692,17 +693,18 @@ class _SonoBottomPlayerState extends State<SonoBottomPlayer>
                     ),
                   ),
                   Padding(
-                    padding: MediaQuery.of(context).size.width > 900
-                        ? const EdgeInsets.symmetric(
-                          horizontal: 14.0,
-                          vertical: 4.0,
-                        )
-                        : EdgeInsets.all(
-                          AppTheme.responsiveSpacing(
-                            context,
-                            AppTheme.spacingXs,
-                          ),
-                        ),
+                    padding:
+                        MediaQuery.of(context).size.width > 900
+                            ? const EdgeInsets.symmetric(
+                              horizontal: 14.0,
+                              vertical: 4.0,
+                            )
+                            : EdgeInsets.all(
+                              AppTheme.responsiveSpacing(
+                                context,
+                                AppTheme.spacingXs,
+                              ),
+                            ),
                     child: Row(
                       children: [
                         _buildClientArtwork(),
@@ -904,7 +906,9 @@ class _SonoBottomPlayerState extends State<SonoBottomPlayer>
           splashColor: AppTheme.textPrimaryDark.opacity20,
           child: Container(
             padding: EdgeInsets.all(
-              isDesktop ? 8.0 : AppTheme.responsiveSpacing(context, AppTheme.spacingXs + 2),
+              isDesktop
+                  ? 8.0
+                  : AppTheme.responsiveSpacing(context, AppTheme.spacingXs + 2),
             ),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
@@ -914,11 +918,14 @@ class _SonoBottomPlayerState extends State<SonoBottomPlayer>
             child: Icon(
               isActive ? Icons.group : Icons.group_rounded,
               color: isActive ? AppTheme.brandPink : AppTheme.textPrimaryDark,
-              size: isDesktop ? 24.0 : AppTheme.responsiveIconSize(
-                context,
-                AppTheme.icon,
-                min: 20,
-              ),
+              size:
+                  isDesktop
+                      ? 24.0
+                      : AppTheme.responsiveIconSize(
+                        context,
+                        AppTheme.icon,
+                        min: 20,
+                      ),
             ),
           ),
         );
@@ -933,8 +940,10 @@ class _SonoBottomPlayerState extends State<SonoBottomPlayer>
         final isDesktop = MediaQuery.of(context).size.width > 900;
         return Container(
           padding: EdgeInsets.symmetric(
-            horizontal: isDesktop ? 8.0 : AppTheme.responsiveSpacing(context, 3.5),
-            vertical: isDesktop ? 4.0 : AppTheme.responsiveSpacing(context, 3.5),
+            horizontal:
+                isDesktop ? 8.0 : AppTheme.responsiveSpacing(context, 3.5),
+            vertical:
+                isDesktop ? 4.0 : AppTheme.responsiveSpacing(context, 3.5),
           ),
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -953,11 +962,23 @@ class _SonoBottomPlayerState extends State<SonoBottomPlayer>
             children: [
               _buildSASSessionButton(),
               SizedBox(
-                width: isDesktop ? 4.0 : AppTheme.responsiveSpacing(context, AppTheme.spacingXs),
+                width:
+                    isDesktop
+                        ? 4.0
+                        : AppTheme.responsiveSpacing(
+                          context,
+                          AppTheme.spacingXs,
+                        ),
               ),
               _buildPlayPauseButton(isPlaying),
               SizedBox(
-                width: isDesktop ? 4.0 : AppTheme.responsiveSpacing(context, AppTheme.spacingXs),
+                width:
+                    isDesktop
+                        ? 4.0
+                        : AppTheme.responsiveSpacing(
+                          context,
+                          AppTheme.spacingXs,
+                        ),
               ),
               _buildSkipButton(),
             ],
@@ -978,13 +999,18 @@ class _SonoBottomPlayerState extends State<SonoBottomPlayer>
       splashColor: AppTheme.textPrimaryDark.opacity20,
       child: Container(
         padding: EdgeInsets.all(
-          isDesktop ? 8.0 : AppTheme.responsiveSpacing(context, AppTheme.spacingXs + 2),
+          isDesktop
+              ? 8.0
+              : AppTheme.responsiveSpacing(context, AppTheme.spacingXs + 2),
         ),
         decoration: const BoxDecoration(shape: BoxShape.circle),
         child: Icon(
           isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
           color: AppTheme.textPrimaryDark,
-          size: isDesktop ? 28.0 : AppTheme.responsiveIconSize(context, 28.0, min: 24.0),
+          size:
+              isDesktop
+                  ? 28.0
+                  : AppTheme.responsiveIconSize(context, 28.0, min: 24.0),
         ),
       ),
     );
@@ -1001,12 +1027,17 @@ class _SonoBottomPlayerState extends State<SonoBottomPlayer>
       splashColor: AppTheme.textPrimaryDark.opacity20,
       child: Padding(
         padding: EdgeInsets.all(
-          isDesktop ? 8.0 : AppTheme.responsiveSpacing(context, AppTheme.spacingXs + 2),
+          isDesktop
+              ? 8.0
+              : AppTheme.responsiveSpacing(context, AppTheme.spacingXs + 2),
         ),
         child: Icon(
           Icons.skip_next_rounded,
           color: AppTheme.textPrimaryDark,
-          size: isDesktop ? 28.0 : AppTheme.responsiveIconSize(context, 28.0, min: 24.0),
+          size:
+              isDesktop
+                  ? 28.0
+                  : AppTheme.responsiveIconSize(context, 28.0, min: 24.0),
         ),
       ),
     );
@@ -1110,17 +1141,18 @@ class _MiniPlayerContent extends StatelessWidget {
                                       : 1.0 - fadeAnimation.value)
                                   : 1.0,
                           child: Padding(
-                            padding: MediaQuery.of(context).size.width > 900
-                                ? const EdgeInsets.symmetric(
-                                  horizontal: 14.0,
-                                  vertical: 4.0,
-                                )
-                                : EdgeInsets.all(
-                                  AppTheme.responsiveSpacing(
-                                    context,
-                                    AppTheme.spacingXs,
-                                  ),
-                                ),
+                            padding:
+                                MediaQuery.of(context).size.width > 900
+                                    ? const EdgeInsets.symmetric(
+                                      horizontal: 14.0,
+                                      vertical: 4.0,
+                                    )
+                                    : EdgeInsets.all(
+                                      AppTheme.responsiveSpacing(
+                                        context,
+                                        AppTheme.spacingXs,
+                                      ),
+                                    ),
                             child: Row(
                               children: [
                                 buildArtwork(),

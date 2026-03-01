@@ -305,17 +305,18 @@ class _PlaylistCoverWidget extends StatelessWidget {
         color: AppTheme.elevatedSurfaceDark,
         borderRadius: BorderRadius.circular(AppTheme.radiusSm),
       ),
-      child: playlist.isFavorite
-          ? Icon(
-              Icons.favorite_rounded,
-              color: Theme.of(context).primaryColor,
-              size: AppTheme.iconMd,
-            )
-          : const Icon(
-              Icons.queue_music_rounded,
-              color: AppTheme.textTertiaryDark,
-              size: AppTheme.iconMd,
-            ),
+      child:
+          playlist.isFavorite
+              ? Icon(
+                Icons.favorite_rounded,
+                color: Theme.of(context).primaryColor,
+                size: AppTheme.iconMd,
+              )
+              : const Icon(
+                Icons.queue_music_rounded,
+                color: AppTheme.textTertiaryDark,
+                size: AppTheme.iconMd,
+              ),
     );
   }
 }

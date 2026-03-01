@@ -908,7 +908,8 @@ Tap "Read Full Terms" below to view the complete Terms of Service.
   }
 
   Future<void> _performUpdateCheckAndShowDialog() async {
-    if (!EnvConfig.enableAutoUpdate || Platform.isIOS || Platform.isLinux) return;
+    if (!EnvConfig.enableAutoUpdate || Platform.isIOS || Platform.isLinux)
+      return;
 
     await SharedPreferences.getInstance();
     bool autoUpdatesActuallyEnabled =

@@ -134,8 +134,7 @@ class _LoadingPageState extends State<LoadingPage> {
           androidNotificationChannelName: 'Sono Player',
           androidNotificationOngoing: false,
           androidStopForegroundOnPause: false,
-          androidNotificationChannelDescription:
-              'Sono audio playback controls',
+          androidNotificationChannelDescription: 'Sono audio playback controls',
           androidShowNotificationBadge: true,
           androidNotificationClickStartsActivity: true,
           androidResumeOnClick: true,
