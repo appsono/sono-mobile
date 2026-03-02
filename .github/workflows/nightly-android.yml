@@ -129,7 +129,7 @@ jobs:
         run: |
           flutter build apk --flavor nightly --release \
             --build-name=${{ steps.version.outputs.version }} \
-            --build-number=${{ steps.version.outputs.version_code }}
+            --build-number=${{ steps.version.outputs.version_code }} \
             --no-tree-shake-icons
 
       - name: Rename APK
