@@ -40,7 +40,7 @@ class ExtensionDetailPage extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // Header card
+          //header card
           _InfoCard(children: [
             _InfoRow(label: 'Version', value: manifest.version),
             _InfoRow(label: 'Author', value: manifest.author),
@@ -49,8 +49,7 @@ class ExtensionDetailPage extends StatelessWidget {
               _InfoRow(label: 'Description', value: manifest.description),
           ]),
           const SizedBox(height: 12),
-
-          // Enable / disable
+          
           _SectionCard(
             child: Row(
               children: [
@@ -84,7 +83,6 @@ class ExtensionDetailPage extends StatelessWidget {
           ),
           const SizedBox(height: 8),
 
-          // Error message
           if (hasError && errorMsg != null) ...[
             Container(
               padding: const EdgeInsets.all(12),
@@ -101,7 +99,6 @@ class ExtensionDetailPage extends StatelessWidget {
             const SizedBox(height: 8),
           ],
 
-          // Open UI button (only if extension has a UI mode and is active)
           if (manifest.hasUi && isActive) ...[
             _ActionButton(
               icon: Symbols.open_in_full,
@@ -124,7 +121,6 @@ class ExtensionDetailPage extends StatelessWidget {
             const SizedBox(height: 8),
           ],
 
-          // Permissions
           if (manifest.permissions.isNotEmpty) ...[
             const SizedBox(height: 4),
             const Text(
@@ -144,7 +140,6 @@ class ExtensionDetailPage extends StatelessWidget {
             const SizedBox(height: 12),
           ],
 
-          // Uninstall
           _ActionButton(
             icon: Symbols.delete,
             label: 'Uninstall',
@@ -194,8 +189,7 @@ class ExtensionDetailPage extends StatelessWidget {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Private helper widgets
+/// Private helper widgets
 
 class _SectionCard extends StatelessWidget {
   const _SectionCard({required this.child});
