@@ -55,3 +55,4 @@ firebase.json
 android/key.properties
 android/*.jks
 android/*.keystore
+android/app/src/stable/google-services.json

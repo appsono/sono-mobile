@@ -9,6 +9,7 @@ import 'package:sono/pages/main/settings/account_settings_page.dart';
 import 'package:sono/pages/main/settings/developer_settings_page.dart';
 import 'package:sono/pages/main/settings/about_settings_page.dart';
 import 'package:sono/pages/main/settings/servers_settings_page.dart';
+import 'package:sono/pages/extensions/extensions_page.dart';
 import 'package:sono/widgets/global/content_constraint.dart';
 
 /// main settings page
@@ -124,6 +125,20 @@ class SettingsPage extends StatelessWidget {
                           ),
                     ),
                   if (isLoggedIn) const SizedBox(height: 5),
+                  _buildSettingsCard(
+                    context,
+                    icon: Symbols.extension,
+                    title: 'Extensions',
+                    subtitle: 'Install and manage extensions',
+                    onTap:
+                        () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const ExtensionsPage(),
+                          ),
+                        ),
+                  ),
+                  const SizedBox(height: 5),
                   _buildSettingsCard(
                     context,
                     icon: Symbols.code_rounded,

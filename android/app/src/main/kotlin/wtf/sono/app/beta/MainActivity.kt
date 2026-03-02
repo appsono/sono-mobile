@@ -6,16 +6,18 @@ import io.flutter.embedding.engine.FlutterEngine
 class MainActivity : AudioServiceActivity() {
     private lateinit var contentUriHandler: ContentUriHandler
     private lateinit var apkInstaller: ApkInstaller
+    private lateinit var visualizerPlugin: VisualizerPlugin
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
 
-        //initialize ContentUri handler
         contentUriHandler = ContentUriHandler(this)
         contentUriHandler.configureFlutterEngine(flutterEngine)
 
-        //initialize APK installer for auto-updates
         apkInstaller = ApkInstaller(this)
         apkInstaller.configureFlutterEngine(flutterEngine)
+
+        visualizerPlugin = VisualizerPlugin()
+        visualizerPlugin.configureFlutterEngine(flutterEngine)
     }
 }

@@ -359,20 +359,24 @@ class LastfmService {
         params['artist[$i]'] = trackData['artist'] as String;
         params['track[$i]'] = trackData['track'] as String;
         params['timestamp[$i]'] = trackData['timestamp'] as String;
-        if (trackData.containsKey('album'))
+        if (trackData.containsKey('album')) {
           params['album[$i]'] = trackData['album'] as String;
-        if (trackData.containsKey('albumArtist'))
+        }
+        if (trackData.containsKey('albumArtist')) {
           params['albumArtist[$i]'] = trackData['albumArtist'] as String;
-        if (trackData.containsKey('duration'))
+        }
+        if (trackData.containsKey('duration')) {
           params['duration[$i]'] = trackData['duration'] as String;
+        }
       }
 
       try {
         await _callApi(params, isPost: true, requiresSk: true);
         //success: batch is not added to remainingQueue > effectively deleting it
       } catch (e) {
-        if (kDebugMode)
+        if (kDebugMode) {
           print('Last.fm: Batch failed. Keeping in queue. Error: $e');
+        }
         hasNetworkError = true;
         remainingQueue.addAll(batch);
       }
@@ -410,8 +414,9 @@ class LastfmService {
       await _callApi(params, isPost: true, requiresSk: true);
       return true;
     } catch (e) {
-      if (kDebugMode)
+      if (kDebugMode) {
         print('Last.fm: Now playing failed. Network issue? Error: $e');
+      }
       return false;
     }
   }

@@ -12,7 +12,7 @@ plugins {
 android {
     namespace = "wtf.sono.app"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = "27.0.12077973" //THIS VERSION IS REQUIRED AND SHOULD NOT BE CHANGED
+    ndkVersion = "28.2.13676358" // bumped for integration_test (backward compatible)
 
     compileOptions {
         isCoreLibraryDesugaringEnabled = true

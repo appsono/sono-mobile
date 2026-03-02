@@ -1,10 +1,16 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:on_audio_query/on_audio_query.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:sono/firebase_init.dart';
+import 'package:sono/utils/audio_filter_utils.dart';
+import 'package:sono_extensions/sono_extensions.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:just_audio_media_kit/just_audio_media_kit.dart';
+import 'package:sono/data/repositories/favorites_repository.dart';
 import 'package:sono/services/utils/theme_service.dart';
 import 'package:sono/services/utils/env_config.dart';
 import 'package:sono/services/sas/sas_manager.dart';
@@ -14,13 +20,85 @@ import 'package:sono/services/utils/favorites_service.dart';
 import 'package:sono/services/servers/server_service.dart';
 import 'package:sono/services/player/player.dart';
 import 'package:sono/styles/app_theme.dart';
+import 'package:sono/services/audio/visualizer_service.dart';
 import 'pages/loading_page.dart';
-import 'firebase_init.dart';
-import 'dart:async';
 import 'package:app_links/app_links.dart';
 import 'package:http/http.dart' as http;
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+// Extension SDK: library cache
+//
+// These lists are populated asynchronously at startup (Android/iOS only) and
+// serve as a synchronous snapshot for extensions that call sono.library.*.
+// Extensions receive an empty list during the brief window before the first
+// scan completes.
+
+List<ExtensionSong> _librarySongsCache = [];
+List<ExtensionAlbum> _libraryAlbumsCache = [];
+List<int> _libraryFavIdsCache = [];
+
+/// Populates the extension library caches in the background.
+///
+/// Only runs on Android/iOS where [OnAudioQuery] is available.
+void _warmLibraryCache() {
+  final audioQuery = OnAudioQuery();
+
+  AudioFilterUtils.getFilteredSongs(audioQuery).then((songs) {
+    _librarySongsCache = songs
+        .map(
+          (s) => ExtensionSong(
+            id: s.id,
+            title: s.title,
+            artist: s.artist,
+            album: s.album,
+            durationMs: s.duration,
+            path: s.data,
+          ),
+        )
+        .toList();
+  }).catchError((_) {});
+
+  audioQuery.queryAlbums().then((albums) {
+    _libraryAlbumsCache = albums
+        .map(
+          (a) => ExtensionAlbum(
+            id: a.id,
+            album: a.album,
+            artist: a.artist,
+            numOfSongs: a.numOfSongs,
+          ),
+        )
+        .toList();
+  }).catchError((_) {});
+
+  FavoritesRepository().getFavoriteSongIds().then((ids) {
+    _libraryFavIdsCache = ids;
+  }).catchError((_) {});
+}
+
+/// Wires [SonoPlayer] ValueNotifier listeners that fire extension hooks.
+///
+/// Called once after the [ExtensionRegistry] is created and before [runApp].
+void _wirePlayerHooks(ExtensionRegistry registry) {
+  SonoPlayer().currentSong.addListener(() {
+    final s = SonoPlayer().currentSong.value;
+    if (s == null) return;
+    final track = ExtensionTrack(
+      id: s.id,
+      title: s.title,
+      artist: s.artist,
+      album: s.album,
+      durationMs: s.duration,
+      path: s.data,
+    );
+    registry.fireHook('onTrackChanged', [track.toMap()]);
+  });
+
+  SonoPlayer().isPlaying.addListener(() {
+    registry.fireHook('onPlaybackStateChanged', [SonoPlayer().isPlaying.value]);
+  });
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -57,6 +135,54 @@ void main() async {
   ]);
   debugPrint('[Init] Firebase initialization complete');
 
+  //warm library cache in background (Android/iOS)
+  if (Platform.isAndroid || Platform.isIOS) {
+    _warmLibraryCache();
+  }
+
+  //start FFT visualizer service (Android only)
+  final visualizerService = VisualizerService();
+  await visualizerService.initialize();
+
+  //create extension registry eagerly so we can wire player hooks
+  //before runApp (listeners must be attached before first song plays)
+  final extensionRegistry = ExtensionRegistry(
+    sonoContext: SonoContext(
+      //read-only player state
+      getCurrentTrack: () {
+        final s = SonoPlayer().currentSong.value;
+        if (s == null) return null;
+        return ExtensionTrack(
+          id: s.id,
+          title: s.title,
+          artist: s.artist,
+          album: s.album,
+          durationMs: s.duration,
+          path: s.data,
+        );
+      },
+      getIsPlaying: () => SonoPlayer().isPlaying.value,
+      getPositionMs: () => SonoPlayer().position.value.inMilliseconds,
+      getDurationMs: () => SonoPlayer().duration.value.inMilliseconds,
+      //player control
+      play: () => SonoPlayer().play(),
+      pause: () => SonoPlayer().pause(),
+      seekTo: (ms) => SonoPlayer().seek(Duration(milliseconds: ms)),
+      skipToNext: () => SonoPlayer().skipToNext(),
+      skipToPrevious: () => SonoPlayer().skipToPrevious(),
+      setSpeed: (s) => SonoPlayer().setSpeed(s),
+      //library (synchronous cached snapshots)
+      getSongs: () => _librarySongsCache,
+      getAlbums: () => _libraryAlbumsCache,
+      getFavoriteSongIds: () => _libraryFavIdsCache,
+      //audio FFT
+      getSpectrum: () => visualizerService.spectrum,
+    ),
+  );
+
+  //wire player state => extension hooks.
+  _wirePlayerHooks(extensionRegistry);
+
   debugPrint('[Init] Calling runApp...');
   runApp(
     MultiProvider(
@@ -66,6 +192,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => FavoritesService()),
         ChangeNotifierProvider.value(value: ArtistFetchProgressService()),
         ChangeNotifierProvider.value(value: MusicServerService.instance),
+        ChangeNotifierProvider.value(value: extensionRegistry),
       ],
       child: const Sono(),
     ),

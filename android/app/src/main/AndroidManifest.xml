@@ -7,6 +7,7 @@
 
     <!-- Audio -->
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
 
     <!-- Storage / Media -->
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO"/>
