@@ -95,26 +95,23 @@ jobs:
           cd ios
           pod install
 
-      - name: Build iOS (unsigned)
+      - name: Disable code signing
         run: |
-          flutter build ios --release --no-codesign \
-            --build-name=${{ steps.version.outputs.version }} \
-            --build-number=${{ steps.version.outputs.version_code }}
+          sed -i '' 's/CODE_SIGNING_REQUIRED = YES;/CODE_SIGNING_REQUIRED = NO;/g' ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' 's/CODE_SIGNING_ALLOWED = YES;/CODE_SIGNING_ALLOWED = NO;/g' ios/Runner.xcodeproj/project.pbxproj
 
-      - name: Package unsigned IPA
+      - name: Build iOS IPA (unsigned)
         run: |
-          VERSION="${{ steps.version.outputs.version }}"
-          APP_PATH="build/ios/iphoneos/Runner.app"
-          mkdir -p Payload
-          cp -r "$APP_PATH" Payload/
-          zip -r "sono-nightly-v${VERSION}-unsigned.ipa" Payload
-          rm -rf Payload
+          flutter build ipa --release --no-codesign \
+            --build-name=${{ steps.version.outputs.version }} \
+            --build-number=${{ steps.version.outputs.version_code }} \
+            --export-options-plist=ios/ExportOptions.plist
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
           name: sono-ios-nightly-${{ steps.version.outputs.version }}
-          path: sono-nightly-v${{ steps.version.outputs.version }}-unsigned.ipa
+          path: build/ios/ipa/*.ipa
           retention-days: 7
 
       - name: Create Nightly Pre-release
@@ -122,7 +119,7 @@ jobs:
         with:
           tag_name: nightly-ios-${{ steps.version.outputs.version }}
           name: Nightly iOS ${{ steps.version.outputs.version }}
-          files: sono-nightly-v${{ steps.version.outputs.version }}-unsigned.ipa
+          files: build/ios/ipa/*.ipa
           prerelease: true
           generate_release_notes: false
           body: |
@@ -152,3 +149,4 @@ jobs:
           delete_prerelease_only: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
