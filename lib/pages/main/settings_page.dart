@@ -97,7 +97,7 @@ class SettingsPage extends StatelessWidget {
                     context,
                     icon: Symbols.dns_rounded,
                     title: 'Music Servers',
-                    subtitle: 'Navidrome, Airsonic, Gonic, and more',
+                    subtitle: 'Navidrome, Airsonic, Gonic',
                     onTap:
                         () => Navigator.push(
                           context,
