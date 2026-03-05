@@ -152,7 +152,7 @@ class SettingsPage extends StatelessWidget {
                           ),
                         ),
                   ),
-                  const SizedBox(height: 25),
+                  const SizedBox(height: 5),
                   _buildSettingsCard(
                     context,
                     icon: Symbols.info_rounded,
