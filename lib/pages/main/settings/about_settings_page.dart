@@ -145,7 +145,7 @@ class _AboutSettingsPageState extends State<AboutSettingsPage> {
       {
         'icon': Icons.discord_rounded,
         'title': 'Discord Server',
-        'subtitle': 'Join our community',
+        'subtitle': 'Update Leaks & Chat',
         'url': 'https://discord.sono.wtf',
         'color': const Color(0xFF5865F2),
       },
