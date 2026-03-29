@@ -32,7 +32,6 @@ class _SetupFlowPageState extends State<SetupFlowPage>
 
   //permission states
   bool _mediaPermissionGranted = false;
-  bool _allFilesPermissionGranted = false;
   bool _notificationPermissionGranted = false;
   bool _alarmPermissionGranted = false;
   bool _batteryOptimizationDisabled = false;
@@ -45,8 +44,8 @@ class _SetupFlowPageState extends State<SetupFlowPage>
   void initState() {
     super.initState();
     //iOS: 5 relevant steps (Welcome, Media, Excluded Folders, Notifications, Music Folder, All Set)
-    //Android: 8 steps (all pages), or 7 if auto-update is disabled (skips Install Updates page)
-    _totalSteps = Platform.isIOS ? 5 : (EnvConfig.enableAutoUpdate ? 8 : 7);
+    //Android: 7 steps, or 6 if auto-update is disabled (skips Install Updates page)
+    _totalSteps = Platform.isIOS ? 5 : (EnvConfig.enableAutoUpdate ? 7 : 6);
     _setupAnimations();
     _checkInitialPermissions();
   }
@@ -87,13 +86,6 @@ class _SetupFlowPageState extends State<SetupFlowPage>
         _mediaPermissionGranted = await Permission.storage.isGranted;
       }
 
-      if (androidInfo.version.sdkInt >= 30) {
-        _allFilesPermissionGranted =
-            await Permission.manageExternalStorage.isGranted;
-      } else {
-        _allFilesPermissionGranted = true;
-      }
-
       _notificationPermissionGranted = await Permission.notification.isGranted;
 
       if (androidInfo.version.sdkInt >= 31) {
@@ -110,7 +102,6 @@ class _SetupFlowPageState extends State<SetupFlowPage>
     } else {
       //iOS: check media library permission via on_audio_query
       _mediaPermissionGranted = await OnAudioQuery().permissionsStatus();
-      _allFilesPermissionGranted = true;
       _notificationPermissionGranted = await Permission.notification.isGranted;
       _alarmPermissionGranted = true;
       _batteryOptimizationDisabled = true;
@@ -139,7 +130,10 @@ class _SetupFlowPageState extends State<SetupFlowPage>
   }
 
   int _getDisplayStep() {
-    if (Platform.isAndroid) return _currentPage;
+    if (Platform.isAndroid) {
+      // Page 2 (All Files Access) was removed, so adjust display step for pages >= 3
+      return _currentPage > 2 ? _currentPage - 1 : _currentPage;
+    }
 
     //iOS: map page number to display step
     //0=Welcome, 1=Media, 3=Excluded Folders, 4=Notifications, 9=Music Folder, 8=All Set
@@ -172,9 +166,11 @@ class _SetupFlowPageState extends State<SetupFlowPage>
       }
       return;
     }
-    //skip "Install Updates" page (7) when auto-update feature is disabled
+    //skip page 2 (All Files Access removed) and optionally page 7 (Install Updates)
     final next = _currentPage + 1;
-    if (!EnvConfig.enableAutoUpdate && next == 7) {
+    if (next == 2) {
+      _navigateToPage(3);
+    } else if (!EnvConfig.enableAutoUpdate && next == 7) {
       _navigateToPage(8);
     } else {
       _navigateToPage(next);
@@ -189,9 +185,11 @@ class _SetupFlowPageState extends State<SetupFlowPage>
       }
       return;
     }
-    //skip "Install Updates" page (7) when auto-update feature is disabled
+    //skip page 2 (All Files Access removed) and optionally page 7 (Install Updates)
     final prev = _currentPage - 1;
-    if (!EnvConfig.enableAutoUpdate && prev == 7) {
+    if (prev == 2) {
+      _navigateToPage(1);
+    } else if (!EnvConfig.enableAutoUpdate && prev == 7) {
       _navigateToPage(6);
     } else {
       _navigateToPage(prev);
@@ -257,25 +255,6 @@ class _SetupFlowPageState extends State<SetupFlowPage>
               //iOS: request media library permission via on_audio_query
               final granted = await OnAudioQuery().permissionsRequest();
               setState(() => _mediaPermissionGranted = granted);
-            }
-          },
-          onNext: _nextPage,
-          onBack: _previousPage,
-        );
-      case 2:
-        return _PermissionPage(
-          title: 'All Files Access',
-          description:
-              'For some older Android versions, Sono needs broader file access to find all music files.',
-          icon: Symbols.folder_rounded,
-          isGranted: _allFilesPermissionGranted,
-          onRequestPermission: () async {
-            if (Platform.isAndroid) {
-              final androidInfo = await DeviceInfoPlugin().androidInfo;
-              if (androidInfo.version.sdkInt >= 30) {
-                final status = await Permission.manageExternalStorage.request();
-                setState(() => _allFilesPermissionGranted = status.isGranted);
-              }
             }
           },
           onNext: _nextPage,
