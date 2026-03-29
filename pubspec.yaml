@@ -2,7 +2,7 @@ name: sono
 description: "Local music player"
 publish_to: 'none'
 
-version: 1.0.9-beta+27032026
+version: 1.0.9-beta+29032026
 
 environment:
   sdk: ^3.7.0-209.1.beta
