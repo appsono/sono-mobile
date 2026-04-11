@@ -2,25 +2,26 @@
 > **This repository is no longer maintained and has been archived.**
 > Development continues at [appsono/sono-new](https://github.com/appsono/sono-new).
 
-
-# Sono
+<br>
 
 <div align="center">
   <img src="https://web.sono.wtf/images/favicon.png" alt="Sono Logo" width="128" height="128" style="border-radius: 16px;">
-  <p><br></p>
   
-  **A beautiful local music player for Android**
+  <h3>Sono</h3>
+  
+  <p>A beautiful local music player for Android</p>
   
   [Download](https://github.com/appsono/sono-mobile/releases)
 </div>
 
 ---
+<br>
 
 ## License
 
 This project is licensed under the GNU General Public License v3.0 - see [LICENSE](LICENSE) for details.
 
----
+<br>
 
 ## Links
 
