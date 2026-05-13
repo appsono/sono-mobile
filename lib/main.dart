@@ -44,32 +44,38 @@ List<int> _libraryFavIdsCache = [];
 void _warmLibraryCache() {
   final audioQuery = OnAudioQuery();
 
-  AudioFilterUtils.getFilteredSongs(audioQuery).then((songs) {
-    _librarySongsCache = songs
-        .map(
-          (s) => ExtensionSong(
-            id: s.id,
-            title: s.title,
-            artist: s.artist,
-            album: s.album,
-            durationMs: s.duration,
-            path: s.data,
-          ),
-        )
-        .toList();
-  }).catchError((_) {});
+  AudioFilterUtils.hasMediaLibraryPermission().then((hasPermission) {
+    if (!hasPermission) {
+      return;
+    }
 
-  audioQuery.queryAlbums().then((albums) {
-    _libraryAlbumsCache = albums
-        .map(
-          (a) => ExtensionAlbum(
-            id: a.id,
-            album: a.album,
-            artist: a.artist,
-            numOfSongs: a.numOfSongs,
-          ),
-        )
-        .toList();
+    AudioFilterUtils.getFilteredSongs(audioQuery).then((songs) {
+      _librarySongsCache = songs
+          .map(
+            (s) => ExtensionSong(
+              id: s.id,
+              title: s.title,
+              artist: s.artist,
+              album: s.album,
+              durationMs: s.duration,
+              path: s.data,
+            ),
+          )
+          .toList();
+    }).catchError((_) {});
+
+    audioQuery.queryAlbums().then((albums) {
+      _libraryAlbumsCache = albums
+          .map(
+            (a) => ExtensionAlbum(
+              id: a.id,
+              album: a.album,
+              artist: a.artist,
+              numOfSongs: a.numOfSongs,
+            ),
+          )
+          .toList();
+    }).catchError((_) {});
   }).catchError((_) {});
 
   FavoritesRepository().getFavoriteSongIds().then((ids) {
@@ -140,9 +146,9 @@ void main() async {
     _warmLibraryCache();
   }
 
-  //start FFT visualizer service (Android only)
+  await SonoPlayer.preloadAudioEffectPreferences();
+
   final visualizerService = VisualizerService();
-  await visualizerService.initialize();
 
   //create extension registry eagerly so we can wire player hooks
   //before runApp (listeners must be attached before first song plays)

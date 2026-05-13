@@ -33,6 +33,7 @@ class _EqualizerSettingsPageState extends State<EqualizerSettingsPage> {
   Future<void> _loadEqualizer() async {
     try {
       if (!Platform.isAndroid) {
+        if (!mounted) return;
         setState(() {
           _errorMessage = 'Equalizer is currently only supported on Android.';
           _isLoading = false;
@@ -40,23 +41,21 @@ class _EqualizerSettingsPageState extends State<EqualizerSettingsPage> {
         return;
       }
 
-      final params = await _player.getEqualizerParameters();
-      if (params == null) {
-        setState(() {
-          _errorMessage = 'Equalizer not available on this device.';
-          _isLoading = false;
-        });
-        return;
-      }
-
       final enabled = await _audioEffectsService.getEqualizerEnabled();
+      final params = await _player.getEqualizerParameters();
 
+      if (!mounted) return;
       setState(() {
         _equalizerParams = params;
         _isEnabled = enabled;
+        _errorMessage =
+            enabled
+                ? 'Equalizer controls become available during active local playback on supported devices.'
+                : 'Enable equalizer to configure bands. Playback may need to restart before controls appear.';
         _isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _errorMessage = 'Error loading equalizer: $e';
         _isLoading = false;
@@ -88,32 +87,6 @@ class _EqualizerSettingsPageState extends State<EqualizerSettingsPage> {
       body:
           _isLoading
               ? const Center(child: CircularProgressIndicator())
-              : _errorMessage != null
-              ? Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.error_rounded,
-                        size: 64,
-                        color: Colors.red.withAlpha((0.7 * 255).round()),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        _errorMessage!,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontFamily: 'VarelaRound',
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              )
               : Column(
                 children: [
                   Padding(
@@ -178,6 +151,7 @@ class _EqualizerSettingsPageState extends State<EqualizerSettingsPage> {
                         onChanged: (value) async {
                           setState(() => _isEnabled = value);
                           await _player.setEqualizerEnabled(value);
+                          await _loadEqualizer();
                         },
                       ),
                     ),
@@ -186,12 +160,31 @@ class _EqualizerSettingsPageState extends State<EqualizerSettingsPage> {
                   Expanded(
                     child:
                         _equalizerParams == null
-                            ? const Center(
-                              child: Text(
-                                'No equalizer available',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontFamily: 'VarelaRound',
+                            ? Center(
+                              child: Padding(
+                                padding: const EdgeInsets.all(24.0),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.equalizer_rounded,
+                                      size: 64,
+                                      color: Colors.white.withAlpha(
+                                        (0.7 * 255).round(),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      _errorMessage ??
+                                          'Equalizer not available on this device.',
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontFamily: 'VarelaRound',
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             )

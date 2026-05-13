@@ -105,15 +105,6 @@
             android:name="com.ryanheise.audioservice.notification.icon"
             android:resource="@drawable/ic_notification" />
         <receiver
-            android:name="com.ryanheise.audioservice.AudioBecomingNoisyReceiver"
-            android:exported="false"
-            android:enabled="true">
-            <intent-filter>
-                <action android:name="android.media.AUDIO_BECOMING_NOISY"/>
-            </intent-filter>
-        </receiver>
-        
-        <receiver
             android:exported="false"
             android:name="com.dexterous.flutterlocalnotifications.ActionBroadcastReceiver"/>
         <receiver

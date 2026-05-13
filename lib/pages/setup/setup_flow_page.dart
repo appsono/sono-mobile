@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -509,7 +510,7 @@ class _PermissionPage extends StatelessWidget {
   final String description;
   final IconData icon;
   final bool isGranted;
-  final VoidCallback onRequestPermission;
+  final FutureOr<void> Function() onRequestPermission;
   final VoidCallback onNext;
   final VoidCallback onBack;
 
@@ -629,11 +630,31 @@ class _PermissionPage extends StatelessWidget {
   }
 }
 
-class _PermissionButton extends StatelessWidget {
+class _PermissionButton extends StatefulWidget {
   final bool isGranted;
-  final VoidCallback onPressed;
+  final FutureOr<void> Function() onPressed;
 
   const _PermissionButton({required this.isGranted, required this.onPressed});
+
+  @override
+  State<_PermissionButton> createState() => _PermissionButtonState();
+}
+
+class _PermissionButtonState extends State<_PermissionButton> {
+  bool _isRequestInFlight = false;
+
+  Future<void> _handlePressed() async {
+    if (_isRequestInFlight || widget.isGranted) return;
+
+    setState(() => _isRequestInFlight = true);
+    try {
+      await widget.onPressed();
+    } finally {
+      if (mounted) {
+        setState(() => _isRequestInFlight = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -641,13 +662,14 @@ class _PermissionButton extends StatelessWidget {
       width: double.infinity,
       height: 56,
       child: ElevatedButton(
-        onPressed: isGranted ? null : onPressed,
+        onPressed:
+            widget.isGranted || _isRequestInFlight ? null : _handlePressed,
         style: ElevatedButton.styleFrom(
           backgroundColor:
-              isGranted
+              widget.isGranted
                   ? AppTheme.success.withValues(alpha: 0.2)
                   : AppTheme.brandPink,
-          foregroundColor: isGranted ? AppTheme.success : Colors.white,
+          foregroundColor: widget.isGranted ? AppTheme.success : Colors.white,
           disabledBackgroundColor: AppTheme.success.withValues(alpha: 0.2),
           disabledForegroundColor: AppTheme.success,
           shape: RoundedRectangleBorder(
@@ -658,7 +680,22 @@ class _PermissionButton extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            if (isGranted) ...[
+            if (_isRequestInFlight) ...[
+              const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                'Requesting Permission...',
+                style: TextStyle(
+                  fontSize: AppTheme.font,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: AppTheme.fontFamily,
+                ),
+              ),
+            ] else if (widget.isGranted) ...[
               const Icon(Symbols.check_rounded, size: 20),
               const SizedBox(width: 8),
               Text(

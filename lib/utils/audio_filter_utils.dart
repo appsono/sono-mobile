@@ -1,8 +1,51 @@
+import 'dart:io';
+
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:on_audio_query/on_audio_query.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:sono/services/settings/library_settings_service.dart';
 import 'package:sono/utils/artist_string_utils.dart';
 
 class AudioFilterUtils {
+  static Future<bool> hasMediaLibraryPermission() async {
+    if (!(Platform.isAndroid || Platform.isIOS)) {
+      return true;
+    }
+
+    if (Platform.isAndroid) {
+      final androidInfo = await DeviceInfoPlugin().androidInfo;
+      if (androidInfo.version.sdkInt >= 33) {
+        return Permission.audio.isGranted;
+      }
+      return Permission.storage.isGranted;
+    }
+
+    return OnAudioQuery().permissionsStatus();
+  }
+
+  static Future<List<SongModel>> querySongsSafely(
+    OnAudioQuery audioQuery, {
+    SongSortType? sortType,
+    OrderType? orderType,
+    String? path,
+  }) async {
+    if (!await hasMediaLibraryPermission()) {
+      return [];
+    }
+
+    try {
+      return await audioQuery.querySongs(
+        sortType: sortType,
+        orderType: orderType,
+        uriType: UriType.EXTERNAL,
+        path: path,
+        ignoreCase: true,
+      );
+    } catch (_) {
+      return [];
+    }
+  }
+
   static Future<List<SongModel>> getFilteredSongs(
     OnAudioQuery audioQuery, {
     SongSortType? sortType,
@@ -11,12 +54,11 @@ class AudioFilterUtils {
   }) async {
     List<String> excludedPaths =
         await LibrarySettingsService.instance.getExcludedFolders();
-    List<SongModel> allSongs = await audioQuery.querySongs(
+    List<SongModel> allSongs = await querySongsSafely(
+      audioQuery,
       sortType: sortType,
       orderType: orderType,
-      uriType: UriType.EXTERNAL,
       path: path,
-      ignoreCase: true,
     );
 
     if (excludedPaths.isEmpty) {

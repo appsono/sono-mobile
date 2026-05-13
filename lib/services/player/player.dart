@@ -32,6 +32,7 @@ import 'package:sono/services/settings/playback_settings_service.dart';
 import 'package:sono/services/utils/recents_service.dart';
 import 'package:sono/services/sas/sas_manager.dart';
 import 'package:sono/services/settings/audio_effects_service.dart';
+import 'package:sono/utils/audio_filter_utils.dart';
 
 //============================================================================
 // CONSTANTS
@@ -613,7 +614,28 @@ class _ArtworkCache {
 class SonoPlayer extends BaseAudioHandler {
   //singleton
   static final SonoPlayer _instance = SonoPlayer._internal();
+  static bool _attachEqualizerToPipeline = false;
   factory SonoPlayer() => _instance;
+
+  static Future<void> preloadAudioEffectPreferences() async {
+    if (!Platform.isAndroid) return;
+
+    try {
+      _attachEqualizerToPipeline =
+          await AudioEffectsService.instance.getEqualizerEnabled();
+    } catch (_) {
+      _attachEqualizerToPipeline = false;
+    }
+  }
+
+  bool get isEqualizerConfigured => _attachEqualizerToPipeline;
+  bool get hasActiveAudioSession => _primaryPlayer.androidAudioSessionId != null;
+
+  void _initializeEqualizerIfNeeded() {
+    if (!Platform.isAndroid) return;
+    if (!_attachEqualizerToPipeline) return;
+    _equalizer ??= AndroidEqualizer();
+  }
 
   //core audio players => secondary player created lazily only when crossfade is enabled
   late AudioPlayer _primaryPlayer;
@@ -704,10 +726,7 @@ class SonoPlayer extends BaseAudioHandler {
       lifecycleState;
 
   SonoPlayer._internal() : super() {
-    //initialize audio effects for audio pipeline
-    if (Platform.isAndroid) {
-      _equalizer = AndroidEqualizer();
-    }
+    _initializeEqualizerIfNeeded();
 
     //create primary player with audio effects pipeline
     _primaryPlayer = AudioPlayer(
@@ -722,7 +741,9 @@ class SonoPlayer extends BaseAudioHandler {
   AudioPipeline? _buildAudioPipeline() {
     if (Platform.isAndroid) {
       final effects = <AndroidAudioEffect>[];
-      if (_equalizer != null) effects.add(_equalizer!);
+      if (_attachEqualizerToPipeline && _equalizer != null) {
+        effects.add(_equalizer!);
+      }
       return effects.isNotEmpty
           ? AudioPipeline(androidAudioEffects: effects)
           : null;
@@ -1125,11 +1146,10 @@ class SonoPlayer extends BaseAudioHandler {
 
       //query all songs by their IDs using OnAudioQuery
       //query all songs once and filter by ID
-      final allSongs = await _audioQuery.querySongs(
+      final allSongs = await AudioFilterUtils.querySongsSafely(
+        _audioQuery,
         sortType: null,
         orderType: OrderType.ASC_OR_SMALLER,
-        uriType: UriType.EXTERNAL,
-        ignoreCase: true,
       );
 
       //create a map for O(1) lookup
@@ -1804,11 +1824,32 @@ class SonoPlayer extends BaseAudioHandler {
 
   ///sets whether equalizer is enabled
   Future<void> setEqualizerEnabled(bool enabled) async {
+    _attachEqualizerToPipeline = enabled;
+    await _audioEffectsService.setEqualizerEnabled(enabled);
+
+    if (!enabled) {
+      if (_equalizer != null) {
+        try {
+          await _equalizer!.setEnabled(false);
+        } catch (e) {
+          debugPrint('SonoPlayer: Error disabling equalizer: $e');
+        }
+      }
+      return;
+    }
+
+    _initializeEqualizerIfNeeded();
     if (_equalizer == null) return;
+
+    if (!hasActiveAudioSession) {
+      debugPrint(
+        'SonoPlayer: Equalizer preference saved (will apply on next active audio session)',
+      );
+      return;
+    }
 
     try {
       await _equalizer!.setEnabled(enabled);
-      await _audioEffectsService.setEqualizerEnabled(enabled);
       debugPrint('SonoPlayer: Equalizer enabled: $enabled');
     } catch (e) {
       debugPrint('SonoPlayer: Error setting equalizer enabled: $e');
@@ -1834,8 +1875,9 @@ class SonoPlayer extends BaseAudioHandler {
   ///gets the equalizer parameters (for UI access to bands)
   Future<AndroidEqualizerParameters?> getEqualizerParameters() async {
     if (_equalizer == null) return null;
+    if (!_attachEqualizerToPipeline || !hasActiveAudioSession) return null;
     try {
-      return await _equalizer!.parameters;
+      return await _equalizer!.parameters.timeout(const Duration(seconds: 2));
     } catch (e) {
       debugPrint('SonoPlayer: Error getting equalizer parameters: $e');
       return null;
@@ -2002,9 +2044,8 @@ class SonoPlayer extends BaseAudioHandler {
 
     //recreate equalizer: the old instance is still bound to the disposed player
     //and just_audio asserts _player == null on effect._setup
-    if (Platform.isAndroid) {
-      _equalizer = AndroidEqualizer();
-    }
+    _equalizer = null;
+    _initializeEqualizerIfNeeded();
 
     _primaryPlayer = AudioPlayer(
       audioLoadConfiguration: _minimalBufferConfig,

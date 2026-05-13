@@ -5,6 +5,7 @@ import 'package:on_audio_query/on_audio_query.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sono/data/repositories/favorites_repository.dart';
 import 'package:sono/services/playlist/playlist_service.dart';
+import 'package:sono/utils/audio_filter_utils.dart';
 
 /// Service for managing user favorites (songs, albums, artists)
 /// Provides caching and notifies listeners when favorites change
@@ -202,7 +203,8 @@ class FavoritesService extends ChangeNotifier {
       final favoriteIds = await getFavoriteSongIds();
       if (favoriteIds.isEmpty) return [];
 
-      final allSongs = await _audioQuery.querySongs(
+      final allSongs = await AudioFilterUtils.querySongsSafely(
+        _audioQuery,
         sortType: null,
         orderType: OrderType.ASC_OR_SMALLER,
       );

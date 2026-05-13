@@ -7,8 +7,8 @@ import 'package:on_audio_query/on_audio_query.dart' as query;
 import 'package:sono/data/repositories/playlists_repository.dart';
 import 'package:sono/services/api/lastfm_service.dart';
 import 'package:sono/services/api/lyrics_service.dart';
-import 'package:sono/services/artists/artist_fetch_progress_service.dart';
-import 'package:sono/services/artists/artist_image_fetch_service.dart';
+//import 'package:sono/services/artists/artist_fetch_progress_service.dart';
+//import 'package:sono/services/artists/artist_image_fetch_service.dart';
 import 'package:sono/services/playlist/playlist_migration_service.dart';
 import 'package:sono/services/playlist/playlist_service.dart';
 import 'package:sono/services/utils/artwork_cache_service.dart';
@@ -28,7 +28,7 @@ class AppStorageCacheSettingsPage extends StatefulWidget {
 
 class _AppStorageCacheSettingsPageState
     extends State<AppStorageCacheSettingsPage> {
-  final ArtistFetchProgressService _progress = ArtistFetchProgressService();
+  //final ArtistFetchProgressService _progress = ArtistFetchProgressService();
   final PlaylistMigrationService _migrationService = PlaylistMigrationService();
   final PlaylistService _playlistService = PlaylistService();
   final PlaylistsRepository _playlistsRepo = PlaylistsRepository();
@@ -369,7 +369,7 @@ class _AppStorageCacheSettingsPageState
   }
 
   /// ============================== Artist images ==============================
-
+  /*
   Future<void> _fetchMissingArtistImages() async {
     if (_progress.isFetching) return;
 
@@ -444,6 +444,7 @@ class _AppStorageCacheSettingsPageState
       }
     }
   }
+  */
 
   /// ============================== Cache management ==============================
 
@@ -728,6 +729,7 @@ class _AppStorageCacheSettingsPageState
             const SizedBox(height: 24),
           ],
 
+          /*
           _sectionHeader('ARTIST IMAGES'),
           const SizedBox(height: 12),
 
@@ -833,7 +835,7 @@ class _AppStorageCacheSettingsPageState
                     ),
                     const SizedBox(height: 8),
                   ],
-
+                    
                   _buildActionTile(
                     icon: Symbols.person_search_rounded,
                     iconColor: AppTheme.info,
@@ -855,9 +857,8 @@ class _AppStorageCacheSettingsPageState
                 ],
               );
             },
-          ),
-
-          const SizedBox(height: 24),
+          ),*/
+          //const SizedBox(height: 24),
           _sectionHeader('CACHE MANAGEMENT'),
           const SizedBox(height: 12),
 

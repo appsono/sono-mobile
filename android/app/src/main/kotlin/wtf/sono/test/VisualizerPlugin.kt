@@ -9,6 +9,7 @@ import kotlin.math.sqrt
 
 class VisualizerPlugin : MethodChannel.MethodCallHandler {
     companion object { const val CHANNEL = "sono_visualizer" }
+    private val captureRateHz = 20
 
     private var visualizer: Visualizer? = null
 
@@ -52,7 +53,7 @@ class VisualizerPlugin : MethodChannel.MethodCallHandler {
                         }
                         fftBins = bins
                     }
-                }, Visualizer.getMaxCaptureRate() / 2, false, true)
+                }, captureRateHz * 1000, false, true)
                 enabled = true
             }
         } catch (_: Exception) {

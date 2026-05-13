@@ -2,7 +2,7 @@ name: sono
 description: "Local music player"
 publish_to: 'none'
 
-version: 1.0.9-beta+2026040901
+version: 1.0.9-beta+2026051313
 
 environment:
   sdk: ^3.7.0-209.1.beta
@@ -17,7 +17,6 @@ dependencies:
     git:
       url: https://github.com/appsono/sono_extensions
       ref: v0.1.7
-
 
   sono_refresh:
     # path: ../../plugins/sono_refresh

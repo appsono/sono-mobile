@@ -17,6 +17,7 @@ import 'package:sono/widgets/global/add_to_playlist_dialog.dart';
 import 'package:sono/services/api/lastfm_service.dart';
 import 'package:sono/styles/app_theme.dart';
 import 'package:sono/styles/text.dart';
+import 'package:sono/utils/audio_filter_utils.dart';
 import 'package:sono/widgets/library/artist_artwork_widget.dart';
 import 'package:sono/widgets/library/artist_picture_picker_dialog.dart';
 import 'package:sono/services/artists/artist_profile_image_service.dart';
@@ -470,7 +471,9 @@ class _ArtistPageState extends State<ArtistPage> {
             'but only found ${_allArtistSongs.length}. Searching combined artist strings...',
           );
 
-          final allSongs = await widget.audioQuery.querySongs();
+          final allSongs = await AudioFilterUtils.querySongsSafely(
+            widget.audioQuery,
+          );
           final artistNameLower = widget.artist.artist.toLowerCase().trim();
 
           //find songs where the artist field contains our artist name

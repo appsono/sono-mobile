@@ -81,6 +81,69 @@ class _AllItemsPageState extends State<AllItemsPage> {
     }
   }
 
+  Future<List<dynamic>> _loadFolders() async {
+    final songs = await AudioFilterUtils.getFilteredSongs(widget.audioQuery);
+    final folderPaths = <String>{};
+
+    for (final song in songs) {
+      if (song.data.isEmpty) continue;
+      try {
+        folderPaths.add(Directory(song.data).parent.path);
+      } catch (_) {
+        //ignore malformed paths from MediaStore.
+      }
+    }
+
+    final folders =
+        folderPaths.map((path) {
+          return <String, String>{
+            'path': path,
+            'name': path
+                .split('/')
+                .lastWhere((segment) => segment.isNotEmpty, orElse: () => path),
+          };
+        }).toList();
+
+    folders.sort(
+      (a, b) => a['name']!.toLowerCase().compareTo(b['name']!.toLowerCase()),
+    );
+
+    return folders;
+  }
+
+  Map<String, String>? _normalizeFolderItem(dynamic item) {
+    if (item is String && item.isNotEmpty) {
+      return {
+        'path': item,
+        'name': item
+            .split('/')
+            .lastWhere((segment) => segment.isNotEmpty, orElse: () => item),
+      };
+    }
+
+    if (item is Map) {
+      final rawPath = item['path'];
+      if (rawPath is! String || rawPath.isEmpty) {
+        return null;
+      }
+
+      final rawName = item['name'];
+      final name =
+          rawName is String && rawName.isNotEmpty
+              ? rawName
+              : rawPath
+                  .split('/')
+                  .lastWhere(
+                    (segment) => segment.isNotEmpty,
+                    orElse: () => rawPath,
+                  );
+
+      return {'path': rawPath, 'name': name};
+    }
+
+    return null;
+  }
+
   Future<void> _onRefresh() async {
     final Future<List<dynamic>> newFuture;
 
@@ -121,7 +184,7 @@ class _AllItemsPageState extends State<AllItemsPage> {
           );
           break;
         case ListItemType.folder:
-          newFuture = widget.audioQuery.queryAllPath();
+          newFuture = _loadFolders();
           break;
       }
     }
@@ -582,7 +645,13 @@ class _AllItemsPageState extends State<AllItemsPage> {
               ),
         );
       case ListItemType.folder:
-        final folder = item as Map<String, String>;
+        final folder = _normalizeFolderItem(item);
+        if (folder == null) {
+          debugPrint(
+            'Error: Unknown folder item type in AllItemsPage: ${item.runtimeType}',
+          );
+          return const SizedBox.shrink();
+        }
         final folderName = folder['name']!;
         final folderPath = folder['path']!;
         return _FolderListTile(

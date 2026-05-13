@@ -7,8 +7,8 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:sono/app_scaffold.dart';
 import 'package:sono/services/player/player.dart';
 import 'package:sono/styles/app_theme.dart';
-import 'package:sono/services/artists/artist_image_fetch_service.dart';
-import 'package:sono/services/artists/artist_fetch_progress_service.dart';
+//import 'package:sono/services/artists/artist_image_fetch_service.dart';
+//import 'package:sono/services/artists/artist_fetch_progress_service.dart';
 import 'package:sono/services/settings/developer_settings_service.dart';
 import 'package:sono/services/utils/crashlytics_service.dart';
 import 'package:sono/pages/setup/setup_flow_page.dart';
@@ -70,7 +70,7 @@ class _LoadingPageState extends State<LoadingPage> {
     }
 
     debugPrint('[LoadingPage] Setup done, checking permissions...');
-    await _checkAndRequestPermissions();
+    final hasMediaPermission = await _checkAndRequestPermissions();
     debugPrint('[LoadingPage] Permissions done, navigating to AppScaffold...');
 
     if (mounted) {
@@ -81,17 +81,19 @@ class _LoadingPageState extends State<LoadingPage> {
 
     //initialize audio service in background so UI is not blocked
     //mini player handles initializing state gracefully
-    _initializeAudioService().then((_) {
-      debugPrint('[LoadingPage] AudioService ready in background');
-      _restorePlaybackState();
-    });
+    if (hasMediaPermission) {
+      _initializeAudioService().then((_) {
+        debugPrint('[LoadingPage] AudioService ready in background');
+        _restorePlaybackState();
+      });
+    }
 
     //fetch artist images in background (non-blocking)
-    _fetchArtistImagesInBackground();
+    //_fetchArtistImagesInBackground();
   }
 
-  Future<void> _checkAndRequestPermissions() async {
-    if (!mounted) return;
+  Future<bool> _checkAndRequestPermissions() async {
+    if (!mounted) return false;
     setState(() => _loadingMessage = "Checking permissions...");
 
     try {
@@ -110,6 +112,7 @@ class _LoadingPageState extends State<LoadingPage> {
       if (mounted && !status.isGranted) {
         debugPrint("Storage/Audio permission denied.");
       }
+      return status.isGranted;
     } catch (e, s) {
       debugPrint("Error checking permissions: $e");
       CrashlyticsService.instance.recordError(
@@ -117,6 +120,7 @@ class _LoadingPageState extends State<LoadingPage> {
         s,
         reason: "Permission check failed",
       );
+      return false;
     }
   }
 
@@ -133,7 +137,7 @@ class _LoadingPageState extends State<LoadingPage> {
           androidNotificationChannelId: 'wtf.sono.beta.channel',
           androidNotificationChannelName: 'Sono Player',
           androidNotificationOngoing: false,
-          androidStopForegroundOnPause: false,
+          androidStopForegroundOnPause: true,
           androidNotificationChannelDescription: 'Sono audio playback controls',
           androidShowNotificationBadge: true,
           androidNotificationClickStartsActivity: true,
@@ -159,6 +163,7 @@ class _LoadingPageState extends State<LoadingPage> {
     }
   }
 
+  /* API IS NO LONGER ACTIVE!
   Future<void> _fetchArtistImagesInBackground() async {
     //this runs in background
     try {
@@ -188,7 +193,7 @@ class _LoadingPageState extends State<LoadingPage> {
       );
       //non-critical error => app continues normally
     }
-  }
+  }*/
 
   @override
   Widget build(BuildContext context) {

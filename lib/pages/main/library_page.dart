@@ -343,26 +343,25 @@ class _LibraryPageState extends State<LibraryPage>
         onTap: () {
           _navigateTo(context, "Folders", ListItemType.folder, () async {
             final songs = await AudioFilterUtils.getFilteredSongs(_audioQuery);
-            final Set<String> folderPaths = {};
-            for (var song in songs) {
-              if (song.data.isNotEmpty) {
-                try {
-                  folderPaths.add(Directory(song.data).parent.path);
-                } catch (e) {
-                  //
-                }
+            final folderPaths = <String>{};
+            for (final song in songs) {
+              if (song.data.isEmpty) continue;
+              try {
+                folderPaths.add(Directory(song.data).parent.path);
+              } catch (_) {
+                //ignore malformed paths from MediaStore.
               }
             }
 
-            final List<Map<String, String>> folders =
+            final folders =
                 folderPaths.map((path) {
-                  return {
+                  return <String, String>{
                     'path': path,
                     'name': path
                         .split('/')
                         .lastWhere(
-                          (e) => e.isNotEmpty,
-                          orElse: () => 'Unknown Folder',
+                          (segment) => segment.isNotEmpty,
+                          orElse: () => path,
                         ),
                   };
                 }).toList();
