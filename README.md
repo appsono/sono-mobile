@@ -5,7 +5,7 @@
 <br>
 
 <div align="center">
-  <img src="https://web.sono.wtf/images/favicon.png" alt="Sono Logo" width="128" height="128" style="border-radius: 16px;">
+  <img src="assets/icon/icon_legacy.png" alt="Sono Logo" width="128" height="128" style="border-radius: 16px;">
   
   <h3>Sono</h3>
   
