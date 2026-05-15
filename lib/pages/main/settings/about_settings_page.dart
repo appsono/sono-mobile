@@ -146,7 +146,7 @@ class _AboutSettingsPageState extends State<AboutSettingsPage> {
         'icon': Icons.discord_rounded,
         'title': 'Discord Server',
         'subtitle': 'Update Leaks & Chat',
-        'url': 'https://discord.sono.wtf',
+        'url': 'https://discord.gg/48fvsUCNwu',
         'color': const Color(0xFF5865F2),
       },
       {
@@ -312,12 +312,12 @@ class _AboutSettingsPageState extends State<AboutSettingsPage> {
       {
         'icon': Icons.privacy_tip_rounded,
         'title': 'Privacy Policy',
-        'url': 'https://sono.wtf/privacy',
+        'url': 'https://sono.mathiiis.d/privacy',
       },
       {
         'icon': Icons.description_rounded,
         'title': 'Terms of Service',
-        'url': 'https://sono.wtf/terms',
+        'url': 'https://sono.mathiiis.de/terms',
       },
       {
         'icon': Icons.inventory_2_rounded,
