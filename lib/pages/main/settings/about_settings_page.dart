@@ -312,7 +312,7 @@ class _AboutSettingsPageState extends State<AboutSettingsPage> {
       {
         'icon': Icons.privacy_tip_rounded,
         'title': 'Privacy Policy',
-        'url': 'https://sono.mathiiis.d/privacy',
+        'url': 'https://sono.mathiiis.de/privacy',
       },
       {
         'icon': Icons.description_rounded,
