@@ -9,6 +9,7 @@ import 'package:sono/pages/main/settings/account_settings_page.dart';
 import 'package:sono/pages/main/settings/developer_settings_page.dart';
 import 'package:sono/pages/main/settings/about_settings_page.dart';
 import 'package:sono/pages/main/settings/servers_settings_page.dart';
+import 'package:sono/pages/main/settings/migration_settings_page.dart';
 import 'package:sono/pages/extensions/extensions_page.dart';
 import 'package:sono/widgets/global/content_constraint.dart';
 
@@ -48,6 +49,22 @@ class SettingsPage extends StatelessWidget {
                   bottom: MediaQuery.of(context).padding.bottom + 80,
                 ),
                 children: [
+                  _buildRewriteNotice(context),
+                  const SizedBox(height: 16),
+                  _buildSettingsCard(
+                    context,
+                    icon: Symbols.move_down_rounded,
+                    title: 'Move to the new Sono',
+                    subtitle: 'Export your likes and playlists',
+                    onTap:
+                        () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const MigrationSettingsPage(),
+                          ),
+                        ),
+                  ),
+                  const SizedBox(height: 12),
                   _buildSettingsCard(
                     context,
                     icon: Symbols.palette_rounded,
@@ -167,6 +184,85 @@ class SettingsPage extends StatelessWidget {
                         ),
                   ),
                 ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRewriteNotice(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppTheme.brandPink.withAlpha((0.12 * 255).round()),
+        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+        border: Border.all(
+          color: AppTheme.brandPink.withAlpha((0.35 * 255).round()),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Symbols.auto_awesome_rounded,
+                color: AppTheme.brandPink,
+                size: 22,
+              ),
+              const SizedBox(width: 10),
+              const Text(
+                'Sono is being rebuilt',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: 'VarelaRound',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'The next release replaces this app with a complete rewrite. '
+            'Your likes and playlists do not carry over on their own, so '
+            'export them first.',
+            style: TextStyle(
+              color: Colors.white.withAlpha((0.75 * 255).round()),
+              fontSize: 14,
+              height: 1.4,
+              fontFamily: 'VarelaRound',
+            ),
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed:
+                  () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const MigrationSettingsPage(),
+                    ),
+                  ),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppTheme.brandPink,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                ),
+              ),
+              child: const Text(
+                'Export my data',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: 'VarelaRound',
+                ),
               ),
             ),
           ),

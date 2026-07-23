@@ -44,6 +44,7 @@ import 'package:sono/widgets/artists/artist_fetch_progress_button.dart';
 import 'package:sono/widgets/global/consent_dialog.dart';
 import 'package:sono/pages/info/privacy_page.dart';
 import 'package:sono/pages/info/terms_page.dart';
+import 'package:sono/widgets/rewrite_notice_dialog.dart';
 
 class AppScaffold extends StatefulWidget {
   const AppScaffold({super.key});
@@ -167,6 +168,10 @@ class _AppScaffoldState extends State<AppScaffold>
           ),
         );
       }
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      RewriteNoticeDialog.maybeShow(context);
     });
   }
 
